@@ -1,0 +1,2134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Lalmai Upazila Master Plan &amp; Urban Suitability Model | Tanzim Al Noor</title>
+  <meta name="description" content="GIS case study of the Lalmai Upazila master planning pipeline: drone and RTK survey, land-use intelligence, AHP suitability modelling and the Urban Development Potential Index.">
+
+  <!-- FIX 2: Google Fonts declared here so the file works standalone
+       AND when the shared styles.css omits them -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* =====================================================
+       LALMAI-SPECIFIC DESIGN TOKENS
+       FIX 1: Shared-site vars (--navy, --teal, --paper, etc.) are NOT
+       redeclared here. They come from the site's styles.css.
+       Only lm-* tokens live below.
+       ===================================================== */
+    :root {
+      --lm-navy:       #0a1628;
+      --lm-navy-2:     #0d1d32;
+      --lm-navy-3:     #12253c;
+      --lm-teal:       #00c9b1;
+      --lm-teal-soft:  #6fe1d2;
+      --lm-parchment:  #f5f0e8;
+      --lm-parchment-2:#ece5d9;
+      --lm-green:      #4a7c59;
+      --lm-blue:       #2563a8;
+      --lm-offwhite:   #e8e4dc;
+      --lm-ink:        #152233;
+      --lm-muted:      #6d736f;
+      --lm-dark-muted: #98a5af;
+      --lm-border:     rgba(10,22,40,.16);
+      --lm-border-dark:rgba(232,228,220,.16);
+      --lm-image-fallback:#111e31;
+      --lm-radius:     4px;
+      --lm-shell:      1280px;
+      --lm-copy:       760px;
+      --lm-header-h:   72px;
+      --lm-ease:       cubic-bezier(.22,.61,.36,1);
+      --lm-fast:       220ms;
+      --lm-medium:     480ms;
+      --lm-slow:       760ms;
+
+      /* Shared-site header tokens — declared only for standalone preview.
+         When styles.css is present these are overridden by that file. */
+      --navy:      #0b2545;
+      --teal:      #0f8b8d;
+      --teal-light:#4fd1c5;
+      --paper:     #f7faf9;
+      --ink:       #16263d;
+      --contour:   #cfdcd9;
+      --white:     #fff;
+      --max:       1120px;
+      --ease:      cubic-bezier(.4,0,.2,1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      background: var(--lm-navy);
+    }
+
+    body {
+      margin: 0;
+      background: var(--lm-parchment);
+      color: var(--lm-ink);
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    body.lm-lock { overflow: hidden; }
+
+    img { max-width: 100%; display: block; }
+    button, a { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+    :focus-visible { outline: 3px solid var(--lm-teal); outline-offset: 4px; }
+
+    /* =====================================================
+       SHARED HEADER — kept minimal, relies on site styles.css
+       Duplicated only for standalone preview correctness
+       ===================================================== */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(247,250,249,.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--contour);
+    }
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 14px 24px;
+      min-height: var(--lm-header-h);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--navy);
+      text-decoration: none;
+      font-family: "Fraunces", Georgia, serif;
+      font-weight: 600;
+      font-size: 1.08rem;
+      white-space: nowrap;
+    }
+    .brand .pin { width: 22px; height: 22px; color: var(--teal); }
+    .nav-links { display: none; list-style: none; margin: 0; padding: 0; }
+    .nav-links a { color: var(--ink); text-decoration: none; font-size: .9rem; font-weight: 500; }
+    .nav-cta { display: flex; align-items: center; gap: 10px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+      border: 1px solid transparent;
+    }
+    .btn-sm { padding: 8px 13px; font-size: .78rem; }
+    .btn-primary { background: var(--navy); color: var(--white); }
+    .btn-ghost { display: none; color: var(--navy); border-color: var(--navy); background: transparent; }
+    .menu-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border: 0;
+      background: transparent;
+      color: var(--navy);
+      cursor: pointer;
+    }
+    .menu-toggle svg { width: 26px; height: 26px; }
+    body.nav-open .nav-links {
+      display: flex;
+      position: absolute;
+      inset: 100% 0 auto 0;
+      flex-direction: column;
+      gap: 0;
+      padding: 8px 24px 18px;
+      background: rgba(247,250,249,.98);
+      border-bottom: 1px solid var(--contour);
+      box-shadow: 0 16px 30px rgba(11,37,69,.08);
+    }
+    body.nav-open .nav-links a { display: block; padding: 11px 0; }
+
+    /* =====================================================
+       LAYOUT SHELL
+       ===================================================== */
+    .lm-case { overflow: clip; }
+    .lm-shell {
+      width: min(calc(100% - 36px), var(--lm-shell));
+      margin-inline: auto;
+    }
+
+    /* =====================================================
+       SECTIONS
+       ===================================================== */
+    .lm-section {
+      position: relative;
+      padding: 76px 0;
+      background: var(--lm-parchment);
+    }
+    .lm-section--navy {
+      background: var(--lm-navy);
+      color: var(--lm-offwhite);
+    }
+    .lm-section--navy::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: .32;
+      background:
+        radial-gradient(circle at 82% 13%, rgba(0,201,177,.09), transparent 28%),
+        radial-gradient(circle at 12% 90%, rgba(37,99,168,.08), transparent 30%);
+    }
+    .lm-section > .lm-shell { position: relative; z-index: 1; }
+    .lm-section-head { margin-bottom: 38px; max-width: 950px; }
+
+    /* Mono utility */
+    .lm-section-label,
+    .lm-eyebrow,
+    .lm-data-label,
+    .lm-step-label,
+    .lm-caption-kicker,
+    .lm-fact dt,
+    .lm-stat-label,
+    .lm-tools span,
+    .lm-weight-row > span,
+    .lm-weight-row > strong,
+    .lm-sector-code,
+    .lm-year-small {
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .lm-section-label {
+      display: block;
+      margin-bottom: 14px;
+      color: var(--lm-teal);
+      font-size: .72rem;
+      font-weight: 500;
+      line-height: 1.4;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    /* Fraunces headings */
+    .lm-section h2,
+    .lm-section h3,
+    .lm-hero h1,
+    .lm-stat-value,
+    .lm-timeline-year,
+    .lm-vision blockquote,
+    .lm-plan-level strong {
+      font-family: "Fraunces", Georgia, serif;
+    }
+
+    .lm-section h2 {
+      margin: 0;
+      max-width: 980px;
+      font-size: clamp(2.25rem, 8vw, 4.9rem);
+      line-height: .98;
+      letter-spacing: -.04em;
+      font-weight: 700;
+      color: var(--lm-navy);
+      font-variation-settings: "opsz" 90;
+    }
+    .lm-section--navy h2,
+    .lm-section--navy h3 { color: var(--lm-offwhite); }
+
+    .lm-section-head > p {
+      max-width: 700px;
+      margin: 20px 0 0;
+      color: #555d5b;
+      font-size: 1rem;
+      line-height: 1.75;
+    }
+    .lm-section--navy .lm-section-head > p { color: #adb9c2; }
+
+    .lm-subhead {
+      margin: 42px 0 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .lm-subhead h3 {
+      margin: 0;
+      color: var(--lm-navy);
+      font-size: clamp(1.5rem, 4.5vw, 2.45rem);
+      line-height: 1.08;
+      letter-spacing: -.025em;
+      font-weight: 650;
+    }
+    .lm-subhead span {
+      color: var(--lm-green);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .73rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+    }
+    .lm-section--navy .lm-subhead span { color: var(--lm-teal); }
+
+    /* =====================================================
+       ENTRANCE REVEAL
+       ===================================================== */
+    .lm-reveal {
+      opacity: 0;
+      transform: translateY(26px);
+      transition:
+        opacity var(--lm-slow) var(--lm-ease),
+        transform var(--lm-slow) var(--lm-ease);
+    }
+    .lm-reveal.lm-visible { opacity: 1; transform: none; }
+
+    /* =====================================================
+       S0 HERO
+       ===================================================== */
+    .lm-hero {
+      position: relative;
+      display: flex;
+      align-items: stretch;
+      min-height: calc(100svh - var(--lm-header-h));
+      color: var(--lm-offwhite);
+      isolation: isolate;
+      background:
+        linear-gradient(90deg, rgba(4,13,27,.92) 0%, rgba(4,13,27,.62) 50%, rgba(4,13,27,.24) 100%),
+        linear-gradient(0deg, rgba(4,13,27,.78) 0%, transparent 48%),
+        url("../images/projects/lalmai/udpi-final-scenario4.jpg") center / cover no-repeat,
+        var(--lm-navy);
+    }
+    .lm-hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background:
+        linear-gradient(120deg, transparent 45%, rgba(0,201,177,.09)),
+        radial-gradient(circle at 84% 28%, rgba(0,201,177,.12), transparent 24%);
+      pointer-events: none;
+    }
+    .lm-hero-inner {
+      width: min(calc(100% - 36px), var(--lm-shell));
+      min-height: inherit;
+      margin-inline: auto;
+      padding: 46px 0 24px;
+      display: flex;
+      flex-direction: column;
+    }
+    .lm-eyebrow {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--lm-teal);
+      font-size: .7rem;
+      line-height: 1.6;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .lm-eyebrow::before {
+      content: "";
+      width: 22px;
+      height: 1px;
+      background: var(--lm-teal);
+    }
+    .lm-hero-copy { margin: auto 0; padding: 60px 0; max-width: 960px; }
+    .lm-hero h1 {
+      margin: 0;
+      max-width: 930px;
+      color: var(--lm-offwhite);
+      font-size: clamp(3.2rem, 13vw, 6.5rem);
+      font-weight: 700;
+      font-variation-settings: "opsz" 120;
+      line-height: .88;
+      letter-spacing: -.055em;
+      text-wrap: balance;
+    }
+    .lm-hero-lede {
+      max-width: 760px;
+      margin: 25px 0 0;
+      color: #d1d5d2;
+      font-size: clamp(1rem, 3.6vw, 1.3rem);
+      line-height: 1.6;
+    }
+    .lm-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 26px; }
+    .lm-chip {
+      padding: 8px 11px;
+      border: 1px solid rgba(232,228,220,.28);
+      color: var(--lm-offwhite);
+      background: rgba(10,22,40,.36);
+      backdrop-filter: blur(8px);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .67rem;
+      line-height: 1;
+      letter-spacing: .04em;
+    }
+    .lm-hero-bottom {
+      padding-top: 18px;
+      border-top: 1px solid rgba(232,228,220,.22);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      color: #b9c2c4;
+      font-size: .76rem;
+    }
+    .lm-hero-bottom a {
+      width: max-content;
+      color: var(--lm-offwhite);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .lm-hero-bottom a span { color: var(--lm-teal); margin-left: 5px; }
+
+    /* =====================================================
+       S1 QUICK FACTS
+       ===================================================== */
+    .lm-quickfacts {
+      background: var(--lm-navy-2);
+      color: var(--lm-offwhite);
+      border-top: 1px solid rgba(255,255,255,.05);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .lm-quickfacts-grid {
+      width: min(calc(100% - 36px), var(--lm-shell));
+      margin-inline: auto;
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+    .lm-fact {
+      margin: 0;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--lm-border-dark);
+    }
+    .lm-fact:last-child { border-bottom: 0; }
+    .lm-fact dt {
+      margin-bottom: 7px;
+      color: var(--lm-teal);
+      font-size: .65rem;
+      text-transform: uppercase;
+      letter-spacing: .11em;
+    }
+    .lm-fact dd {
+      margin: 0;
+      color: var(--lm-offwhite);
+      font-size: .88rem;
+      line-height: 1.55;
+      font-weight: 500;
+    }
+
+    /* =====================================================
+       S2 STATS
+       ===================================================== */
+    .lm-stats {
+      background: var(--lm-parchment);
+      border-bottom: 1px solid var(--lm-border);
+    }
+    .lm-stat-grid {
+      width: min(calc(100% - 36px), var(--lm-shell));
+      margin-inline: auto;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .lm-stat {
+      min-width: 0;
+      padding: 26px 13px 26px 0;
+      border-bottom: 1px solid var(--lm-border);
+    }
+    .lm-stat:nth-child(odd)  { border-right: 1px solid var(--lm-border); }
+    .lm-stat:nth-child(even) { padding-left: 14px; }
+    .lm-stat-value {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--lm-navy);
+      font-size: clamp(1.6rem, 5vw, 2.8rem);
+      line-height: .95;
+      letter-spacing: -.04em;
+      font-weight: 700;
+      white-space: normal;
+      word-break: break-word;
+    }
+    .lm-stat-label {
+      display: block;
+      color: #69716d;
+      font-size: .61rem;
+      line-height: 1.45;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    /* =====================================================
+       FIGURE SYSTEM
+       ===================================================== */
+    .lm-figure { margin: 0; }
+    .lm-media {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, var(--lm-image-fallback), #182a41);
+      aspect-ratio: 16/10;
+    }
+    .lm-media--wide   { aspect-ratio: 16/8; }
+    .lm-media--hero   { aspect-ratio: 16/11; }
+    .lm-media--portrait { aspect-ratio: 4/5; }
+    .lm-media--square { aspect-ratio: 1; }
+    .lm-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      cursor: zoom-in;
+      transition: transform var(--lm-medium) var(--lm-ease), opacity var(--lm-fast) ease;
+    }
+    .lm-media--map img,
+    .lm-media--diagram img,
+    .lm-media--chart img {
+      object-fit: contain;
+      background: #e7e2d8;
+    }
+    .lm-section--navy .lm-media--map img,
+    .lm-section--navy .lm-media--diagram img,
+    .lm-section--navy .lm-media--chart img { background: #111e31; }
+    .lm-media:hover img { transform: scale(1.015); }
+    .lm-media.lm-missing img { opacity: 0; pointer-events: none; }
+    .lm-media.lm-missing::after {
+      content: "Image unavailable";
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #8f9ba4;
+      font-family: "JetBrains Mono", monospace;
+      font-size: .7rem;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+    .lm-caption {
+      padding: 12px 0 0;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: start;
+      color: #565e5a;
+      font-size: .84rem;
+      line-height: 1.55;
+    }
+    .lm-caption-kicker {
+      color: var(--lm-green);
+      font-size: .63rem;
+      line-height: 1.7;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+    }
+    .lm-caption strong { color: inherit; font-weight: 500; }
+    .lm-section--navy .lm-caption { color: #aeb8c0; }
+    .lm-section--navy .lm-caption-kicker { color: var(--lm-teal); }
+    .lm-image-grid { display: grid; grid-template-columns: 1fr; gap: 25px; }
+    .lm-image-grid--tight { gap: 15px; }
+
+    /* =====================================================
+       S3 OVERVIEW
+       ===================================================== */
+    .lm-overview { display: grid; gap: 34px; }
+    .lm-overview .lm-media { aspect-ratio: 4/5; }
+
+    .lm-data-panel {
+      padding: 24px;
+      background: #fff;
+      border: 1px solid var(--lm-border);
+    }
+    .lm-section--navy .lm-data-panel {
+      color: var(--lm-offwhite);
+      background: rgba(255,255,255,.035);
+      border-color: var(--lm-border-dark);
+    }
+    .lm-data-label {
+      display: block;
+      margin-bottom: 9px;
+      color: var(--lm-teal);
+      font-size: .67rem;
+      line-height: 1.4;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .lm-data-panel h3 {
+      margin: 0;
+      color: var(--lm-navy);
+      font-size: clamp(1.55rem, 5vw, 2.4rem);
+      font-weight: 650;
+      line-height: 1.1;
+      letter-spacing: -.025em;
+    }
+    .lm-section--navy .lm-data-panel h3 { color: var(--lm-offwhite); }
+    .lm-data-panel > p {
+      margin: 11px 0 0;
+      color: #68706d;
+      line-height: 1.65;
+      font-size: .91rem;
+    }
+    .lm-section--navy .lm-data-panel > p { color: #9dabb5; }
+
+    .lm-toggle-group {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      margin: 22px 0;
+      border: 1px solid var(--lm-border);
+    }
+    .lm-section--navy .lm-toggle-group { border-color: var(--lm-border-dark); }
+    .lm-toggle {
+      border: 0;
+      border-right: 1px solid var(--lm-border);
+      border-bottom: 1px solid var(--lm-border);
+      padding: 11px 9px;
+      cursor: pointer;
+      color: #56615d;
+      background: transparent;
+      font-family: "JetBrains Mono", monospace;
+      font-size: .63rem;
+      line-height: 1.3;
+      letter-spacing: .04em;
+    }
+    .lm-toggle:nth-child(even) { border-right: 0; }
+    .lm-toggle:nth-last-child(-n+2) { border-bottom: 0; }
+    .lm-section--navy .lm-toggle { color: #a9b5bd; border-color: var(--lm-border-dark); }
+    .lm-toggle[aria-pressed="true"] { color: var(--lm-navy); background: var(--lm-teal); }
+
+    .lm-chart { min-height: 160px; }
+    .lm-compare-row { margin-top: 18px; }
+    .lm-compare-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      margin-bottom: 8px;
+      color: #55605c;
+      font-size: .78rem;
+    }
+    .lm-section--navy .lm-compare-meta { color: #c1c8cc; }
+    .lm-compare-meta strong {
+      color: var(--lm-navy);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .72rem;
+      font-weight: 500;
+    }
+    .lm-section--navy .lm-compare-meta strong { color: var(--lm-offwhite); }
+    .lm-bar-track { height: 9px; overflow: hidden; background: rgba(10,22,40,.1); }
+    .lm-section--navy .lm-bar-track { background: rgba(255,255,255,.09); }
+    .lm-bar-fill {
+      height: 100%;
+      transform-origin: left center;
+      background: linear-gradient(90deg, var(--lm-teal), #49e3d0);
+      transition: width .65s var(--lm-ease);
+    }
+    .lm-chart-note {
+      margin-top: 20px !important;
+      padding-top: 14px;
+      border-top: 1px solid var(--lm-border-dark);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .65rem !important;
+      line-height: 1.55 !important;
+    }
+
+    /* =====================================================
+       S4 SURVEY
+       ===================================================== */
+    .lm-field-hero .lm-media { aspect-ratio: 16/10; }
+    .lm-field-pair { display: grid; grid-template-columns: 1fr; gap: 25px; margin-top: 28px; }
+    .lm-process-grid { display: grid; grid-template-columns: 1fr; gap: 22px; margin-top: 46px; }
+    .lm-process-card {
+      margin: 0;
+      padding: 12px;
+      background: rgba(255,255,255,.035);
+      border: 1px solid var(--lm-border-dark);
+    }
+    .lm-process-card .lm-media { aspect-ratio: 4/3; }
+    .lm-process-card figcaption {
+      padding: 13px 4px 2px;
+      color: #b4bec4;
+      font-size: .83rem;
+      line-height: 1.55;
+    }
+    .lm-process-card figcaption strong { color: var(--lm-offwhite); font-weight: 500; }
+    .lm-survey-banner { margin-top: 42px; }
+
+    /* =====================================================
+       S5 TOPOGRAPHY
+       ===================================================== */
+    .lm-full-map { margin: 0 calc(50% - 50vw); width: 100vw; }
+    .lm-full-map .lm-media { aspect-ratio: 16/11; }
+    .lm-full-map .lm-caption {
+      width: min(calc(100% - 36px), var(--lm-shell));
+      margin-inline: auto;
+    }
+    .lm-map-pair { display: grid; gap: 27px; margin: 50px 0; }
+    .lm-landuse-panel { margin-top: 50px; }
+    .lm-landuse-controls { grid-template-columns: repeat(3, 1fr); }
+    .lm-landuse-controls .lm-toggle { border-bottom: 0; }
+    .lm-landuse-controls .lm-toggle:nth-child(2) { border-right: 1px solid var(--lm-border); }
+    /* FIX 6: 3-column last child border reset (applied here for mobile, overridden at 1024px) */
+    .lm-landuse-controls .lm-toggle:nth-child(3) { border-right: 0; }
+
+    .lm-landuse-row {
+      display: grid;
+      grid-template-columns: 95px 1fr 48px;
+      gap: 10px;
+      align-items: center;
+      margin: 10px 0;
+    }
+    .lm-landuse-name,
+    .lm-landuse-value {
+      font-family: "JetBrains Mono", monospace;
+      font-size: .59rem;
+      line-height: 1.3;
+      color: #626966;
+    }
+    .lm-landuse-value { text-align: right; color: var(--lm-navy); }
+    .lm-landuse-bars { display: grid; gap: 3px; }
+    .lm-landuse-track { height: 6px; background: rgba(10,22,40,.09); overflow: hidden; }
+    .lm-landuse-fill { height: 100%; transition: width .6s var(--lm-ease); }
+    .lm-landuse-fill--urban { background: var(--lm-teal); }
+    .lm-landuse-fill--rural { background: var(--lm-green); }
+    .lm-landuse-legend {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-top: 17px;
+      color: #65706b;
+      font-family: "JetBrains Mono", monospace;
+      font-size: .62rem;
+    }
+    .lm-key { display: inline-block; width: 12px; height: 4px; margin-right: 6px; vertical-align: middle; }
+    .lm-key--urban { background: var(--lm-teal); }
+    .lm-key--rural { background: var(--lm-green); }
+
+    .lm-timeline {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 82%;
+      gap: 14px;
+      overflow-x: auto;
+      overscroll-behavior-inline: contain;
+      scroll-snap-type: x mandatory;
+      padding: 2px 0 14px;
+      scrollbar-color: var(--lm-green) transparent;
+    }
+    .lm-timeline figure {
+      position: relative;
+      margin: 0;
+      scroll-snap-align: center;
+      overflow: hidden;
+      background: var(--lm-image-fallback);
+      aspect-ratio: 4/5;
+    }
+    .lm-timeline img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
+    .lm-timeline-year {
+      position: absolute;
+      left: 15px;
+      bottom: 10px;
+      z-index: 2;
+      color: #fff;
+      font-size: clamp(2.4rem, 11vw, 4.4rem);
+      font-weight: 700;
+      letter-spacing: -.05em;
+      line-height: 1;
+      text-shadow: 0 2px 18px rgba(0,0,0,.42);
+    }
+    .lm-timeline figure::after {
+      content: "";
+      position: absolute;
+      inset: 45% 0 0;
+      pointer-events: none;
+      background: linear-gradient(transparent, rgba(5,13,24,.75));
+    }
+
+    /* =====================================================
+       S6 AHP
+       ===================================================== */
+    .lm-model-grid { display: grid; gap: 24px; }
+    .lm-weight-panel {
+      margin-top: 48px;
+      padding: 23px;
+      background: rgba(255,255,255,.035);
+      border: 1px solid var(--lm-border-dark);
+    }
+    .lm-weight-row {
+      display: grid;
+      grid-template-columns: minmax(105px, 1.2fr) 2fr 37px;
+      gap: 9px;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .lm-weight-row:last-child { border-bottom: 0; }
+    .lm-weight-row > span,
+    .lm-weight-row > strong { color: #aeb9c0; font-size: .58rem; line-height: 1.35; font-weight: 400; }
+    .lm-weight-row > strong { color: var(--lm-teal); text-align: right; }
+    .lm-weight-track { height: 7px; overflow: hidden; background: rgba(255,255,255,.08); }
+    .lm-weight-fill {
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, #008f83, var(--lm-teal), #75e8d8);
+      transition: width 900ms var(--lm-ease);
+    }
+
+    /* =====================================================
+       SCROLLYTELLER
+       ===================================================== */
+    .lm-scrolly { margin-top: 68px; position: relative; }
+    .lm-scrolly-intro { max-width: 760px; margin-bottom: 28px; }
+    .lm-scrolly-intro .lm-data-label { margin-bottom: 10px; }
+    .lm-scrolly-intro h3 {
+      margin: 0;
+      color: var(--lm-offwhite);
+      font-size: clamp(2rem, 7vw, 3.8rem);
+      line-height: 1;
+      letter-spacing: -.035em;
+    }
+    .lm-scrolly-layout { display: grid; gap: 24px; }
+    .lm-scrolly-stage {
+      position: relative;
+      background: #07111f;
+      border: 1px solid var(--lm-border-dark);
+    }
+    .lm-scrolly-map {
+      position: relative;
+      aspect-ratio: 4/5;
+      overflow: hidden;
+      background: var(--lm-image-fallback);
+    }
+    .lm-scrolly-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #101d2d;
+      cursor: zoom-in;
+      opacity: 0;
+      transform: scale(1.012);
+      transition:
+        opacity var(--lm-slow) var(--lm-ease),
+        transform var(--lm-slow) var(--lm-ease);
+    }
+    .lm-scrolly-layer.lm-active { opacity: 1; transform: none; }
+    .lm-scrolly-live {
+      padding: 21px;
+      min-height: 180px;
+      border-top: 1px solid var(--lm-border-dark);
+    }
+    .lm-scrolly-live .lm-step-label {
+      display: block;
+      color: var(--lm-teal);
+      font-size: .64rem;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+    .lm-scrolly-live h3 {
+      margin: 10px 0 12px;
+      color: var(--lm-offwhite);
+      font-size: clamp(1.5rem, 6vw, 2.6rem);
+      line-height: 1.05;
+      font-weight: 650;
+    }
+    .lm-scrolly-stat { margin: 0; color: #aeb9c1; font-size: .9rem; line-height: 1.6; }
+    .lm-scrolly-steps { display: grid; gap: 18px; }
+    .lm-scrolly-step {
+      width: 100%;
+      min-height: 210px;
+      padding: 25px;
+      text-align: left;
+      border: 1px solid var(--lm-border-dark);
+      color: var(--lm-offwhite);
+      background: rgba(255,255,255,.025);
+      cursor: pointer;
+      transition:
+        border-color var(--lm-fast) ease,
+        background var(--lm-fast) ease,
+        transform var(--lm-fast) ease;
+    }
+    .lm-scrolly-step:hover,
+    .lm-scrolly-step[aria-current="step"] {
+      border-color: rgba(0,201,177,.6);
+      background: rgba(0,201,177,.07);
+    }
+    .lm-scrolly-step .lm-step-label {
+      color: var(--lm-teal);
+      font-size: .63rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .lm-scrolly-step strong {
+      display: block;
+      margin: 13px 0 8px;
+      color: var(--lm-offwhite);
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 1.45rem;
+      line-height: 1.1;
+      font-weight: 650;
+    }
+    .lm-scrolly-step span:last-child {
+      display: block;
+      color: #98a6af;
+      font-size: .86rem;
+      line-height: 1.65;
+    }
+    .lm-post-udpi { display: grid; gap: 28px; margin-top: 66px; }
+    .lm-result {
+      margin-top: 30px;
+      padding: 22px 24px;
+      border-left: 4px solid var(--lm-teal);
+      background: rgba(0,201,177,.065);
+    }
+    .lm-result span {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--lm-teal);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .65rem;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+    .lm-result strong {
+      display: block;
+      color: var(--lm-offwhite);
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(1.45rem, 5vw, 2.45rem);
+      line-height: 1.15;
+      font-weight: 650;
+    }
+
+    /* =====================================================
+       S7 FRAMEWORK
+       ===================================================== */
+    .lm-vision {
+      margin: 0 0 42px;
+      padding: 33px 0;
+      border-top: 1px solid var(--lm-border);
+      border-bottom: 1px solid var(--lm-border);
+    }
+    .lm-vision blockquote {
+      margin: 0;
+      max-width: 1000px;
+      color: var(--lm-navy);
+      font-size: clamp(2rem, 7.8vw, 4.8rem);
+      line-height: 1.04;
+      letter-spacing: -.04em;
+      font-style: italic;
+      font-weight: 600;
+    }
+    .lm-vision cite {
+      display: block;
+      margin-top: 18px;
+      color: var(--lm-green);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .7rem;
+      font-style: normal;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .lm-plan-levels {
+      display: grid;
+      gap: 1px;
+      background: var(--lm-border);
+      border: 1px solid var(--lm-border);
+    }
+    .lm-plan-level { padding: 24px; background: var(--lm-parchment); }
+    .lm-plan-level .lm-year-small {
+      color: var(--lm-green);
+      font-size: .65rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .lm-plan-level strong {
+      display: block;
+      margin-top: 8px;
+      color: var(--lm-navy);
+      font-size: 1.5rem;
+      line-height: 1.1;
+      font-weight: 650;
+    }
+    .lm-framework-photos { display: grid; gap: 26px; margin-top: 42px; }
+    .lm-pra-grid { margin-top: 42px; }
+
+    /* =====================================================
+       S8 SECTORAL PLANS
+       ===================================================== */
+    .lm-sector-list { display: grid; gap: 62px; }
+    .lm-sector {
+      display: grid;
+      gap: 26px;
+      padding-top: 34px;
+      border-top: 1px solid var(--lm-border-dark);
+    }
+    .lm-sector:first-child { padding-top: 0; border-top: 0; }
+    .lm-sector-media { display: grid; gap: 12px; }
+    .lm-sector-media.lm-two { grid-template-columns: 1fr; }
+    .lm-sector-copy { align-self: center; }
+    .lm-sector-code {
+      display: block;
+      margin-bottom: 12px;
+      color: var(--lm-teal);
+      font-size: .67rem;
+      line-height: 1.4;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .lm-sector-copy h3 {
+      margin: 0;
+      color: var(--lm-offwhite);
+      font-size: clamp(1.8rem, 6vw, 3.1rem);
+      line-height: 1.05;
+      letter-spacing: -.035em;
+      font-weight: 650;
+    }
+    .lm-sector-copy p {
+      margin: 17px 0 0;
+      color: #aeb8bf;
+      line-height: 1.72;
+      font-size: .94rem;
+    }
+    .lm-sector-note {
+      margin-top: 18px !important;
+      padding: 14px 16px;
+      border-left: 3px solid var(--lm-blue);
+      background: rgba(37,99,168,.1);
+      color: #c4ced4 !important;
+      font-family: "JetBrains Mono", monospace;
+      font-size: .68rem !important;
+    }
+    .lm-sector-points { margin: 20px 0 0; padding: 0; list-style: none; display: grid; gap: 11px; }
+    .lm-sector-points li {
+      position: relative;
+      padding-left: 20px;
+      color: #b9c3c9;
+      font-size: .87rem;
+      line-height: 1.55;
+    }
+    .lm-sector-points li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: .65em;
+      width: 8px;
+      height: 2px;
+      background: var(--lm-teal);
+    }
+
+    /* =====================================================
+       S9 / S10 PROFILE GRIDS
+       ===================================================== */
+    .lm-profile-body {
+      margin: -14px 0 34px;
+      max-width: 780px;
+      color: #5f6763;
+      font-size: .96rem;
+      line-height: 1.75;
+    }
+    .lm-section--navy .lm-profile-body { color: #aeb9c0; }
+    .lm-profile-grid { display: grid; grid-template-columns: 1fr; gap: 23px; }
+    .lm-profile-grid .lm-caption { grid-template-columns: 1fr; }
+
+    /* =====================================================
+       S11 TOOLS
+       ===================================================== */
+    .lm-tools { display: flex; flex-wrap: wrap; gap: 9px; }
+    .lm-tools span {
+      padding: 10px 12px;
+      color: var(--lm-offwhite);
+      background: var(--lm-navy);
+      border: 1px solid var(--lm-teal);
+      font-size: .65rem;
+      letter-spacing: .025em;
+      transition:
+        background var(--lm-fast) ease,
+        color var(--lm-fast) ease,
+        transform var(--lm-fast) ease;
+    }
+    .lm-tools span:hover {
+      color: var(--lm-navy);
+      background: var(--lm-teal);
+      transform: translateY(-2px);
+    }
+
+    /* =====================================================
+       FOOTER NAV
+       ===================================================== */
+    .lm-footer-nav {
+      display: grid;
+      grid-template-columns: 1fr;
+      background: var(--lm-navy);
+      border-top: 1px solid var(--lm-border-dark);
+    }
+    .lm-footer-nav a {
+      min-height: 150px;
+      padding: 28px max(18px, calc((100vw - var(--lm-shell)) / 2));
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      color: var(--lm-offwhite);
+      text-decoration: none;
+      border-bottom: 1px solid var(--lm-border-dark);
+      transition: background var(--lm-fast) ease;
+    }
+    .lm-footer-nav a:hover { background: var(--lm-navy-3); }
+    .lm-footer-nav span {
+      color: var(--lm-teal);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .64rem;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+    }
+    .lm-footer-nav strong {
+      display: block;
+      margin-top: 7px;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(1.55rem, 5vw, 2.5rem);
+      font-weight: 650;
+      letter-spacing: -.025em;
+    }
+
+    /* =====================================================
+       LIGHTBOX
+       ===================================================== */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 55px 18px 24px;
+      background: rgba(2,8,16,.94);
+      backdrop-filter: blur(8px);
+    }
+    .lightbox.open { display: flex; }
+    .lightbox img {
+      max-width: min(94vw, 1500px);
+      max-height: 82vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      background: #101b2a;
+      box-shadow: 0 24px 100px rgba(0,0,0,.5);
+    }
+    .lb-close {
+      position: absolute;
+      top: 15px;
+      right: 18px;
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 50%;
+      color: #fff;
+      background: rgba(255,255,255,.06);
+      font-size: 1.7rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .lb-cap {
+      position: absolute;
+      left: 50%;
+      bottom: 12px;
+      width: min(calc(100% - 36px), 950px);
+      transform: translateX(-50%);
+      margin: 0;
+      color: #cbd2d5;
+      text-align: center;
+      font-size: .78rem;
+      line-height: 1.45;
+    }
+
+    /* =====================================================
+       BACK TO TOP
+       ===================================================== */
+    .lm-back-top {
+      position: fixed;
+      right: 17px;
+      bottom: 17px;
+      z-index: 80;
+      width: 45px;
+      height: 45px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(0,201,177,.6);
+      border-radius: 50%;
+      color: var(--lm-navy);
+      background: var(--lm-teal);
+      box-shadow: 0 12px 30px rgba(0,0,0,.22);
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+      transition: opacity var(--lm-fast) ease, transform var(--lm-fast) ease;
+    }
+    .lm-back-top.lm-show { opacity: 1; pointer-events: auto; transform: none; }
+    .lm-back-top svg { width: 18px; height: 18px; }
+
+    /* =====================================================
+       640px
+       ===================================================== */
+    @media (min-width: 640px) {
+      .btn-ghost { display: inline-flex; }
+      .lm-shell { width: min(calc(100% - 64px), var(--lm-shell)); }
+      .lm-section { padding: 94px 0; }
+      .lm-hero-inner { width: min(calc(100% - 64px), var(--lm-shell)); padding-top: 68px; padding-bottom: 30px; }
+      .lm-hero-bottom { flex-direction: row; justify-content: space-between; align-items: center; }
+      .lm-quickfacts-grid { width: min(calc(100% - 64px), var(--lm-shell)); grid-template-columns: repeat(2, 1fr); }
+      .lm-fact {
+        padding: 22px 20px;
+        border-bottom: 1px solid var(--lm-border-dark);
+        border-right: 1px solid var(--lm-border-dark);
+      }
+      .lm-fact:nth-child(even)       { border-right: 0; }
+      .lm-fact:nth-last-child(-n+2)  { border-bottom: 0; }
+      .lm-stat-grid { width: min(calc(100% - 64px), var(--lm-shell)); grid-template-columns: repeat(4, 1fr); }
+      .lm-stat { padding: 31px 18px; border-right: 1px solid var(--lm-border); }
+      .lm-stat:nth-child(even)       { padding-left: 18px; }
+      .lm-stat:nth-child(4n)         { border-right: 0; }
+      .lm-stat:nth-last-child(-n+4)  { border-bottom: 0; }
+      .lm-field-pair,
+      .lm-map-pair,
+      .lm-model-grid,
+      .lm-framework-photos           { grid-template-columns: repeat(2, 1fr); }
+      .lm-process-grid               { grid-template-columns: repeat(2, 1fr); }
+      .lm-image-grid                 { grid-template-columns: repeat(2, 1fr); }
+      .lm-timeline                   { grid-auto-columns: 45%; }
+      .lm-profile-grid               { grid-template-columns: repeat(2, 1fr); }
+      .lm-profile-grid > :first-child:last-child,
+      .lm-profile-grid > :nth-child(5):last-child { grid-column: span 2; }
+      .lm-plan-levels                { grid-template-columns: repeat(3, 1fr); }
+      .lm-landuse-row                { grid-template-columns: 145px 1fr 60px; }
+      .lm-weight-row                 { grid-template-columns: minmax(160px, 1fr) 3fr 48px; gap: 15px; }
+      .lm-weight-row > span,
+      .lm-weight-row > strong        { font-size: .65rem; }
+      .lm-full-map .lm-caption       { width: min(calc(100% - 64px), var(--lm-shell)); }
+      .lm-footer-nav                 { grid-template-columns: 1fr 1fr; }
+      .lm-footer-nav a               { min-height: 190px; border-right: 1px solid var(--lm-border-dark); border-bottom: 0; }
+      .lm-footer-nav a:last-child    { align-items: flex-end; text-align: right; border-right: 0; }
+    }
+
+    /* =====================================================
+       1024px
+       ===================================================== */
+    @media (min-width: 1024px) {
+      .nav-links { display: flex; align-items: center; gap: 22px; }
+      .menu-toggle { display: none; }
+      body.nav-open .nav-links {
+        position: static;
+        padding: 0;
+        flex-direction: row;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+      }
+      .lm-section { padding: 122px 0; }
+      .lm-hero-inner { padding-top: 84px; padding-bottom: 34px; }
+      .lm-hero-copy { padding: 80px 0; }
+      .lm-hero h1 { font-size: clamp(5rem, 7.6vw, 7.7rem); max-width: 1050px; }
+      .lm-hero-lede { font-size: 1.28rem; }
+      .lm-quickfacts-grid { grid-template-columns: repeat(4, 1fr); }
+      .lm-fact { padding: 23px 25px; border-bottom: 0; }
+      .lm-fact:nth-child(even)  { border-right: 1px solid var(--lm-border-dark); }
+      .lm-fact:last-child       { border-right: 0; }
+      .lm-stat-grid             { grid-template-columns: repeat(8, 1fr); }
+      .lm-stat                  { min-height: 157px; padding: 32px 14px; border-bottom: 0; border-right: 1px solid var(--lm-border); }
+      .lm-stat:nth-child(even)  { padding-left: 14px; }
+      .lm-stat:nth-child(4n)    { border-right: 1px solid var(--lm-border); }
+      .lm-stat:last-child       { border-right: 0; }
+      .lm-stat-value            { font-size: clamp(1.4rem, 1.8vw, 2.2rem); }
+      .lm-overview              { grid-template-columns: minmax(0, 1.3fr) minmax(350px, .7fr); align-items: stretch; }
+      .lm-overview .lm-media   { height: 100%; aspect-ratio: auto; min-height: 650px; }
+      .lm-data-panel            { padding: 34px; }
+      .lm-field-hero .lm-media { height: 500px; aspect-ratio: auto; }
+      .lm-field-pair            { grid-template-columns: repeat(2, 1fr); }
+      .lm-field-pair .lm-media { aspect-ratio: 16/9; }
+      .lm-process-grid          { grid-template-columns: repeat(2, 1fr); gap: 25px; }
+      .lm-full-map .lm-media   { height: min(78vh, 850px); aspect-ratio: auto; }
+      .lm-map-pair .lm-media   { aspect-ratio: 4/5; }
+      .lm-timeline {
+        grid-template-columns: repeat(4, 1fr);
+        grid-auto-flow: row;
+        grid-auto-columns: auto;
+        overflow: visible;
+        gap: 15px;
+      }
+      .lm-model-grid .lm-media { aspect-ratio: 4/3; }
+      .lm-scrolly-layout {
+        grid-template-columns: minmax(0, 1.25fr) minmax(340px, .75fr);
+        gap: 42px;
+        align-items: start;
+      }
+      .lm-scrolly-stage {
+        position: sticky;
+        top: calc(var(--lm-header-h) + 24px);
+      }
+      .lm-scrolly-map { aspect-ratio: 16/13; }
+      .lm-scrolly-step {
+        min-height: 72vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 38px;
+      }
+      .lm-post-udpi             { grid-template-columns: repeat(2, 1fr); }
+      .lm-framework-photos .lm-media { aspect-ratio: 16/10; }
+      .lm-pra-grid              { grid-template-columns: repeat(3, 1fr); }
+      .lm-sector                { grid-template-columns: minmax(0, 1.05fr) minmax(340px, .95fr); gap: 54px; }
+      .lm-sector:nth-child(even) .lm-sector-media { order: 2; }
+      .lm-sector:nth-child(even) .lm-sector-copy  { order: 1; }
+      .lm-sector-media.lm-two   { grid-template-columns: 1fr 1fr; }
+      .lm-sector-media.lm-two .lm-media { aspect-ratio: 4/5; }
+      .lm-sector-media:not(.lm-two) .lm-media { aspect-ratio: 4/3; }
+      .lm-profile-grid          { grid-template-columns: repeat(5, 1fr); gap: 14px; }
+      .lm-profile-grid > :first-child:last-child,
+      .lm-profile-grid > :nth-child(5):last-child { grid-column: auto; }
+      #lm-services .lm-profile-grid { grid-template-columns: repeat(4, 1fr); }
+      .lm-toggle-group          { grid-template-columns: repeat(4, 1fr); }
+      .lm-toggle                { border-bottom: 0; border-right: 1px solid var(--lm-border); }
+      .lm-toggle:nth-child(even){ border-right: 1px solid var(--lm-border); }
+      .lm-toggle:last-child     { border-right: 0; }
+      /* FIX 6: landuse controls are 3-col — reset nth-child(3) border at desktop too */
+      .lm-landuse-controls      { grid-template-columns: repeat(3, 1fr); }
+      .lm-landuse-controls .lm-toggle:nth-child(3) { border-right: 0; }
+      .lm-full-map .lm-caption  { padding-top: 14px; }
+    }
+
+    /* =====================================================
+       REDUCED MOTION
+       ===================================================== */
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .lm-reveal { opacity: 1 !important; transform: none !important; }
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+      .lm-weight-fill { transition: none !important; }
+    }
+  </style>
+</head>
+
+<body class="lm-page">
+
+  <header class="site-header">
+    <nav class="nav">
+      <a href="../index.html" class="brand">
+        <svg class="pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0Z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+        Tanzim&nbsp;Al&nbsp;Noor
+      </a>
+      <ul class="nav-links">
+        <li><a href="../index.html#about">About</a></li>
+        <li><a href="../index.html#skills">Skills</a></li>
+        <li><a href="../index.html#experience">Experience</a></li>
+        <li><a href="../index.html#projects">Projects</a></li>
+        <li><a href="../index.html#research">Research</a></li>
+        <li><a href="../index.html#education">Education</a></li>
+        <li><a href="../index.html#contact">Contact</a></li>
+      </ul>
+      <div class="nav-cta">
+        <a href="../Tanzim_Al_Noor_CV.pdf" class="btn btn-ghost btn-sm" download>Download CV</a>
+        <a href="../index.html#contact" class="btn btn-primary btn-sm">Get in Touch</a>
+        <button class="menu-toggle" aria-label="Toggle menu" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="lm-case">
+
+    <!-- S0 HERO -->
+    <section class="lm-hero" id="lm-top" aria-labelledby="lm-title">
+      <div class="lm-hero-inner">
+        <div class="lm-eyebrow">Portfolio / GIS &amp; Master Planning · UTMIDP · LGED · Cumilla</div>
+        <div class="lm-hero-copy">
+          <h1 id="lm-title">Mapping where Lalmai should grow.</h1>
+          <p class="lm-hero-lede">A 120 km² planning pipeline built from drone imagery, RTK control, land-use intelligence and a 20-factor AHP suitability model.</p>
+          <div class="lm-chips" aria-label="Project disciplines">
+            <span class="lm-chip">GIS database</span>
+            <span class="lm-chip">Drone survey</span>
+            <span class="lm-chip">MCDA / AHP</span>
+            <span class="lm-chip">Structure planning</span>
+          </div>
+        </div>
+        <div class="lm-hero-bottom">
+          <span>Image: final conservation-constrained UDPI output</span>
+          <a href="#lm-overview">Scroll through the evidence <span aria-hidden="true">↓</span></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- S1 QUICK FACTS -->
+    <section class="lm-quickfacts" aria-label="Project quick facts">
+      <div class="lm-quickfacts-grid">
+        <dl class="lm-fact"><dt>Client</dt><dd>LGED, Government of Bangladesh</dd></dl>
+        <dl class="lm-fact"><dt>Programme</dt><dd>UTMIDP · UMPP-2</dd></dl>
+        <dl class="lm-fact"><dt>Role</dt><dd>Assistant Urban Planner — GIS &amp; Spatial Analysis</dd></dl>
+        <dl class="lm-fact"><dt>Status</dt><dd>Ongoing · Draft survey outputs completed</dd></dl>
+      </div>
+    </section>
+
+    <!-- S2 STATS -->
+    <section class="lm-stats" aria-label="Project statistics">
+      <div class="lm-stat-grid">
+        <article class="lm-stat"><strong class="lm-stat-value" data-counter="120" data-decimals="0" data-suffix=" km²">0</strong><span class="lm-stat-label">Area surveyed</span></article>
+        <article class="lm-stat"><strong class="lm-stat-value" data-counter="215011" data-decimals="0">0</strong><span class="lm-stat-label">Base-year population</span></article>
+        <article class="lm-stat"><strong class="lm-stat-value" data-counter="366964" data-decimals="0">0</strong><span class="lm-stat-label">Projected population 2047</span></article>
+        <article class="lm-stat"><strong class="lm-stat-value" data-counter="9" data-decimals="0">0</strong><span class="lm-stat-label">Unions · administrative coverage</span></article>
+        <article class="lm-stat"><strong class="lm-stat-value" data-counter="55.9" data-decimals="1" data-suffix="%">0</strong><span class="lm-stat-label">Land under agriculture</span></article>
+        <article class="lm-stat"><strong class="lm-stat-value" data-counter="20" data-decimals="0">0</strong><span class="lm-stat-label">AHP suitability factors</span></article>
+        <article class="lm-stat"><strong class="lm-stat-value" data-counter="8.48" data-decimals="2" data-suffix="%">0</strong><span class="lm-stat-label">Structures in unsuitable zones</span></article>
+        <article class="lm-stat"><strong class="lm-stat-value" data-counter="0.52" data-decimals="2" data-suffix=" m²">0</strong><span class="lm-stat-label">Open space per person</span></article>
+      </div>
+    </section>
+
+    <!-- S3 OVERVIEW -->
+    <section class="lm-section lm-section--navy" id="lm-overview">
+      <div class="lm-shell">
+        <header class="lm-section-head lm-reveal">
+          <span class="lm-section-label">01 · Overview</span>
+          <h2>A master plan built as a spatial decision system.</h2>
+        </header>
+        <div class="lm-overview">
+          <figure class="lm-figure lm-reveal">
+            <div class="lm-media lm-media--map">
+              <img src="../images/projects/lalmai/lalmai-location-context-map.jpg" alt="Location and administrative context map of Lalmai Upazila" loading="lazy" data-lightbox data-caption="Nine unions connected by regional roads, rivers and rural settlement corridors.">
+            </div>
+            <figcaption class="lm-caption">
+              <span class="lm-caption-kicker">Context</span>
+              <strong>Nine unions connected by regional roads, rivers and rural settlement corridors.</strong>
+            </figcaption>
+          </figure>
+          <aside class="lm-data-panel lm-reveal">
+            <span class="lm-data-label">Urban / rural comparison</span>
+            <h3>Two settlement systems, one planning boundary.</h3>
+            <p>Switch indicators to compare the designated urban and rural areas.</p>
+            <div class="lm-toggle-group" role="group" aria-label="Urban and rural comparison metric">
+              <button class="lm-toggle" type="button" data-profile="area"       aria-pressed="true">Area</button>
+              <button class="lm-toggle" type="button" data-profile="population" aria-pressed="false">Population</button>
+              <button class="lm-toggle" type="button" data-profile="density"    aria-pressed="false">Density</button>
+              <button class="lm-toggle" type="button" data-profile="ppa"        aria-pressed="false">Density / acre</button>
+            </div>
+            <div class="lm-chart" id="lm-profile-chart" aria-live="polite"></div>
+            <p class="lm-chart-note">
+              Urban: 7.17 km² · 20,285 people · 2,828 people/km² · 7.06 people/acre<br>
+              Rural: 112.51 km² · 194,726 people · 1,731 people/km² · 4.33 people/acre
+            </p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- S4 SURVEY -->
+    <section class="lm-section lm-section--navy" id="lm-survey">
+      <div class="lm-shell">
+        <header class="lm-section-head lm-reveal">
+          <span class="lm-section-label">02 · GIS Database &amp; Survey</span>
+          <h2>Every map began in the field.</h2>
+        </header>
+        <figure class="lm-figure lm-field-hero lm-reveal">
+          <div class="lm-media">
+            <img src="../images/projects/lalmai/drone-rtk-fieldwork.jpg" alt="Drone and RTK fieldwork in Lalmai Upazila" loading="lazy" data-lightbox data-caption="Drone imagery anchored to field control.">
+          </div>
+          <figcaption class="lm-caption">
+            <span class="lm-caption-kicker">Field control</span>
+            <strong>Drone imagery anchored to field control.</strong>
+          </figcaption>
+        </figure>
+        <div class="lm-field-pair">
+          <figure class="lm-figure lm-reveal">
+            <div class="lm-media">
+              <img src="../images/projects/lalmai/bm-pillar-rtk.jpg" alt="Permanent benchmark pillar and RTK GNSS setup" loading="lazy" data-lightbox data-caption="Permanent benchmark network.">
+            </div>
+            <figcaption class="lm-caption"><span class="lm-caption-kicker">Control</span><strong>Permanent benchmark network.</strong></figcaption>
+          </figure>
+          <figure class="lm-figure lm-reveal">
+            <div class="lm-media">
+              <img src="../images/projects/lalmai/field-survey-team.jpg" alt="Field survey team verifying data" loading="lazy" data-lightbox data-caption="Ground verification before database approval.">
+            </div>
+            <figcaption class="lm-caption"><span class="lm-caption-kicker">Verification</span><strong>Ground verification before database approval.</strong></figcaption>
+          </figure>
+        </div>
+        <div class="lm-process-grid">
+          <figure class="lm-process-card lm-reveal">
+            <div class="lm-media lm-media--diagram"><img src="../images/projects/lalmai/mouza-digitization-workflow.jpg" alt="Mouza digitization workflow" loading="lazy" data-lightbox data-caption="Legacy cadastral records became a geodatabase."></div>
+            <figcaption><strong>Legacy cadastral records became a geodatabase.</strong></figcaption>
+          </figure>
+          <figure class="lm-process-card lm-reveal">
+            <div class="lm-media lm-media--diagram"><img src="../images/projects/lalmai/orthophoto-dsm-dem.jpg" alt="Orthophoto DSM and DEM workflow" loading="lazy" data-lightbox data-caption="Orthophoto → DSM → terrain intelligence."></div>
+            <figcaption><strong>Orthophoto → DSM → terrain intelligence.</strong></figcaption>
+          </figure>
+          <figure class="lm-process-card lm-reveal">
+            <div class="lm-media lm-media--diagram"><img src="../images/projects/lalmai/processing-dsm-dem-aerial.jpg" alt="Aerial image processing for DSM and DEM" loading="lazy" data-lightbox data-caption="Raw aerial captures to calibrated elevation surfaces."></div>
+            <figcaption><strong>Raw aerial captures to calibrated elevation surfaces.</strong></figcaption>
+          </figure>
+          <figure class="lm-process-card lm-reveal">
+            <div class="lm-media lm-media--diagram"><img src="../images/projects/lalmai/sample-stereo-model.jpg" alt="Sample stereo photogrammetry model" loading="lazy" data-lightbox data-caption="Stereo model quality verification."></div>
+            <figcaption><strong>Stereo model quality verification.</strong></figcaption>
+          </figure>
+        </div>
+        <figure class="lm-figure lm-survey-banner lm-reveal">
+          <div class="lm-media lm-media--wide">
+            <img src="../images/projects/lalmai/household-survey-collage.jpg" alt="Household survey fieldwork collage" loading="lazy" data-lightbox data-caption="Structured household surveys added the human layer to the spatial database.">
+          </div>
+          <figcaption class="lm-caption">
+            <span class="lm-caption-kicker">Household survey</span>
+            <strong>Structured household surveys added the human layer to the spatial database.</strong>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- S5 TOPOGRAPHIC & LAND USE -->
+    <section class="lm-section" id="lm-landuse">
+      <div class="lm-shell">
+        <header class="lm-section-head lm-reveal">
+          <span class="lm-section-label">03 · Topographic &amp; Land Use</span>
+          <h2>Terrain, settlement and land use — read at upazila scale.</h2>
+        </header>
+        <figure class="lm-figure lm-full-map lm-reveal">
+          <div class="lm-media lm-media--map">
+            <img src="../images/projects/lalmai/dem-elevation-map.jpg" alt="Digital elevation model of Lalmai Upazila" loading="lazy" data-lightbox data-caption="Elevation establishes the first boundary between buildable and flood-sensitive land.">
+          </div>
+          <figcaption class="lm-caption">
+            <span class="lm-caption-kicker">Elevation</span>
+            <strong>Elevation establishes the first boundary between buildable and flood-sensitive land.</strong>
+          </figcaption>
+        </figure>
+        <div class="lm-map-pair">
+          <figure class="lm-figure lm-reveal">
+            <div class="lm-media lm-media--map"><img src="../images/projects/lalmai/contour-map.jpg" alt="Contour map of Lalmai" loading="lazy" data-lightbox data-caption="Contour pattern."></div>
+            <figcaption class="lm-caption"><span class="lm-caption-kicker">Terrain</span><strong>Contour pattern.</strong></figcaption>
+          </figure>
+          <figure class="lm-figure lm-reveal">
+            <div class="lm-media lm-media--map"><img src="../images/projects/lalmai/structure-density-heatmap.jpg" alt="Structure-density heatmap" loading="lazy" data-lightbox data-caption="Built concentration follows roads and local centres."></div>
+            <figcaption class="lm-caption"><span class="lm-caption-kicker">Settlement</span><strong>Built concentration follows roads and local centres.</strong></figcaption>
+          </figure>
+        </div>
+        <figure class="lm-figure lm-full-map lm-reveal">
+          <div class="lm-media lm-media--map">
+            <img src="../images/projects/lalmai/generalized-landuse-map.jpg" alt="Generalized land-use map of Lalmai Upazila" loading="lazy" data-lightbox data-caption="Agriculture dominates while residential expansion stretches along the road network.">
+          </div>
+          <figcaption class="lm-caption">
+            <span class="lm-caption-kicker">Existing land use</span>
+            <strong>Agriculture dominates while residential expansion stretches along the road network.</strong>
+          </figcaption>
+        </figure>
+        <div class="lm-data-panel lm-landuse-panel lm-reveal">
+          <span class="lm-data-label">Land-use comparison</span>
+          <h3>Urban and rural Lalmai allocate land very differently.</h3>
+          <p>Percent of land within each respective zone.</p>
+          <div class="lm-toggle-group lm-landuse-controls" role="group" aria-label="Land-use chart mode">
+            <button class="lm-toggle" type="button" data-landuse="compare" aria-pressed="true">Compare</button>
+            <button class="lm-toggle" type="button" data-landuse="urban"   aria-pressed="false">Urban only</button>
+            <button class="lm-toggle" type="button" data-landuse="rural"   aria-pressed="false">Rural only</button>
+          </div>
+          <div id="lm-landuse-chart" aria-live="polite"></div>
+          <div class="lm-landuse-legend">
+            <span><i class="lm-key lm-key--urban"></i>Urban</span>
+            <span><i class="lm-key lm-key--rural"></i>Rural</span>
+          </div>
+        </div>
+        <div class="lm-subhead lm-reveal">
+          <div>
+            <span>1994 → 2024</span>
+            <h3>Thirty years of land-cover change.</h3>
+          </div>
+        </div>
+        <div class="lm-timeline lm-reveal" aria-label="Land-cover timeline">
+          <figure>
+            <img src="../images/projects/lalmai/landcover-1994.jpg" alt="Land cover map of Lalmai in 1994" loading="lazy" data-lightbox data-caption="Lalmai land-cover classification, 1994.">
+            <figcaption class="lm-timeline-year">1994</figcaption>
+          </figure>
+          <figure>
+            <img src="../images/projects/lalmai/landcover-2004.jpg" alt="Land cover map of Lalmai in 2004" loading="lazy" data-lightbox data-caption="Lalmai land-cover classification, 2004.">
+            <figcaption class="lm-timeline-year">2004</figcaption>
+          </figure>
+          <figure>
+            <img src="../images/projects/lalmai/landcover-2014.jpg" alt="Land cover map of Lalmai in 2014" loading="lazy" data-lightbox data-caption="Lalmai land-cover classification, 2014.">
+            <figcaption class="lm-timeline-year">2014</figcaption>
+          </figure>
+          <figure>
+            <img src="../images/projects/lalmai/landcover-2024.jpg" alt="Land cover map of Lalmai in 2024" loading="lazy" data-lightbox data-caption="Lalmai land-cover classification, 2024.">
+            <figcaption class="lm-timeline-year">2024</figcaption>
+          </figure>
+        </div>
+        <figure class="lm-figure lm-reveal" style="margin-top:30px">
+          <div class="lm-media lm-media--wide lm-media--chart">
+            <img src="../images/projects/lalmai/landcover-change-chart.jpg" alt="Thirty-year land-cover change chart" loading="lazy" data-lightbox data-caption="30-year land cover change — agriculture loss and urban expansion quantified.">
+          </div>
+          <figcaption class="lm-caption">
+            <span class="lm-caption-kicker">Change analysis</span>
+            <strong>30-year land cover change — agriculture loss and urban expansion quantified.</strong>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- S6 AHP / UDPI -->
+    <section class="lm-section lm-section--navy" id="lm-udpi">
+      <div class="lm-shell">
+        <header class="lm-section-head lm-reveal">
+          <span class="lm-section-label">04 · AHP–UDPI Model</span>
+          <h2>Twenty factors. One defensible growth surface.</h2>
+        </header>
+        <div class="lm-model-grid">
+          <figure class="lm-figure lm-reveal">
+            <div class="lm-media lm-media--diagram"><img src="../images/projects/lalmai/ahp-hierarchy-diagram.jpg" alt="AHP hierarchy diagram" loading="lazy" data-lightbox data-caption="AHP hierarchy linking suitability factors to future urban development potential."></div>
+            <figcaption class="lm-caption"><span class="lm-caption-kicker">AHP</span><strong>Factor hierarchy.</strong></figcaption>
+          </figure>
+          <figure class="lm-figure lm-reveal">
+            <div class="lm-media lm-media--diagram"><img src="../images/projects/lalmai/ahp-weighted-overlay-model.jpg" alt="AHP weighted-overlay model" loading="lazy" data-lightbox data-caption="Weighted overlay converts standardized GIS layers into one suitability surface."></div>
+            <figcaption class="lm-caption"><span class="lm-caption-kicker">ModelBuilder</span><strong>Weighted-overlay model.</strong></figcaption>
+          </figure>
+        </div>
+        <div class="lm-weight-panel lm-reveal" id="lm-weight-panel">
+          <span class="lm-data-label">AHP factor weights</span>
+          <div class="lm-weight-row"><span>Growth centre / market</span><div class="lm-weight-track"><div class="lm-weight-fill" data-weight="12"></div></div><strong>12%</strong></div>
+          <div class="lm-weight-row"><span>Elevation</span><div class="lm-weight-track"><div class="lm-weight-fill" data-weight="12"></div></div><strong>12%</strong></div>
+          <div class="lm-weight-row"><span>Economic pull zone</span><div class="lm-weight-track"><div class="lm-weight-fill" data-weight="11"></div></div><strong>11%</strong></div>
+          <div class="lm-weight-row"><span>Stream proximity</span><div class="lm-weight-track"><div class="lm-weight-fill" data-weight="10"></div></div><strong>10%</strong></div>
+          <div class="lm-weight-row"><span>Existing land use</span><div class="lm-weight-track"><div class="lm-weight-fill" data-weight="9"></div></div><strong>9%</strong></div>
+          <div class="lm-weight-row"><span>Road-network proximity</span><div class="lm-weight-track"><div class="lm-weight-fill" data-weight="9"></div></div><strong>9%</strong></div>
+          <div class="lm-weight-row"><span>Administrative HQ</span><div class="lm-weight-track"><div class="lm-weight-fill" data-weight="8"></div></div><strong>8%</strong></div>
+          <div class="lm-weight-row"><span>Population density</span><div class="lm-weight-track"><div class="lm-weight-fill" data-weight="5"></div></div><strong>5%</strong></div>
+          <div class="lm-weight-row"><span>Residential settlements</span><div class="lm-weight-track"><div class="lm-weight-fill" data-weight="5"></div></div><strong>5%</strong></div>
+          <div class="lm-weight-row"><span>Education facilities</span><div class="lm-weight-track"><div class="lm-weight-fill" data-weight="5"></div></div><strong>5%</strong></div>
+          <div class="lm-weight-row"><span>Electricity connections</span><div class="lm-weight-track"><div class="lm-weight-fill" data-weight="4"></div></div><strong>4%</strong></div>
+          <div class="lm-weight-row"><span>Health facilities</span><div class="lm-weight-track"><div class="lm-weight-fill" data-weight="4"></div></div><strong>4%</strong></div>
+          <div class="lm-weight-row"><span>Soil quality</span><div class="lm-weight-track"><div class="lm-weight-fill" data-weight="2"></div></div><strong>2%</strong></div>
+          <div class="lm-weight-row"><span>Slope</span><div class="lm-weight-track"><div class="lm-weight-fill" data-weight="2"></div></div><strong>2%</strong></div>
+          <div class="lm-weight-row"><span>Public open space</span><div class="lm-weight-track"><div class="lm-weight-fill" data-weight="2"></div></div><strong>2%</strong></div>
+        </div>
+
+        <!-- SIGNATURE SCROLLYTELLER -->
+        <div class="lm-scrolly">
+          <div class="lm-scrolly-intro lm-reveal">
+            <span class="lm-data-label">UDPI scenario reveal</span>
+            <h3>Suitability changes when conservation becomes non-negotiable.</h3>
+          </div>
+          <div class="lm-scrolly-layout">
+            <div class="lm-scrolly-stage lm-reveal" aria-live="polite">
+              <div class="lm-scrolly-map">
+                <img class="lm-scrolly-layer lm-active" id="lm-scrolly-image-a"
+                  src="../images/projects/lalmai/udpi-raw-output.jpg"
+                  alt="Unconstrained urban development potential map"
+                  loading="lazy" data-lightbox data-caption="Base UDPI — unconstrained suitability.">
+                <img class="lm-scrolly-layer" id="lm-scrolly-image-b"
+                  src="../images/projects/lalmai/udpi-raw-output.jpg"
+                  alt="" loading="lazy" data-lightbox data-caption="Base UDPI — unconstrained suitability.">
+              </div>
+              <div class="lm-scrolly-live">
+                <span class="lm-step-label" id="lm-live-label">Base</span>
+                <h3 id="lm-live-title">Unconstrained suitability</h3>
+                <p class="lm-scrolly-stat" id="lm-live-stat">20 weighted factors produce the initial potential surface</p>
+              </div>
+            </div>
+            <div class="lm-scrolly-steps" aria-label="UDPI scenarios">
+              <button class="lm-scrolly-step" type="button" data-step="0" aria-current="step">
+                <span class="lm-step-label">Base</span>
+                <strong>Unconstrained suitability</strong>
+                <span>20 weighted factors produce the initial potential surface.</span>
+              </button>
+              <button class="lm-scrolly-step" type="button" data-step="1" aria-current="false">
+                <span class="lm-step-label">Scenario 01</span>
+                <strong>River and canal protection</strong>
+                <span>Blue infrastructure becomes a non-negotiable planning boundary.</span>
+              </button>
+              <button class="lm-scrolly-step" type="button" data-step="2" aria-current="false">
+                <span class="lm-step-label">Scenario 02</span>
+                <strong>Multi-crop land protection</strong>
+                <span>Food-producing land removed from the developable envelope.</span>
+              </button>
+              <button class="lm-scrolly-step" type="button" data-step="3" aria-current="false">
+                <span class="lm-step-label">Final</span>
+                <strong>All conservation parameters</strong>
+                <span>56.30% of Lalmai is not suitable for urban expansion.</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="lm-post-udpi">
+          <figure class="lm-figure lm-reveal">
+            <div class="lm-media lm-media--map"><img src="../images/projects/lalmai/urban-area-demarcation-mouza.jpg" alt="Urban-area demarcation by mouza" loading="lazy" data-lightbox data-caption="Urban-area demarcation translated from suitability evidence to cadastral geography."></div>
+            <figcaption class="lm-caption"><span class="lm-caption-kicker">Demarcation</span><strong>Suitability translated to mouza-scale planning boundaries.</strong></figcaption>
+          </figure>
+          <figure class="lm-figure lm-reveal">
+            <div class="lm-media lm-media--map"><img src="../images/projects/lalmai/final-lalmai-urban-rural-demarcation.jpg" alt="Final urban and rural demarcation of Lalmai" loading="lazy" data-lightbox data-caption="Final Lalmai urban and rural demarcation."></div>
+            <figcaption class="lm-caption"><span class="lm-caption-kicker">Final boundary</span><strong>Urban and rural planning areas resolved into one framework.</strong></figcaption>
+          </figure>
+        </div>
+        <div class="lm-result lm-reveal">
+          <span>Result</span>
+          <strong>56.30% of Lalmai is classified as not suitable for future urban expansion.</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- S7 FRAMEWORK -->
+    <section class="lm-section" id="lm-framework">
+      <div class="lm-shell">
+        <header class="lm-section-head lm-reveal">
+          <span class="lm-section-label">05 · Plan Framework &amp; Vision</span>
+          <h2>From spatial evidence to a 20-year planning framework.</h2>
+        </header>
+        <div class="lm-vision lm-reveal">
+          <blockquote>"A liveable, inclusive, resilient, innovative and adaptive Lalmai Upazila."</blockquote>
+          <cite>Vision 2047</cite>
+        </div>
+        <div class="lm-plan-levels lm-reveal">
+          <article class="lm-plan-level"><span class="lm-year-small">20 years</span><strong>Structure Plan</strong></article>
+          <article class="lm-plan-level"><span class="lm-year-small">10 years</span><strong>Urban &amp; Rural Area Plans</strong></article>
+          <article class="lm-plan-level"><span class="lm-year-small">5 years</span><strong>Action Area Plans</strong></article>
+        </div>
+        <div class="lm-framework-photos">
+          <figure class="lm-figure lm-reveal">
+            <div class="lm-media lm-media--diagram"><img src="../images/projects/lalmai/masterplan-methodology.jpg" alt="Master plan methodology" loading="lazy" data-lightbox data-caption="Master plan methodology linking evidence, participation and implementation."></div>
+            <figcaption class="lm-caption"><span class="lm-caption-kicker">Method</span><strong>Evidence becomes policy through a staged planning framework.</strong></figcaption>
+          </figure>
+          <figure class="lm-figure lm-reveal">
+            <div class="lm-media"><img src="../images/projects/lalmai/pra-field-survey.jpg" alt="Participatory rural appraisal field survey" loading="lazy" data-lightbox data-caption="Participatory rural appraisal connected mapped evidence with local knowledge."></div>
+            <figcaption class="lm-caption"><span class="lm-caption-kicker">Participation</span><strong>Local knowledge tested what the maps could not see alone.</strong></figcaption>
+          </figure>
+        </div>
+        <div class="lm-subhead lm-reveal">
+          <div><span>PRA / KII</span><h3>Community evidence, visualised.</h3></div>
+        </div>
+        <div class="lm-image-grid lm-pra-grid">
+          <figure class="lm-figure lm-reveal"><div class="lm-media lm-media--chart"><img src="../images/projects/lalmai/key-findings-pra.jpg" alt="Key findings from PRA" loading="lazy" data-lightbox data-caption="Key findings synthesised from participatory rural appraisal."></div><figcaption class="lm-caption"><strong>Key PRA findings.</strong></figcaption></figure>
+          <figure class="lm-figure lm-reveal"><div class="lm-media lm-media--chart"><img src="../images/projects/lalmai/key-findings-kii.jpg" alt="Key findings from key informant interviews" loading="lazy" data-lightbox data-caption="Key findings from key informant interviews."></div><figcaption class="lm-caption"><strong>Key KII findings.</strong></figcaption></figure>
+          <figure class="lm-figure lm-reveal"><div class="lm-media lm-media--chart"><img src="../images/projects/lalmai/major-problems-pra.jpg" alt="Major problems identified through PRA" loading="lazy" data-lightbox data-caption="Major problems identified through PRA."></div><figcaption class="lm-caption"><strong>Major problems identified locally.</strong></figcaption></figure>
+          <figure class="lm-figure lm-reveal"><div class="lm-media lm-media--chart"><img src="../images/projects/lalmai/seasonal-calendar.jpg" alt="Seasonal calendar" loading="lazy" data-lightbox data-caption="Seasonal calendar linking livelihoods, climate and local constraints."></div><figcaption class="lm-caption"><strong>Seasonal calendar.</strong></figcaption></figure>
+          <figure class="lm-figure lm-reveal"><div class="lm-media lm-media--chart"><img src="../images/projects/lalmai/cause-effect-diagram.jpg" alt="Cause and effect diagram" loading="lazy" data-lightbox data-caption="Cause-effect diagram of development challenges."></div><figcaption class="lm-caption"><strong>Cause–effect relationships.</strong></figcaption></figure>
+          <figure class="lm-figure lm-reveal"><div class="lm-media lm-media--chart"><img src="../images/projects/lalmai/community-venn-diagram.jpg" alt="Community Venn diagram" loading="lazy" data-lightbox data-caption="Community Venn diagram of institutional relationships."></div><figcaption class="lm-caption"><strong>Institutional relationships.</strong></figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- S8 SECTORAL PLANS -->
+    <section class="lm-section lm-section--navy" id="lm-sectoral">
+      <div class="lm-shell">
+        <header class="lm-section-head lm-reveal">
+          <span class="lm-section-label">06 · Sectoral Plans</span>
+          <h2>Four planning decisions shaped by the spatial evidence.</h2>
+        </header>
+        <div class="lm-sector-list">
+          <article class="lm-sector">
+            <div class="lm-sector-media lm-two lm-reveal">
+              <div class="lm-media lm-media--chart"><img src="../images/projects/lalmai/population-density-progression.jpg" alt="Population-density progression" loading="lazy" data-lightbox data-caption="Projected population-density progression toward the 2047 plan horizon."></div>
+              <div class="lm-media lm-media--map"><img src="../images/projects/lalmai/agricultural-intensity-map.jpg" alt="Agricultural intensity map" loading="lazy" data-lightbox data-caption="Agricultural intensity identifies productive land that growth should avoid."></div>
+            </div>
+            <div class="lm-sector-copy lm-reveal">
+              <span class="lm-sector-code">06A · Spatial Growth</span>
+              <h3>Absorb 71% population growth without defaulting to sprawl.</h3>
+              <p>Population projections and agricultural intensity are read together: growth is directed toward spatially suitable land rather than allowed to consume productive countryside by default.</p>
+            </div>
+          </article>
+          <article class="lm-sector">
+            <div class="lm-sector-media lm-reveal">
+              <div class="lm-media lm-media--map"><img src="../images/projects/lalmai/waterbody-map.jpg" alt="Waterbody map of Lalmai Upazila" loading="lazy" data-lightbox data-caption="The river and canal system is treated as connected blue infrastructure."></div>
+            </div>
+            <div class="lm-sector-copy lm-reveal">
+              <span class="lm-sector-code">06B · Water &amp; Environment</span>
+              <h3>Treat the river–canal network as infrastructure, not leftover land.</h3>
+              <p>Water bodies operate simultaneously as drainage, ecology, flood-storage space and settlement structure.</p>
+              <p class="lm-sector-note">Only 1.76 acres of recreational land recorded across five unions.</p>
+            </div>
+          </article>
+          <article class="lm-sector">
+            <div class="lm-sector-media lm-two lm-reveal">
+              <div class="lm-media lm-media--map"><img src="../images/projects/lalmai/flood-class-map.jpg" alt="Flood-class map of Lalmai Upazila" loading="lazy" data-lightbox data-caption="Flood-class mapping exposes land with persistent inundation risk."></div>
+              <div class="lm-media lm-media--chart"><img src="../images/projects/lalmai/flood-class-chart.jpg" alt="Flood-class distribution chart" loading="lazy" data-lightbox data-caption="Flood-class distribution quantifies exposure across Lalmai."></div>
+            </div>
+            <div class="lm-sector-copy lm-reveal">
+              <span class="lm-sector-code">06C · Disaster Resilience</span>
+              <h3>Design for waterlogging and flood exposure before expansion occurs.</h3>
+              <ul class="lm-sector-points">
+                <li>Keep growth away from persistent inundation zones.</li>
+                <li>Restore blocked drainage paths.</li>
+                <li>Prioritize vulnerable settlements in emergency planning.</li>
+              </ul>
+            </div>
+          </article>
+          <article class="lm-sector">
+            <div class="lm-sector-media lm-two lm-reveal">
+              <div class="lm-media lm-media--map"><img src="../images/projects/lalmai/road-condition-map.jpg" alt="Road-condition map" loading="lazy" data-lightbox data-caption="Road condition identifies links where poor surfaces limit access."></div>
+              <div class="lm-media lm-media--map"><img src="../images/projects/lalmai/travel-time-map.jpg" alt="Travel-time map" loading="lazy" data-lightbox data-caption="Travel-time analysis exposes service-access gaps."></div>
+            </div>
+            <div class="lm-sector-copy lm-reveal">
+              <span class="lm-sector-code">06D · Transport</span>
+              <h3>Upgrade connectivity where poor roads isolate people from services.</h3>
+              <p>Road condition and travel-time evidence make accessibility a measurable planning variable rather than a generalized infrastructure goal.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- S9 SOCIO-ECONOMIC -->
+    <section class="lm-section" id="lm-socioeconomic">
+      <div class="lm-shell">
+        <header class="lm-section-head lm-reveal">
+          <span class="lm-section-label">07 · Socio-Economic Profile</span>
+          <h2>Income, livelihood and economic structure.</h2>
+        </header>
+        <p class="lm-profile-body lm-reveal">Socio-economic surveys across all 9 unions revealed a predominantly agriculture-dependent economy with emerging service and trade sectors. These findings directly shaped the Economic Development strategy in the Structure Plan.</p>
+        <div class="lm-profile-grid">
+          <figure class="lm-figure lm-reveal"><div class="lm-media lm-media--chart"><img src="../images/projects/lalmai/income-expenditure-range.jpg" alt="Income and expenditure ranges" loading="lazy" data-lightbox data-caption="Household income and expenditure ranges."></div><figcaption class="lm-caption"><strong>Income and expenditure.</strong></figcaption></figure>
+          <figure class="lm-figure lm-reveal"><div class="lm-media lm-media--chart"><img src="../images/projects/lalmai/types-of-economic-activity.jpg" alt="Types of economic activity" loading="lazy" data-lightbox data-caption="Types of economic activity across surveyed households."></div><figcaption class="lm-caption"><strong>Economic activity.</strong></figcaption></figure>
+          <figure class="lm-figure lm-reveal"><div class="lm-media lm-media--chart"><img src="../images/projects/lalmai/forward-backward-linkage.jpg" alt="Forward and backward economic linkages" loading="lazy" data-lightbox data-caption="Forward and backward linkages in Lalmai's local economy."></div><figcaption class="lm-caption"><strong>Economic linkages.</strong></figcaption></figure>
+          <figure class="lm-figure lm-reveal"><div class="lm-media lm-media--chart"><img src="../images/projects/lalmai/purpose-of-using-technology.jpg" alt="Purpose of using technology" loading="lazy" data-lightbox data-caption="Purposes for which surveyed households use technology."></div><figcaption class="lm-caption"><strong>Technology use.</strong></figcaption></figure>
+          <figure class="lm-figure lm-reveal"><div class="lm-media lm-media--chart"><img src="../images/projects/lalmai/educational-attainment.jpg" alt="Educational attainment" loading="lazy" data-lightbox data-caption="Educational attainment in surveyed households."></div><figcaption class="lm-caption"><strong>Educational attainment.</strong></figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- S10 URBAN SERVICES -->
+    <section class="lm-section lm-section--navy" id="lm-services">
+      <div class="lm-shell">
+        <header class="lm-section-head lm-reveal">
+          <span class="lm-section-label">08 · Urban Services</span>
+          <h2>Education, recreation and waste — a services gap.</h2>
+        </header>
+        <p class="lm-profile-body lm-reveal">Field surveys and service-area analysis exposed critical facility deficits: primary schools serve only portions of their intended catchments, playground access is near-zero, and solid waste disposal is largely unmanaged.</p>
+        <div class="lm-profile-grid">
+          <figure class="lm-figure lm-reveal"><div class="lm-media lm-media--map"><img src="../images/projects/lalmai/service-area-primary-schools.jpg" alt="Primary-school service-area map" loading="lazy" data-lightbox data-caption="Primary-school service areas reveal gaps in educational access."></div><figcaption class="lm-caption"><strong>Primary-school catchments.</strong></figcaption></figure>
+          <figure class="lm-figure lm-reveal"><div class="lm-media lm-media--map"><img src="../images/projects/lalmai/proximity-playground-service-zones.jpg" alt="Playground proximity service zones" loading="lazy" data-lightbox data-caption="Playground proximity and service zones."></div><figcaption class="lm-caption"><strong>Playground access.</strong></figcaption></figure>
+          <figure class="lm-figure lm-reveal"><div class="lm-media lm-media--chart"><img src="../images/projects/lalmai/reason-dissatisfaction-education.jpg" alt="Reasons for dissatisfaction with education" loading="lazy" data-lightbox data-caption="Surveyed reasons for dissatisfaction with education services."></div><figcaption class="lm-caption"><strong>Education-service dissatisfaction.</strong></figcaption></figure>
+          <figure class="lm-figure lm-reveal"><div class="lm-media lm-media--chart"><img src="../images/projects/lalmai/household-waste-dumping.jpg" alt="Household waste-dumping practices" loading="lazy" data-lightbox data-caption="Household waste-dumping practices reveal unmanaged disposal patterns."></div><figcaption class="lm-caption"><strong>Household waste disposal.</strong></figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- S11 TOOLS -->
+    <section class="lm-section" id="lm-tools">
+      <div class="lm-shell">
+        <header class="lm-section-head lm-reveal">
+          <span class="lm-section-label">09 · Tools Used</span>
+          <h2>The planning stack.</h2>
+        </header>
+        <div class="lm-tools lm-reveal" aria-label="Tools and methods used">
+          <span>ArcGIS Pro</span><span>ArcMap</span><span>ModelBuilder</span><span>Spatial Analyst</span>
+          <span>Network Analyst</span><span>AHP</span><span>MCDA</span><span>Weighted Overlay</span>
+          <span>RTK-GNSS</span><span>Drone Photogrammetry</span><span>DEM / DSM</span><span>KoboToolbox</span>
+          <span>Geodatabase Design</span><span>Land-use Survey</span><span>PRA / KII</span><span>Adobe Illustrator</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER NAV -->
+    <nav class="lm-footer-nav" aria-label="Project navigation">
+      <a href="../index.html#projects"><span>← Back</span><strong>Portfolio projects</strong></a>
+      <a href="../index.html#contact"><span>Next →</span><strong>Start a conversation</strong></a>
+    </nav>
+  </main>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" role="dialog" aria-modal="true" aria-label="Expanded project image">
+    <button class="lb-close" type="button" aria-label="Close image">×</button>
+    <img src="" alt="">
+    <p class="lb-cap"></p>
+  </div>
+
+  <!-- BACK TO TOP -->
+  <button class="lm-back-top" type="button" aria-label="Back to top">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg>
+  </button>
+
+  <script>
+  (() => {
+    'use strict';
+
+    const RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const IO = 'IntersectionObserver' in window;
+
+    /* =====================================================
+       FIX 4: Mobile nav — guarded so shared script.js
+       (which also handles .menu-toggle) doesn't double-bind.
+       We use a data attribute as a one-time flag.
+       ===================================================== */
+    const menuToggle = document.querySelector('.menu-toggle');
+    if (menuToggle && !menuToggle.dataset.navInit) {
+      menuToggle.dataset.navInit = '1';
+      menuToggle.setAttribute('aria-expanded', 'false');
+      menuToggle.addEventListener('click', () => {
+        const open = document.body.classList.toggle('nav-open');
+        menuToggle.setAttribute('aria-expanded', String(open));
+      });
+      document.querySelectorAll('.nav-links a').forEach(link => {
+        link.addEventListener('click', () => {
+          document.body.classList.remove('nav-open');
+          menuToggle.setAttribute('aria-expanded', 'false');
+        });
+      });
+    }
+
+    /* =====================================================
+       Graceful image failure
+       ===================================================== */
+    document.querySelectorAll('.lm-case img').forEach(img => {
+      const fail = () => { const m = img.closest('.lm-media'); if (m) m.classList.add('lm-missing'); };
+      img.addEventListener('error', fail);
+      if (img.complete && img.naturalWidth === 0) fail();
+    });
+
+    /* =====================================================
+       Reveal on intersection
+       ===================================================== */
+    const revealItems = document.querySelectorAll('.lm-reveal');
+    if (RM || !IO) {
+      revealItems.forEach(el => el.classList.add('lm-visible'));
+    } else {
+      const ro = new IntersectionObserver((entries, obs) => {
+        entries.forEach(e => { if (!e.isIntersecting) return; e.target.classList.add('lm-visible'); obs.unobserve(e.target); });
+      }, { threshold: 0.12, rootMargin: '0px 0px -7% 0px' });
+      revealItems.forEach(el => ro.observe(el));
+    }
+
+    /* =====================================================
+       Animated counters
+       ===================================================== */
+    const fmt = (v, d) => Number(v).toLocaleString('en-GB', { minimumFractionDigits: d, maximumFractionDigits: d });
+    const finishCounter = el => {
+      const t = Number(el.dataset.counter), d = Number(el.dataset.decimals || 0);
+      el.textContent = (el.dataset.prefix || '') + fmt(t, d) + (el.dataset.suffix || '');
+    };
+    const animateCounter = el => {
+      if (el.dataset.counted) return;
+      el.dataset.counted = '1';
+      if (RM) { finishCounter(el); return; }
+      const t = Number(el.dataset.counter), d = Number(el.dataset.decimals || 0);
+      const prefix = el.dataset.prefix || '', suffix = el.dataset.suffix || '';
+      const start = performance.now();
+      const tick = now => {
+        const p = Math.min((now - start) / 1500, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = prefix + fmt(t * eased, d) + suffix;
+        if (p < 1) requestAnimationFrame(tick); else finishCounter(el);
+      };
+      requestAnimationFrame(tick);
+    };
+    const counters = document.querySelectorAll('[data-counter]');
+    if (!IO) { counters.forEach(animateCounter); }
+    else {
+      const co = new IntersectionObserver((entries, obs) => {
+        entries.forEach(e => { if (!e.isIntersecting) return; animateCounter(e.target); obs.unobserve(e.target); });
+      }, { threshold: 0.5 });
+      counters.forEach(el => co.observe(el));
+    }
+
+    /* =====================================================
+       Urban / rural profile chart
+       ===================================================== */
+    const profileData = {
+      area:       { unit: 'km²',         decimals: 2, rows: [['Urban area', 7.17], ['Rural area', 112.51]] },
+      population: { unit: 'people',       decimals: 0, rows: [['Urban population', 20285], ['Rural population', 194726]] },
+      density:    { unit: 'people/km²',   decimals: 0, rows: [['Urban density', 2828], ['Rural density', 1731]] },
+      ppa:        { unit: 'people/acre',  decimals: 2, rows: [['Urban density', 7.06], ['Rural density', 4.33]] }
+    };
+    const profileChart = document.getElementById('lm-profile-chart');
+    const profileBtns  = document.querySelectorAll('[data-profile]');
+    const renderProfile = key => {
+      if (!profileChart) return;
+      const m = profileData[key], max = Math.max(...m.rows.map(r => r[1]));
+      profileChart.innerHTML = m.rows.map(([label, value]) => {
+        const w = max ? value / max * 100 : 0;
+        const fv = value.toLocaleString('en-GB', { minimumFractionDigits: m.decimals, maximumFractionDigits: m.decimals });
+        return `<div class="lm-compare-row">
+          <div class="lm-compare-meta"><span>${label}</span><strong>${fv} ${m.unit}</strong></div>
+          <div class="lm-bar-track" aria-hidden="true">
+            <div class="lm-bar-fill" style="width:${RM ? w : 0}%" data-width="${w}"></div>
+          </div></div>`;
+      }).join('');
+      if (!RM) requestAnimationFrame(() => {
+        profileChart.querySelectorAll('.lm-bar-fill').forEach(b => { b.style.width = b.dataset.width + '%'; });
+      });
+    };
+    profileBtns.forEach(btn => btn.addEventListener('click', () => {
+      profileBtns.forEach(b => b.setAttribute('aria-pressed', 'false'));
+      btn.setAttribute('aria-pressed', 'true');
+      renderProfile(btn.dataset.profile);
+    }));
+    renderProfile('area');
+
+    /* =====================================================
+       Land-use comparison chart
+       ===================================================== */
+    const urbanLU = { Residential:38.3, Commercial:4.4, 'Mixed-use':7.3, Education:4.5, Recreation:0.5, Agriculture:17.8, Waterbody:8.5, Vacant:17.7, Other:1 };
+    const ruralLU = { Residential:9.6, Agriculture:55.9, Waterbody:8.6, Vacant:11.9, Forest:4.7, Other:9.3 };
+    const luCats  = ['Residential','Commercial','Mixed-use','Education','Recreation','Agriculture','Waterbody','Vacant','Forest','Other'];
+    const luChart  = document.getElementById('lm-landuse-chart');
+    const luBtns   = document.querySelectorAll('[data-landuse]');
+    const renderLU = mode => {
+      if (!luChart) return;
+      const MAX = 55.9;
+      luChart.innerHTML = luCats.map(cat => {
+        const u = urbanLU[cat], r = ruralLU[cat];
+        const showU = mode !== 'rural', showR = mode !== 'urban';
+        if (mode === 'urban' && u == null) return '';
+        if (mode === 'rural' && r == null) return '';
+        const uw = u != null ? (u / MAX) * 100 : 0;
+        const rw = r != null ? (r / MAX) * 100 : 0;
+        const val = mode === 'compare'
+          ? `${u != null ? u+'%' : '—'} / ${r != null ? r+'%' : '—'}`
+          : mode === 'urban' ? `${u}%` : `${r}%`;
+        return `<div class="lm-landuse-row">
+          <span class="lm-landuse-name">${cat}</span>
+          <div class="lm-landuse-bars">
+            ${showU && u != null ? `<div class="lm-landuse-track" aria-label="${cat} urban ${u}%"><div class="lm-landuse-fill lm-landuse-fill--urban" style="width:${RM?uw:0}%" data-width="${uw}"></div></div>` : ''}
+            ${showR && r != null ? `<div class="lm-landuse-track" aria-label="${cat} rural ${r}%"><div class="lm-landuse-fill lm-landuse-fill--rural" style="width:${RM?rw:0}%" data-width="${rw}"></div></div>` : ''}
+          </div>
+          <span class="lm-landuse-value">${val}</span></div>`;
+      }).join('');
+      if (!RM) requestAnimationFrame(() => {
+        luChart.querySelectorAll('.lm-landuse-fill').forEach(b => { b.style.width = b.dataset.width + '%'; });
+      });
+    };
+    luBtns.forEach(btn => btn.addEventListener('click', () => {
+      luBtns.forEach(b => b.setAttribute('aria-pressed', 'false'));
+      btn.setAttribute('aria-pressed', 'true');
+      renderLU(btn.dataset.landuse);
+    }));
+    renderLU('compare');
+
+    /* =====================================================
+       AHP weight bars — animate on viewport entry
+       ===================================================== */
+    const weightPanel = document.getElementById('lm-weight-panel');
+    const showWeights = () => document.querySelectorAll('.lm-weight-fill').forEach(b => { b.style.width = b.dataset.weight + '%'; });
+    if (weightPanel) {
+      if (RM || !IO) { showWeights(); }
+      else {
+        const wo = new IntersectionObserver((entries, obs) => {
+          if (!entries.some(e => e.isIntersecting)) return;
+          showWeights(); obs.disconnect();
+        }, { threshold: 0.3 });
+        wo.observe(weightPanel);
+      }
+    }
+
+    /* =====================================================
+       UDPI Scrollyteller — FIX 3: looser rootMargin for mobile
+       ===================================================== */
+    const scenarios = [
+      { label:'Base',        title:'Unconstrained suitability',    stat:'20 weighted factors produce the initial potential surface',   image:'../images/projects/lalmai/udpi-raw-output.jpg',        alt:'Unconstrained UDPI map',                        caption:'Base UDPI — unconstrained suitability.' },
+      { label:'Scenario 01', title:'River and canal protection',   stat:'Blue infrastructure becomes a non-negotiable planning boundary', image:'../images/projects/lalmai/scenario1-river-canal.jpg', alt:'UDPI with river and canal restrictions',          caption:'Scenario 01 — river and canal protection.' },
+      { label:'Scenario 02', title:'Multi-crop land protection',   stat:'Food-producing land removed from the developable envelope',  image:'../images/projects/lalmai/scenario2-multicrop.jpg',    alt:'UDPI with multi-crop agricultural land protected', caption:'Scenario 02 — multi-crop land protection.' },
+      { label:'Final',       title:'All conservation parameters',  stat:'56.30% of Lalmai is not suitable for urban expansion',       image:'../images/projects/lalmai/udpi-final-scenario4.jpg',   alt:'Final conservation-constrained UDPI map',         caption:'Final UDPI — all conservation parameters.' }
+    ];
+    const steps     = [...document.querySelectorAll('.lm-scrolly-step')];
+    const layerA    = document.getElementById('lm-scrolly-image-a');
+    const layerB    = document.getElementById('lm-scrolly-image-b');
+    const liveLabel = document.getElementById('lm-live-label');
+    const liveTitle = document.getElementById('lm-live-title');
+    const liveStat  = document.getElementById('lm-live-stat');
+    let current = 0, front = layerA, back = layerB, typeRAF = 0;
+
+    const typeText = (el, text) => {
+      cancelAnimationFrame(typeRAF);
+      if (RM) { el.textContent = text; return; }
+      el.textContent = '';
+      const dur = Math.min(800, Math.max(320, text.length * 17));
+      const t0 = performance.now();
+      const tick = now => {
+        const p = Math.min((now - t0) / dur, 1);
+        el.textContent = text.slice(0, Math.max(1, Math.floor(text.length * p)));
+        if (p < 1) typeRAF = requestAnimationFrame(tick);
+      };
+      typeRAF = requestAnimationFrame(tick);
+    };
+
+    const activateScenario = idx => {
+      if (!scenarios[idx]) return;
+      const s = scenarios[idx];
+      current = idx;
+      steps.forEach((st, i) => st.setAttribute('aria-current', i === idx ? 'step' : 'false'));
+      liveLabel.textContent = s.label;
+      liveTitle.textContent = s.title;
+      typeText(liveStat, s.stat);
+      if (!front || !back) return;
+      back.src = s.image; back.alt = s.alt; back.dataset.caption = s.caption;
+      const reveal = () => {
+        back.classList.add('lm-active'); front.classList.remove('lm-active');
+        [front, back] = [back, front];
+      };
+      back.complete ? reveal() : back.addEventListener('load', reveal, { once:true });
+      back.addEventListener('error', reveal, { once:true });
+    };
+
+    steps.forEach((st, i) => {
+      st.addEventListener('click',  () => activateScenario(i));
+      st.addEventListener('focus',  () => activateScenario(i));
+    });
+
+    if (IO && steps.length) {
+      /* FIX 3: Wider rootMargin so steps activate reliably on short mobile screens */
+      const so = new IntersectionObserver(entries => {
+        const visible = entries.filter(e => e.isIntersecting).sort((a,b) => b.intersectionRatio - a.intersectionRatio);
+        if (!visible.length) return;
+        const idx = Number(visible[0].target.dataset.step);
+        if (idx !== current) activateScenario(idx);
+      }, { threshold: [0.3, 0.5, 0.7], rootMargin: '-10% 0px -20% 0px' });
+      steps.forEach(st => so.observe(st));
+    }
+
+    /* =====================================================
+       Lightbox
+       ===================================================== */
+    const lb     = document.querySelector('.lightbox');
+    const lbImg  = lb?.querySelector('img');
+    const lbCap  = lb?.querySelector('.lb-cap');
+    const lbClose= lb?.querySelector('.lb-close');
+    let prevFocus= null;
+
+    const openLB = trigger => {
+      if (!lb || !lbImg || !lbCap) return;
+      const src = trigger.currentSrc || trigger.src;
+      if (!src) return;
+      prevFocus = document.activeElement;
+      lbImg.src = src; lbImg.alt = trigger.alt || '';
+      lbCap.textContent = trigger.dataset.caption || '';
+      lb.classList.add('open');
+      document.body.classList.add('lm-lock');
+      lbClose?.focus();
+    };
+    const closeLB = () => {
+      if (!lb) return;
+      lb.classList.remove('open');
+      document.body.classList.remove('lm-lock');
+      if (lbImg) { lbImg.src = ''; lbImg.alt = ''; }
+      prevFocus?.focus?.();
+    };
+
+    document.querySelectorAll('.lm-case img[data-lightbox]').forEach(img => {
+      img.tabIndex = 0;
+      img.setAttribute('role', 'button');
+      img.setAttribute('aria-label', (img.alt || 'Project image') + ' — open enlarged');
+      img.addEventListener('click', () => openLB(img));
+      img.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openLB(img); } });
+    });
+    lbClose?.addEventListener('click', closeLB);
+    lb?.addEventListener('click', e => { if (e.target === lb) closeLB(); });
+    lbImg?.addEventListener('click', e => e.stopPropagation());
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && lb?.classList.contains('open')) closeLB(); });
+
+    /* =====================================================
+       Back to top
+       ===================================================== */
+    const backTop = document.querySelector('.lm-back-top');
+    const updateBT = () => backTop?.classList.toggle('lm-show', window.scrollY > 300);
+    window.addEventListener('scroll', updateBT, { passive: true });
+    updateBT();
+    backTop?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: RM ? 'auto' : 'smooth' }));
+
+  })();
+  </script>
+</body>
+</html>
