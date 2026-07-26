@@ -1,0 +1,1051 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Bachelor's thesis research dossier by Tanzim Al Noor: GeoAI and machine-learning digital soil carbon mapping across Khulna District, Bangladesh.">
+  <title>Predicting Soil Carbon from Space — Tanzim Al Noor</title>
+
+  <!-- FIX 1: Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../styles.css">
+
+  <style>
+    :root {
+      --th-navy: #0a1628;
+      --th-navy-2: #0d1c31;
+      --th-navy-3: #12243c;
+      --th-navy-4: #182e4a;
+      --th-amber: #c8803a;
+      --th-amber-bright: #df9a52;
+      --th-amber-dark: #8d5425;
+      --th-green: #2d6a4f;
+      --th-green-bright: #4f9c76;
+      --th-yellow: #f4d03f;
+      --th-offwhite: #e8e4dc;
+      --th-parchment: #f5f0e8;
+      --th-ink: #142134;
+      --th-muted: #9da8b8;
+      --th-muted-dark: #637083;
+      --th-steel: #587b9d;
+      --th-blue: #3a78a8;
+      --th-grey: #7d8389;
+      --th-border-dark: rgba(232,228,220,.15);
+      --th-border-light: rgba(10,22,40,.14);
+      --th-shadow: 0 24px 70px rgba(0,0,0,.22);
+      --th-radius: 18px;
+      --th-radius-sm: 10px;
+      --th-max: 1280px;
+      --th-ease: cubic-bezier(.2,.7,.2,1);
+    }
+
+    *,*::before,*::after{box-sizing:border-box}
+    html{scroll-behavior:smooth;background:var(--th-navy)}
+    body{margin:0;overflow-x:hidden;color:var(--th-offwhite);background:var(--th-navy);font-family:"Inter",system-ui,sans-serif;line-height:1.65}
+    body.th-lock{overflow:hidden}
+    .th-page{overflow:clip;background:var(--th-navy)}
+    .th-page a{color:inherit}
+
+    .th-section{position:relative;padding:86px 20px}
+    .th-section--dark{color:var(--th-offwhite);background:var(--th-navy)}
+    .th-section--dark-alt{color:var(--th-offwhite);background:var(--th-navy-2)}
+    .th-section--light{color:var(--th-ink);background:var(--th-parchment)}
+    .th-container{width:min(100%,var(--th-max));margin-inline:auto}
+
+    .th-section-label{display:inline-flex;gap:10px;align-items:center;margin:0 0 16px;color:var(--th-amber);font:700 .76rem/1.4 "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase}
+    .th-section-label::before{width:28px;height:1px;content:"";background:currentColor}
+    .th-heading{max-width:920px;margin:0;font:700 clamp(2.25rem,6vw,4.9rem)/.98 "Fraunces",serif;letter-spacing:-.045em;text-wrap:balance}
+    .th-section--light .th-heading{color:var(--th-navy)}
+    .th-lead{max-width:860px;margin:24px 0 0;color:var(--th-muted);font-size:clamp(1rem,2vw,1.15rem)}
+    .th-section--light .th-lead{color:#475469}
+    .th-mono{font-family:"JetBrains Mono",monospace}
+
+    .th-reveal{opacity:0;transform:translateY(24px);transition:opacity .8s var(--th-ease),transform .8s var(--th-ease)}
+    .th-reveal.th-visible{opacity:1;transform:none}
+    .th-kicker{color:var(--th-amber);font:700 .77rem/1.4 "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase}
+
+    .th-panel{border:1px solid var(--th-border-dark);border-radius:var(--th-radius);background:rgba(255,255,255,.035)}
+    .th-section--light .th-panel{border-color:var(--th-border-light);background:#fffaf2}
+
+    .th-figure{position:relative;margin:0;overflow:hidden;border-radius:var(--th-radius);background:var(--th-navy-3);box-shadow:var(--th-shadow)}
+    .th-figure img,.th-card-image img{display:block;width:100%;height:100%;object-fit:cover}
+    .th-figure img[data-lightbox],.th-card-image img[data-lightbox]{cursor:zoom-in}
+    .th-figure--contain img{object-fit:contain;background:#07111f}
+
+    .th-img-fallback{display:grid;width:100%;min-height:220px;place-items:center;padding:30px;color:var(--th-muted);background:linear-gradient(135deg,rgba(200,128,58,.07),transparent 50%),var(--th-navy-3);font:600 .76rem/1.7 "JetBrains Mono",monospace;letter-spacing:.04em;text-align:center}
+    .th-figure figcaption{padding:14px 16px 16px;color:#bbc3ce;background:#101f34;font-size:.83rem}
+    .th-section--light .th-figure figcaption{color:#c6cbd3}
+
+    /* HERO */
+    .th-hero{position:relative;display:flex;min-height:100svh;align-items:stretch;overflow:hidden;background:var(--th-navy);isolation:isolate}
+    .th-hero-bg{position:absolute;z-index:-3;inset:0;width:100%;height:100%;object-fit:cover}
+    .th-hero-bg-fallback{position:absolute;z-index:-4;inset:0;display:grid;place-items:center;color:rgba(232,228,220,.3);background:var(--th-navy);font:600 .72rem/1.5 "JetBrains Mono",monospace;letter-spacing:.1em}
+    .th-hero::before{position:absolute;z-index:-2;inset:0;content:"";background:linear-gradient(90deg,rgba(10,22,40,.94) 0%,rgba(10,22,40,.88) 45%,rgba(10,22,40,.60) 100%)}
+    .th-hero::after{position:absolute;z-index:-1;inset:auto 0 0;height:36%;content:"";background:linear-gradient(0deg,var(--th-navy) 0%,transparent 100%);pointer-events:none}
+    .th-hero-inner{display:flex;width:min(100%,var(--th-max));min-height:100svh;margin-inline:auto;padding:130px 20px 78px;flex-direction:column;justify-content:center}
+    .th-hero-copy{max-width:1020px}
+    .th-hero-eyebrow{margin-bottom:22px;color:var(--th-amber-bright);font:700 .76rem/1.5 "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase}
+    .th-hero h1{max-width:1000px;margin:0;color:#fffaf2;font:700 clamp(3.5rem,12vw,7rem)/.88 "Fraunces",serif;letter-spacing:-.065em;text-wrap:balance}
+    .th-hero-subhead{max-width:930px;margin:28px 0 0;color:rgba(232,228,220,.86);font-size:clamp(1rem,2.2vw,1.28rem);line-height:1.72}
+    .th-chip-row{display:flex;margin-top:30px;flex-wrap:wrap;gap:9px}
+    .th-chip{padding:8px 11px;border:1px solid rgba(200,128,58,.68);border-radius:999px;color:#e7b47d;background:rgba(10,22,40,.5);font:650 .7rem/1.2 "JetBrains Mono",monospace}
+
+    /* FIX: badge top adjusted to clear sticky nav */
+    .th-published-badge{position:absolute;z-index:2;top:80px;right:20px;max-width:270px;padding:10px 13px;border:1px solid rgba(200,128,58,.4);border-radius:999px;color:#e3bb8f;background:rgba(10,22,40,.7);backdrop-filter:blur(10px);font:600 .65rem/1.5 "JetBrains Mono",monospace}
+
+    .th-hero-bottom{position:absolute;z-index:3;right:20px;bottom:22px;left:20px;display:flex;max-width:var(--th-max);margin-inline:auto;flex-direction:column;gap:14px;color:#aeb8c6;font:500 .67rem/1.6 "JetBrains Mono",monospace}
+    .th-scroll-link{display:inline-flex;align-items:center;gap:8px;color:var(--th-amber-bright);text-decoration:none}
+
+    /* IDENTITY STRIP */
+    .th-identity{padding:0;border-block:1px solid rgba(255,255,255,.08);background:var(--th-navy-2)}
+    .th-identity-grid{display:grid;width:min(100%,var(--th-max));margin-inline:auto;grid-template-columns:1fr}
+    .th-identity-item{padding:17px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .th-identity-key{display:block;margin-bottom:5px;color:#78879a;font:600 .64rem/1.3 "JetBrains Mono",monospace;letter-spacing:.09em;text-transform:uppercase}
+    .th-identity-value{display:block;color:var(--th-offwhite);font:550 .72rem/1.55 "JetBrains Mono",monospace}
+
+    /* PROBLEM */
+    .th-problem-grid{display:grid;margin-top:42px;gap:16px}
+    .th-problem-card{padding:28px;border-left:3px solid var(--th-amber);border-radius:0 var(--th-radius) var(--th-radius) 0;color:var(--th-offwhite);background:var(--th-navy);box-shadow:0 12px 30px rgba(10,22,40,.13)}
+    .th-problem-card h3{margin:0 0 12px;color:#fff8ed;font:650 1.48rem/1.1 "Fraunces",serif}
+    .th-problem-card p{margin:0;color:#b9c2cd;font-size:.93rem}
+    .th-pullquote{max-width:1060px;margin:58px auto 0;padding:4px 0;color:var(--th-amber-dark);font:italic 600 clamp(1.6rem,4.5vw,3.1rem)/1.24 "Fraunces",serif;text-align:center;text-wrap:balance}
+
+    /* STUDY AREA */
+    .th-study-grid{display:grid;margin-top:42px;gap:24px}
+    .th-study-map{min-height:460px}
+    .th-study-map img{min-height:430px;object-fit:contain}
+    .th-facts{display:grid;gap:10px}
+    .th-fact{padding:19px 20px;border:1px solid var(--th-border-dark);border-radius:12px;background:rgba(255,255,255,.035)}
+    .th-fact strong{display:block;color:var(--th-yellow);font:650 clamp(1.25rem,3vw,2rem)/1 "JetBrains Mono",monospace}
+    .th-fact span{display:block;margin-top:7px;color:#9faaba;font-size:.79rem;line-height:1.55}
+    .th-context{max-width:1080px;margin:30px 0 0;color:#adb7c5;font-size:1rem}
+
+    /* COVARIATES */
+    .th-variable-grid{display:grid;margin-top:40px;gap:16px}
+    .th-variable-card{overflow:hidden;border:1px solid var(--th-border-light);border-radius:var(--th-radius);background:#fffaf2;box-shadow:0 14px 32px rgba(10,22,40,.08);transition:transform .25s var(--th-ease),box-shadow .25s var(--th-ease),border-color .25s var(--th-ease)}
+    .th-variable-card:hover{transform:translateY(-4px);border-color:rgba(200,128,58,.55);box-shadow:0 20px 40px rgba(10,22,40,.13)}
+    .th-card-image{position:relative;aspect-ratio:4/3;overflow:hidden;background:var(--th-navy)}
+    .th-card-image img{object-fit:contain}
+    .th-variable-body{padding:20px}
+    .th-variable-body h3{margin:0;color:var(--th-navy);font:700 1.75rem/1.05 "Fraunces",serif}
+    .th-variable-type{margin-top:7px;color:#6c7686;font:600 .66rem/1.5 "JetBrains Mono",monospace}
+    .th-variable-stats{display:flex;margin-top:15px;gap:16px;color:var(--th-amber-dark);font:700 .72rem/1.4 "JetBrains Mono",monospace}
+    .th-variable-body p{margin:14px 0 0;color:#4b5667;font-size:.88rem}
+    .th-correlation{margin-top:30px}
+    .th-correlation img{aspect-ratio:16/9;object-fit:contain}
+
+    /* PIPELINE */
+    .th-pipeline{position:relative;max-width:980px;margin:50px auto 0;padding-left:38px}
+    .th-pipeline::before{position:absolute;top:16px;bottom:16px;left:11px;width:2px;content:"";background:linear-gradient(var(--th-amber),rgba(200,128,58,.14))}
+    .th-pipeline-step{position:relative;padding:0 0 40px 14px}
+    .th-pipeline-step::before{position:absolute;top:7px;left:-34px;width:14px;height:14px;border:3px solid var(--th-navy);border-radius:50%;content:"";background:var(--th-amber);box-shadow:0 0 0 1px var(--th-amber)}
+    .th-pipeline-num{color:var(--th-amber);font:700 .75rem/1 "JetBrains Mono",monospace}
+    .th-pipeline-step h3{margin:8px 0 10px;color:#fbf6ee;font:650 clamp(1.45rem,3vw,2.15rem)/1.08 "Fraunces",serif}
+    .th-pipeline-step p{max-width:800px;margin:0;color:#aeb8c5;font-size:.92rem}
+    .th-method-figure{margin-top:22px}
+    .th-method-figure img{max-height:760px;object-fit:contain}
+
+    /* MODEL SHOOTOUT */
+    .th-model-layout{display:grid;margin-top:40px;gap:22px}
+    .th-table-wrap{overflow-x:auto;border:1px solid var(--th-border-light);border-radius:var(--th-radius);background:#fffaf2}
+    .th-model-table,.th-upazila-table,.th-sensitivity-table{width:100%;border-collapse:collapse;min-width:760px;font-size:.82rem}
+    .th-model-table th,.th-model-table td,.th-upazila-table th,.th-upazila-table td,.th-sensitivity-table th,.th-sensitivity-table td{padding:14px 13px;border-bottom:1px solid rgba(10,22,40,.1);text-align:left}
+    .th-model-table th,.th-upazila-table th,.th-sensitivity-table th{color:#6c7581;background:#eee8de;font:700 .65rem/1.3 "JetBrains Mono",monospace;letter-spacing:.05em;text-transform:uppercase}
+    .th-model-table td:nth-child(n+3):nth-child(-n+6),.th-upazila-table td:nth-child(2),.th-sensitivity-table td:not(:first-child){font-family:"JetBrains Mono",monospace}
+    .th-model-row,.th-upazila-row{cursor:pointer;transition:background .2s ease,color .2s ease}
+    .th-model-row:hover,.th-upazila-row:hover{background:rgba(200,128,58,.07)}
+    .th-model-row.th-active{color:#fff8eb;background:var(--th-amber-dark)}
+    .th-model-button{padding:0;border:0;color:inherit;background:transparent;font:inherit;cursor:pointer;text-align:left}
+    .th-model-preview{align-self:start;overflow:hidden;border-radius:var(--th-radius);background:var(--th-navy);box-shadow:var(--th-shadow)}
+    .th-model-preview img{display:block;width:100%;aspect-ratio:4/3;object-fit:contain;background:#07111f}
+    .th-model-preview-copy{padding:18px;color:#c6ced8}
+    .th-model-preview-copy strong{display:block;color:var(--th-yellow);font:650 .78rem/1.5 "JetBrains Mono",monospace}
+    .th-model-preview-copy span{display:block;margin-top:6px;font-size:.82rem}
+
+    .th-r2-chart{display:grid;max-width:980px;margin-top:42px;gap:14px}
+    .th-bar-row{display:grid;grid-template-columns:minmax(90px,170px) 1fr 62px;align-items:center;gap:12px}
+    .th-bar-label,.th-bar-value{font:650 .7rem/1.3 "JetBrains Mono",monospace}
+    .th-bar-track{height:12px;overflow:hidden;border-radius:999px;background:#d9d5cf}
+    .th-bar-fill{width:0;height:100%;border-radius:inherit;background:var(--th-navy-3);transition:width 1.1s var(--th-ease)}
+    .th-bar-fill--amber{background:var(--th-amber)}
+    .th-bar-animate.th-visible .th-bar-fill{width:var(--th-target)}
+    .th-formula{max-width:730px;margin:38px 0 0;padding:20px 22px;overflow-x:auto;border-left:3px solid var(--th-amber);color:#f8e7d1;background:var(--th-navy);font:700 clamp(.77rem,2vw,1rem)/1.6 "JetBrains Mono",monospace}
+
+    /* FEATURE IMPORTANCE */
+    .th-two-figure{display:grid;margin-top:40px;gap:18px}
+    .th-feature-bars{display:grid;max-width:940px;margin-top:40px;gap:11px}
+    .th-feature-bar{display:grid;grid-template-columns:130px 1fr 64px;align-items:center;gap:10px}
+    .th-feature-name,.th-feature-value{color:#b8c1cc;font:650 .7rem/1.4 "JetBrains Mono",monospace}
+    .th-feature-track{height:10px;overflow:hidden;border-radius:999px;background:rgba(255,255,255,.08)}
+    .th-feature-fill{width:0;height:100%;border-radius:inherit;background:#8a7461;transition:width 1.15s var(--th-ease)}
+    .th-feature-fill--amber{background:var(--th-amber)}
+    .th-feature-fill--green{background:var(--th-green-bright)}
+    .th-feature-fill--steel{background:var(--th-steel)}
+    .th-feature-fill--amber-muted{background:#9b7049}
+    .th-feature-animate.th-visible .th-feature-fill{width:var(--th-target)}
+    .th-insight-grid{display:grid;margin-top:42px;gap:16px}
+    .th-insight{padding:22px;border-left:3px solid var(--th-amber);background:rgba(255,255,255,.035)}
+    .th-insight h3{margin:0 0 9px;font:650 1.25rem/1.1 "Fraunces",serif}
+    .th-insight p{margin:0;color:#aeb8c5;font-size:.86rem}
+    .th-importance-gallery{display:flex;margin-top:26px;overflow-x:auto;gap:16px;scroll-snap-type:x mandatory;scrollbar-color:var(--th-amber) var(--th-navy-3)}
+    .th-importance-gallery .th-figure{min-width:min(88vw,520px);scroll-snap-align:start}
+    .th-importance-gallery img{aspect-ratio:4/3;object-fit:contain}
+
+    /* SPATIAL MAPS */
+    .th-map-grid{display:flex;margin-top:40px;overflow-x:auto;gap:16px;scroll-snap-type:x mandatory}
+    .th-map-card{min-width:min(86vw,420px);overflow:hidden;border:1px solid var(--th-border-light);border-radius:var(--th-radius);background:#fffaf2;scroll-snap-align:start}
+    .th-map-card img{display:block;width:100%;aspect-ratio:4/3;object-fit:contain;background:var(--th-navy);cursor:zoom-in}
+    .th-map-card-body{padding:18px}
+    .th-map-card h3{margin:0;color:var(--th-navy);font:700 1.55rem/1.05 "Fraunces",serif}
+    .th-map-r2{display:block;margin-top:7px;color:var(--th-amber-dark);font:700 .72rem/1.4 "JetBrains Mono",monospace}
+    .th-map-card p{margin:10px 0 0;color:#596476;font-size:.82rem}
+    .th-rf-map{position:relative;margin-top:30px}
+    .th-rf-map img{max-height:820px;object-fit:contain}
+    .th-rf-caption{position:absolute;right:0;bottom:0;left:0;padding:14px 18px;color:#efe8dd;background:rgba(10,22,40,.88);font:600 .68rem/1.55 "JetBrains Mono",monospace;backdrop-filter:blur(8px)}
+    .th-upazila-wrap{margin-top:34px}
+    .th-upazila-row.th-active{background:rgba(200,128,58,.16);box-shadow:inset 3px 0 0 var(--th-amber)}
+    .th-upazila-map{margin-top:26px}
+    .th-upazila-map img{max-height:840px;object-fit:contain}
+
+    /* LAND COVER */
+    .th-land-chart{display:grid;max-width:1000px;margin-top:42px;gap:15px}
+    .th-land-row{display:grid;grid-template-columns:145px 1fr 56px;align-items:center;gap:12px}
+    .th-land-label,.th-land-value{color:#bcc5cf;font:650 .69rem/1.35 "JetBrains Mono",monospace}
+    .th-land-track{height:20px;overflow:hidden;border-radius:4px;background:rgba(255,255,255,.065)}
+    .th-land-fill{width:0;height:100%;transition:width 1.2s var(--th-ease)}
+    .th-land-animate.th-visible .th-land-fill{width:var(--th-target)}
+    .th-lf-green{background:var(--th-green)}
+    .th-lf-green2{background:#4b8c64}
+    .th-lf-grey{background:var(--th-grey)}
+    .th-lf-steel{background:var(--th-steel)}
+    .th-lf-blue{background:var(--th-blue)}
+    .th-lf-amber{background:var(--th-amber)}
+    .th-lf-amber-dark{background:var(--th-amber-dark)}
+    .th-finding-callout{max-width:1060px;margin-top:38px;padding:24px 26px;border-left:4px solid var(--th-amber);color:#d3dae2;background:rgba(255,255,255,.04);font-size:1rem}
+
+    /* FIX 3: Range chart with real data */
+    .th-range-chart{margin-top:44px;padding-top:30px;border-top:1px solid var(--th-border-dark)}
+    .th-range-chart h3{margin:0 0 8px;font:650 1.7rem/1.1 "Fraunces",serif}
+    .th-whisker-row{display:grid;grid-template-columns:145px 1fr auto;align-items:center;gap:12px;margin-top:12px}
+    .th-whisker-track{position:relative;height:20px}
+    .th-whisker-track::before{position:absolute;top:9px;right:0;left:0;height:1px;content:"";background:rgba(255,255,255,.1)}
+    .th-whisker-bar{position:absolute;top:6px;height:8px;border-radius:4px;background:rgba(255,255,255,.12)}
+    .th-mean-dot{position:absolute;top:3px;width:14px;height:14px;border:2px solid var(--th-navy);border-radius:50%;background:var(--th-yellow);transform:translateX(-50%)}
+    .th-whisker-meta{font:600 .65rem/1.55 "JetBrains Mono",monospace;color:#7a8898;white-space:nowrap}
+
+    /* ROBUSTNESS */
+    .th-robust-grid{display:grid;margin-top:40px;gap:16px}
+    .th-robust-card{padding:24px;border:1px solid var(--th-border-light);border-radius:var(--th-radius);background:#fffaf2}
+    .th-robust-card h3{margin:0;color:var(--th-navy);font:700 1.5rem/1.05 "Fraunces",serif}
+    .th-verdict{display:block;margin:9px 0 13px;color:var(--th-amber-dark);font:700 .68rem/1.45 "JetBrains Mono",monospace}
+    .th-robust-card p{margin:0;color:#505b6c;font-size:.85rem}
+    .th-sensitivity-wrap{margin-top:34px;overflow-x:auto;border:1px solid var(--th-border-light);border-radius:var(--th-radius)}
+    .th-sensitivity-table td{min-width:105px;text-align:center}
+    .th-sensitivity-table td:first-child{text-align:left}
+    .th-heat-stable{background:rgba(45,106,79,.16)}
+    .th-heat-mid{background:rgba(200,128,58,.22)}
+    .th-heat-high{background:rgba(200,128,58,.38)}
+    .th-heat-critical{color:#fff;background:#8f3e26}
+
+    /* SPATIAL VALIDATION */
+    .th-validation-grid{display:grid;margin-top:40px;gap:20px}
+    .th-validation-grid .th-figure img{aspect-ratio:4/3;object-fit:contain}
+    .th-validation-card{padding:26px;border:1px solid var(--th-border-dark);border-radius:var(--th-radius);background:rgba(255,255,255,.035)}
+    .th-validation-metric{padding-block:15px;border-bottom:1px solid var(--th-border-dark)}
+    .th-validation-metric:last-of-type{border-bottom:0}
+    .th-validation-metric strong{display:block;color:var(--th-yellow);font:700 1.05rem/1.3 "JetBrains Mono",monospace}
+    .th-validation-metric span{display:block;margin-top:5px;color:#9eabba;font-size:.8rem}
+    .th-validation-card p{margin:20px 0 0;color:#b2bcc8}
+    .th-validation-note{margin-top:26px;padding:22px 24px;border-left:4px solid var(--th-green-bright);color:#c3ccd5;background:rgba(45,106,79,.11)}
+
+    /* FINDINGS */
+    .th-findings-grid{display:grid;margin-top:42px;gap:16px}
+    .th-finding-card{min-height:255px;padding:26px;border:1px solid var(--th-border-light);border-radius:var(--th-radius);background:#fffaf2}
+    .th-finding-num{display:block;margin-bottom:22px;color:var(--th-amber);font:700 3rem/.8 "Fraunces",serif}
+    .th-finding-card h3{margin:0;color:var(--th-navy);font:700 1.5rem/1.08 "Fraunces",serif}
+    .th-finding-card p{margin:12px 0 0;color:#536071;font-size:.88rem}
+    .th-policy{margin-top:30px;padding:30px;border-radius:var(--th-radius);color:var(--th-offwhite);background:var(--th-navy)}
+    .th-policy h3{margin:0;font:650 1.8rem/1 "Fraunces",serif}
+    .th-policy ul{margin:20px 0 0;padding:0;list-style:none}
+    .th-policy li{position:relative;margin-top:13px;padding-left:24px;color:#bdc6d0}
+    .th-policy li::before{position:absolute;top:.54em;left:0;width:8px;height:8px;border-radius:50%;content:"";background:var(--th-amber)}
+
+    /* LIMITATIONS */
+    .th-limit-grid{display:grid;margin-top:40px;gap:24px}
+    .th-limit-column{padding:26px;border:1px solid var(--th-border-dark);border-radius:var(--th-radius);background:rgba(255,255,255,.03)}
+    .th-limit-column h3{margin:0 0 18px;font:650 1.7rem/1.05 "Fraunces",serif}
+    .th-limit-list{margin:0;padding:0;list-style:none}
+    .th-limit-list li{position:relative;margin-top:14px;padding-left:23px;color:#aeb9c6;font-size:.88rem}
+    .th-limit-list li::before{position:absolute;left:0;content:"—";color:var(--th-amber);font-weight:800}
+    .th-limit-list--future li::before{color:var(--th-green-bright)}
+
+    /* PUBLICATION */
+    .th-publication{margin-top:40px;padding:clamp(28px,6vw,48px);border-left:4px solid var(--th-amber);border-radius:0 var(--th-radius) var(--th-radius) 0;color:var(--th-offwhite);background:var(--th-navy);box-shadow:var(--th-shadow)}
+    .th-publication-citation{max-width:980px;margin:0;font-size:clamp(1rem,2vw,1.2rem);line-height:1.75}
+    .th-doi{display:inline-flex;margin-top:24px;padding:11px 18px;border-radius:999px;color:var(--th-navy);background:var(--th-amber);font:750 .72rem/1.2 "JetBrains Mono",monospace;text-decoration:none;transition:background .2s ease,transform .2s ease}
+    .th-doi:hover{background:var(--th-amber-bright);transform:translateY(-2px)}
+    .th-publication-note{max-width:850px;margin:22px 0 0;color:#919eae;font:500 .69rem/1.7 "JetBrains Mono",monospace}
+
+    /* STACK */
+    .th-stack-grid{display:grid;margin-top:40px;gap:18px}
+    .th-stack-category{padding:24px;border:1px solid var(--th-border-dark);border-radius:var(--th-radius);background:rgba(255,255,255,.03)}
+    .th-stack-category h3{margin:0 0 18px;color:#f5eee4;font:650 1.3rem/1.1 "Fraunces",serif}
+    .th-tag-row{display:flex;flex-wrap:wrap;gap:8px}
+    .th-tag{padding:7px 9px;border:1px solid rgba(200,128,58,.6);border-radius:999px;color:#ddb07f;background:var(--th-navy);font:600 .64rem/1.2 "JetBrains Mono",monospace;transition:color .2s ease,background .2s ease}
+    .th-tag:hover{color:var(--th-navy);background:var(--th-amber)}
+
+    /* FOOTER NAV */
+    .th-footer-nav{padding:25px 20px 80px;background:var(--th-navy)}
+    .th-footer-grid{display:grid;width:min(100%,var(--th-max));margin-inline:auto;gap:12px}
+    .th-footer-card{display:flex;min-height:120px;padding:22px;border:1px solid var(--th-border-dark);border-radius:var(--th-radius);align-items:center;justify-content:space-between;color:var(--th-offwhite);background:var(--th-navy-2);font:650 1.25rem/1.2 "Fraunces",serif;text-decoration:none;transition:border-color .2s ease,background .2s ease,transform .2s ease}
+    .th-footer-card:hover{border-color:rgba(200,128,58,.55);background:var(--th-navy-3);transform:translateY(-2px)}
+    .th-footer-card span{color:var(--th-amber);font-family:"JetBrains Mono",monospace;font-size:1rem}
+
+    /* LIGHTBOX */
+    .th-lightbox{position:fixed;z-index:9999;inset:0;display:none;padding:24px;align-items:center;justify-content:center;background:rgba(3,9,18,.94);backdrop-filter:blur(12px)}
+    .th-lightbox.th-open{display:flex}
+    .th-lightbox-inner{position:relative;width:min(100%,1180px);max-height:92vh}
+    .th-lightbox-image{display:block;width:100%;max-height:82vh;object-fit:contain;border-radius:12px;background:var(--th-navy)}
+    .th-lightbox-caption{margin-top:12px;color:#bac4cf;font-size:.8rem;text-align:center}
+    .th-lightbox-close{position:absolute;top:-14px;right:-8px;display:grid;width:42px;height:42px;border:1px solid rgba(255,255,255,.2);border-radius:50%;place-items:center;color:white;background:var(--th-navy-2);font-size:1.4rem;cursor:pointer}
+
+    /* BACK TO TOP */
+    .th-back-top{position:fixed;z-index:700;right:18px;bottom:18px;display:grid;width:44px;height:44px;border:1px solid rgba(200,128,58,.6);border-radius:50%;opacity:0;place-items:center;color:var(--th-navy);background:var(--th-amber);box-shadow:0 10px 24px rgba(0,0,0,.25);pointer-events:none;cursor:pointer;transform:translateY(10px);transition:opacity .2s ease,transform .2s ease}
+    .th-back-top.th-show{opacity:1;pointer-events:auto;transform:none}
+
+    /* ACCESSIBILITY */
+    .th-sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+    .th-page button:focus-visible,.th-page a:focus-visible,.th-page [role="button"]:focus-visible{outline:3px solid var(--th-yellow);outline-offset:4px}
+
+    @media(min-width:640px){
+      .th-section{padding:105px 32px}
+      .th-hero-inner{padding-inline:32px}
+      .th-published-badge{right:32px}
+      .th-hero-bottom{right:32px;left:32px;flex-direction:row;align-items:center;justify-content:space-between}
+      .th-identity-grid{grid-template-columns:repeat(2,1fr)}
+      .th-identity-item{border-right:1px solid rgba(255,255,255,.08)}
+      .th-problem-grid{grid-template-columns:repeat(3,1fr)}
+      .th-variable-grid{grid-template-columns:repeat(2,1fr)}
+      .th-two-figure{grid-template-columns:repeat(2,1fr)}
+      .th-insight-grid{grid-template-columns:repeat(3,1fr)}
+      .th-map-grid{display:grid;grid-template-columns:repeat(2,1fr);overflow:visible}
+      .th-map-card{min-width:0}
+      .th-robust-grid{grid-template-columns:repeat(2,1fr)}
+      .th-findings-grid{grid-template-columns:repeat(2,1fr)}
+      .th-limit-grid{grid-template-columns:repeat(2,1fr)}
+      .th-stack-grid{grid-template-columns:repeat(2,1fr)}
+      .th-footer-grid{grid-template-columns:repeat(2,1fr)}
+    }
+    @media(min-width:1024px){
+      .th-section{padding:128px 44px}
+      .th-hero-inner{padding-inline:44px}
+      .th-published-badge{top:80px;right:44px}
+      .th-hero-bottom{right:44px;left:44px}
+      .th-identity-grid{grid-template-columns:repeat(6,1fr)}
+      .th-identity-item{min-height:118px;border-bottom:0}
+      .th-study-grid{grid-template-columns:3fr 2fr}
+      .th-variable-grid{grid-template-columns:repeat(3,1fr)}
+      .th-model-layout{grid-template-columns:minmax(0,1.5fr) minmax(330px,.8fr)}
+      .th-importance-gallery{display:grid;grid-template-columns:repeat(2,1fr);overflow:visible}
+      .th-importance-gallery .th-figure{min-width:0}
+      .th-map-grid{grid-template-columns:repeat(3,1fr)}
+      .th-robust-grid{grid-template-columns:repeat(5,1fr)}
+      .th-validation-grid{grid-template-columns:1.25fr .75fr}
+      .th-findings-grid{grid-template-columns:repeat(3,1fr)}
+      .th-stack-grid{grid-template-columns:repeat(4,1fr)}
+    }
+    @media(prefers-reduced-motion:reduce){
+      html{scroll-behavior:auto}
+      *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
+      .th-reveal{opacity:1;transform:none}
+      .th-bar-fill,.th-feature-fill,.th-land-fill{width:var(--th-target)}
+    }
+  </style>
+</head>
+<body>
+<header class="site-header">
+  <nav class="nav">
+    <a href="../index.html" class="brand">
+      <svg class="pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0Z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+      Tanzim&nbsp;Al&nbsp;Noor
+    </a>
+    <ul class="nav-links">
+      <li><a href="../index.html#about">About</a></li>
+      <li><a href="../index.html#skills">Skills</a></li>
+      <li><a href="../index.html#experience">Experience</a></li>
+      <li><a href="../index.html#projects">Projects</a></li>
+      <li><a href="../index.html#research">Research</a></li>
+      <li><a href="../index.html#education">Education</a></li>
+      <li><a href="../index.html#contact">Contact</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="../Tanzim_Al_Noor_CV.pdf" class="btn btn-ghost btn-sm" download>Download CV</a>
+      <a href="../index.html#contact" class="btn btn-primary btn-sm">Get in Touch</a>
+      <button class="menu-toggle" aria-label="Toggle menu" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<main class="th-page">
+
+  <!-- S0 HERO -->
+  <section class="th-hero" id="th-hero" aria-labelledby="th-hero-title">
+    <div class="th-hero-bg-fallback" aria-hidden="true">soc-spatial-map-rf.jpg</div>
+    <img class="th-hero-bg" src="../images/projects/thesis/soc-spatial-map-rf.jpg" alt="" loading="lazy" data-fallback-label="soc-spatial-map-rf.jpg">
+    <div class="th-published-badge">Peer-reviewed publication derived · Smart Agricultural Technology, 2025</div>
+    <div class="th-hero-inner">
+      <div class="th-hero-copy th-reveal">
+        <div class="th-hero-eyebrow">Bachelor's Thesis · BURP · KUET · 2025</div>
+        <h1 id="th-hero-title">Predicting soil carbon from space.</h1>
+        <p class="th-hero-subhead">A machine learning framework integrating Sentinel-1 SAR, Sentinel-2 optical imagery, topographic indices and climate covariates to map topsoil SOC at 10 m resolution across 4,394 km² of coastal Bangladesh — without a single additional field sample.</p>
+        <div class="th-chip-row" aria-label="Research disciplines">
+          <span class="th-chip">Random Forest · GeoAI</span>
+          <span class="th-chip">Sentinel-1/2 Fusion</span>
+          <span class="th-chip">SHAP Explainability</span>
+          <span class="th-chip">Digital Soil Mapping</span>
+        </div>
+      </div>
+    </div>
+    <div class="th-hero-bottom">
+      <span>Khulna District, Bangladesh · 0–20 cm topsoil · WGS 1984 · 10 m resolution</span>
+      <a class="th-scroll-link" href="#th-identity" aria-label="Scroll to research identity">Scroll to explore ↓</a>
+    </div>
+  </section>
+
+  <!-- S1 RESEARCH IDENTITY -->
+  <section class="th-identity" id="th-identity" aria-label="Research identity">
+    <div class="th-identity-grid">
+      <div class="th-identity-item"><span class="th-identity-key">Degree</span><span class="th-identity-value">Bachelor of Urban and Regional Planning (BURP)</span></div>
+      <div class="th-identity-item"><span class="th-identity-key">Institution</span><span class="th-identity-value">KUET, Khulna, Bangladesh</span></div>
+      <div class="th-identity-item"><span class="th-identity-key">Supervisor</span><span class="th-identity-value">Arpita Bakshi, Lecturer, Dept. URP</span></div>
+      <div class="th-identity-item"><span class="th-identity-key">Dataset</span><span class="th-identity-value">201 georeferenced SRDI soil samples</span></div>
+      <div class="th-identity-item"><span class="th-identity-key">Best model</span><span class="th-identity-value">Random Forest · R² = 0.8129</span></div>
+      <div class="th-identity-item"><span class="th-identity-key">Status</span><span class="th-identity-value">Thesis approved · September 2025</span></div>
+    </div>
+  </section>
+
+  <!-- S2 THE PROBLEM -->
+  <section class="th-section th-section--light" id="th-problem">
+    <div class="th-container">
+      <div class="th-reveal">
+        <div class="th-section-label">01 · Why This Matters</div>
+        <h2 class="th-heading">Soil carbon is invisible. We made it mappable.</h2>
+      </div>
+      <div class="th-problem-grid">
+        <article class="th-problem-card th-reveal"><h3>The Carbon Crisis</h3><p>SOC stores ~1,500 Gt globally — more than atmosphere + vegetation combined. Its depletion accelerates climate change. Khulna's deltaic soils are a critical but unmapped reservoir.</p></article>
+        <article class="th-problem-card th-reveal"><h3>The Data Gap</h3><p>Bangladesh has no high-resolution SOC map. Conventional field sampling costs $1,000s per km² and still misses fine-scale variability across tidal floodplains, polders, and mangroves.</p></article>
+        <article class="th-problem-card th-reveal"><h3>The Hypothesis</h3><p>Sentinel-1 radar + Sentinel-2 optical + terrain + climate, fed into ensemble ML, can predict SOC at 10 m resolution with &gt;80% explained variance — at near-zero marginal cost per pixel.</p></article>
+      </div>
+      <blockquote class="th-pullquote th-reveal">"Higher SOC in southern coastal upazilas. Lower values in inland agricultural zones. The delta speaks — if you know how to listen."</blockquote>
+    </div>
+  </section>
+
+  <!-- S3 STUDY AREA -->
+  <section class="th-section th-section--dark" id="th-study-area">
+    <div class="th-container">
+      <div class="th-reveal">
+        <div class="th-section-label">02 · Study Area</div>
+        <h2 class="th-heading">4,394 km² of tidal delta, flood plain and coastal forest.</h2>
+      </div>
+      <div class="th-study-grid">
+        <figure class="th-figure th-figure--contain th-study-map th-reveal">
+          <img src="../images/projects/thesis/study-area-map.jpg" alt="Study area map of Khulna District with sample locations." loading="lazy" data-lightbox data-caption="Nine upazilas. 201 soil sample points. Rupsa, Shibsa, Pasur and Koyra river systems." role="button" tabindex="0" data-fallback-label="study-area-map.jpg">
+          <figcaption>Nine upazilas. 201 soil sample points. Rupsa, Shibsa, Pasur and Koyra river systems. Elevation generally below 10 m.</figcaption>
+        </figure>
+        <div class="th-facts">
+          <div class="th-fact th-reveal"><strong><span data-counter="4394" data-decimals="0">0</span> km²</strong><span>District area</span></div>
+          <div class="th-fact th-reveal"><strong><span data-counter="9" data-decimals="0">0</span> upazilas</strong><span>Batiaghata · Dacope · Dighalia · Dumuria · Koyra · Paikgacha · Phultala · Rupsha · Terokhada</span></div>
+          <div class="th-fact th-reveal"><strong><span data-counter="201" data-decimals="0">0</span> samples</strong><span>SRDI topsoil 0–20 cm, georeferenced WGS84</span></div>
+          <div class="th-fact th-reveal"><strong>~<span data-counter="4.6" data-decimals="1">0</span> pts / 100 km²</strong><span>Sampling density</span></div>
+          <div class="th-fact th-reveal"><strong><span data-counter="26" data-decimals="0">0</span>°C avg</strong><span>Annual mean temperature</span></div>
+          <div class="th-fact th-reveal"><strong style="font-size:1.25rem">Tropical monsoon</strong><span>Climate regime</span></div>
+          <div class="th-fact th-reveal"><strong>&lt;10 m ASL</strong><span>Elevation, predisposing to tidal inundation and salinity intrusion</span></div>
+        </div>
+      </div>
+      <p class="th-context th-reveal">Khulna sits at the intersection of mangrove forests (Sundarbans), paddy agriculture, and tidal wetlands — making SOC dynamics extraordinarily complex and spatially variable. Cyclones, tidal surges and seasonal waterlogging drive rapid organic matter input and decomposition cycles simultaneously.</p>
+    </div>
+  </section>
+
+  <!-- S4 COVARIATES -->
+  <section class="th-section th-section--light" id="th-covariates">
+    <div class="th-container">
+      <div class="th-reveal">
+        <div class="th-section-label">03 · Multi-Source Predictor Stack</div>
+        <h2 class="th-heading">Nine variables. Four data streams. One harmonized surface.</h2>
+        <p class="th-lead">All layers harmonized at 10 m resolution, aligned to WGS 1984 common grid. Covariate values extracted at 201 sample locations using ArcGIS 10.8 <span class="th-mono">Extract Multi Values to Point</span>. Final predictor set selected through Pearson correlation (<span class="th-mono">p &lt; 0.05</span>) and VIF filtering (<span class="th-mono">threshold = 10</span>).</p>
+      </div>
+      <div class="th-variable-grid">
+        <article class="th-variable-card th-reveal"><div class="th-card-image"><img src="../images/projects/thesis/predictor-ndvi.jpg" alt="NDVI predictor map" loading="lazy" data-lightbox data-caption="NDVI · r=+0.651 · VIF=8.89" role="button" tabindex="0" data-fallback-label="predictor-ndvi.jpg"></div><div class="th-variable-body"><h3>NDVI</h3><div class="th-variable-type">Sentinel-2 · Vegetation Index</div><div class="th-variable-stats"><span>r = +0.651</span><span>VIF = 8.89</span></div><p>Denser vegetation → more organic residue → higher SOC</p></div></article>
+        <article class="th-variable-card th-reveal"><div class="th-card-image"><img src="../images/projects/thesis/predictor-red2.jpg" alt="RED2 B6 predictor map" loading="lazy" data-lightbox data-caption="RED2 (B6) · r=+0.482 · VIF=7.50" role="button" tabindex="0" data-fallback-label="predictor-red2.jpg"></div><div class="th-variable-body"><h3>RED2 (B6)</h3><div class="th-variable-type">Sentinel-2 · Red-Edge</div><div class="th-variable-stats"><span>r = +0.482</span><span>VIF = 7.50</span></div><p>Chlorophyll content and vegetation vigor — sensitive to organic matter inputs</p></div></article>
+        <article class="th-variable-card th-reveal"><div class="th-card-image"><img src="../images/projects/thesis/predictor-bsi.jpg" alt="Bare Soil Index predictor map" loading="lazy" data-lightbox data-caption="BSI · r=−0.237 · VIF=4.20" role="button" tabindex="0" data-fallback-label="predictor-bsi.jpg"></div><div class="th-variable-body"><h3>BSI</h3><div class="th-variable-type">Sentinel-2 · Bare Soil Index</div><div class="th-variable-stats"><span>r = −0.237</span><span>VIF = 4.20</span></div><p>Exposed soil = low organic input = depleted SOC</p></div></article>
+        <article class="th-variable-card th-reveal"><div class="th-card-image"><img src="../images/projects/thesis/predictor-precipitation.jpg" alt="Precipitation predictor map" loading="lazy" data-lightbox data-caption="Precipitation · r=+0.248 · VIF=4.90" role="button" tabindex="0" data-fallback-label="predictor-precipitation.jpg"></div><div class="th-variable-body"><h3>Precipitation</h3><div class="th-variable-type">ERA5-Land · Climate</div><div class="th-variable-stats"><span>r = +0.248</span><span>VIF = 4.90</span></div><p>Higher rainfall drives biomass growth and SOC accumulation</p></div></article>
+        <article class="th-variable-card th-reveal"><div class="th-card-image"><img src="../images/projects/thesis/predictor-temperature.jpg" alt="Temperature predictor map" loading="lazy" data-lightbox data-caption="Temperature · r=−0.189 · VIF=5.00" role="button" tabindex="0" data-fallback-label="predictor-temperature.jpg"></div><div class="th-variable-body"><h3>Temperature</h3><div class="th-variable-type">ERA5-Land · Climate</div><div class="th-variable-stats"><span>r = −0.189</span><span>VIF = 5.00</span></div><p>Tropical heat accelerates microbial decomposition of SOC</p></div></article>
+        <article class="th-variable-card th-reveal"><div class="th-card-image"><img src="../images/projects/thesis/predictor-vv.jpg" alt="Sentinel-1 VV predictor map" loading="lazy" data-lightbox data-caption="Sentinel-1 VV · r=+0.560 · VIF=5.23" role="button" tabindex="0" data-fallback-label="predictor-vv.jpg"></div><div class="th-variable-body"><h3>Sentinel-1 VV</h3><div class="th-variable-type">SAR · Radar Backscatter</div><div class="th-variable-stats"><span>r = +0.560</span><span>VIF = 5.23</span></div><p>Surface roughness + soil moisture — cloud-penetrating signal</p></div></article>
+        <article class="th-variable-card th-reveal"><div class="th-card-image"><img src="../images/projects/thesis/predictor-elevation.jpg" alt="Elevation predictor map" loading="lazy" data-lightbox data-caption="Elevation · r=+0.546 · VIF=8.60" role="button" tabindex="0" data-fallback-label="predictor-elevation.jpg"></div><div class="th-variable-body"><h3>Elevation (DEM)</h3><div class="th-variable-type">SRTM · Topography</div><div class="th-variable-stats"><span>r = +0.546</span><span>VIF = 8.60</span></div><p>Micro-elevation controls salinity exposure and organic matter deposition</p></div></article>
+        <article class="th-variable-card th-reveal"><div class="th-card-image"><img src="../images/projects/thesis/predictor-slope.jpg" alt="Slope predictor map" loading="lazy" data-lightbox data-caption="Slope · r=+0.621 · VIF=4.60" role="button" tabindex="0" data-fallback-label="predictor-slope.jpg"></div><div class="th-variable-body"><h3>Slope</h3><div class="th-variable-type">SRTM-derived · Topography</div><div class="th-variable-stats"><span>r = +0.621</span><span>VIF = 4.60</span></div><p>Steeper slope = more erosion = less SOC accumulation</p></div></article>
+        <article class="th-variable-card th-reveal"><div class="th-card-image"><img src="../images/projects/thesis/predictor-tri.jpg" alt="TRI predictor map" loading="lazy" data-lightbox data-caption="TRI · r=+0.514 · VIF=3.40" role="button" tabindex="0" data-fallback-label="predictor-tri.jpg"></div><div class="th-variable-body"><h3>TRI</h3><div class="th-variable-type">SRTM-derived · Topography</div><div class="th-variable-stats"><span>r = +0.514</span><span>VIF = 3.40</span></div><p>Terrain ruggedness drives micro-environment SOC variability</p></div></article>
+      </div>
+      <figure class="th-figure th-figure--contain th-correlation th-reveal">
+        <img src="../images/projects/thesis/correlation-matrix.jpg" alt="Correlation matrix of all candidate predictor variables." loading="lazy" data-lightbox data-caption="Predictor correlation matrix. Pairs with r ≥ 0.90 (e.g. NDVI–SAVI r=0.99, SWIR1–SWIR2 r=0.96) were screened; only the more SOC-relevant variable in each pair was retained." role="button" tabindex="0" data-fallback-label="correlation-matrix.jpg">
+        <figcaption>Predictor correlation matrix. Non-significant variables removed at <span class="th-mono">p &lt; 0.05</span>; high-collinearity pairs screened at <span class="th-mono">r &gt; 0.80</span> and <span class="th-mono">VIF &gt; 10</span>.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- S5 METHODOLOGY -->
+  <section class="th-section th-section--dark" id="th-methodology">
+    <div class="th-container">
+      <div class="th-reveal">
+        <div class="th-section-label">04 · Analytical Framework</div>
+        <h2 class="th-heading">From satellite pixel to soil carbon prediction.</h2>
+      </div>
+      <div class="th-pipeline">
+        <article class="th-pipeline-step th-reveal"><span class="th-pipeline-num">01</span><h3>Data Acquisition</h3><p>Sentinel-2 (<span class="th-mono">COPERNICUS/S2_HARMONIZED</span>), Sentinel-1 GRD (dry season Nov–Feb median), SRTM DEM (<span class="th-mono">USGS/SRTMGL1_003</span>), ERA5-Land climate (2001–2023 mean). All via Google Earth Engine at 10 m resolution.</p></article>
+        <article class="th-pipeline-step th-reveal"><span class="th-pipeline-num">02</span><h3>Variable Selection</h3><p>Pearson correlation (<span class="th-mono">p &lt; 0.05</span>) removed non-significant variables. <span class="th-mono">VIF &gt; 10</span> removed SAVI (42.20), SWIR1 (381.90), VH (153.00). Correlation matrix screened pairs with <span class="th-mono">r &gt; 0.80</span>. Final: 9 predictors retained.</p></article>
+        <article class="th-pipeline-step th-reveal"><span class="th-pipeline-num">03</span><h3>ML Pipeline Construction</h3><p>Scikit-learn pipelines with median imputation → StandardScaler for scale-sensitive models (SVR, KNN, MLP). Five algorithms: RF, GB (histogram-based), SVR (RBF kernel), MLP, KNN. Unified structure ensures no data leakage.</p></article>
+        <article class="th-pipeline-step th-reveal"><span class="th-pipeline-num">04</span><h3>Model Training &amp; Validation</h3><p>5-fold cross-validation. Metrics: R², RMSE, MAE. Composite score = ⅓(1/RMSE + 1/MAE + R²) for holistic ranking. SHAP values computed for RF to explain feature-level influence.</p></article>
+        <article class="th-pipeline-step th-reveal"><span class="th-pipeline-num">05</span><h3>Sensitivity Analysis</h3><p>Perturbation-based: each predictor shifted ±10%. Performance deltas (ΔRMSE, ΔMAE, ΔR²) quantify each model's robustness to input noise. Identifies critical vs. redundant covariates per algorithm.</p></article>
+        <article class="th-pipeline-step th-reveal"><span class="th-pipeline-num">06</span><h3>Spatial Prediction &amp; Validation</h3><p>Best model (RF) applied wall-to-wall across Khulna at 10 m. Moran's I test (<span class="th-mono">I = 0.1447, p = 0.000259, z = 3.653</span>) confirmed significant spatial clustering — validating spatial coherence of predictions.</p></article>
+      </div>
+      <figure class="th-figure th-figure--contain th-method-figure th-reveal">
+        <img src="../images/projects/thesis/methodology-flowchart.jpg" alt="Full methodology flowchart." loading="lazy" data-lightbox data-caption="Analytical workflow from remote-sensing acquisition through ML, explainability, sensitivity testing and spatial validation." role="button" tabindex="0" data-fallback-label="methodology-flowchart.jpg">
+        <figcaption>End-to-end analytical workflow: acquisition → harmonization → variable selection → machine learning → explainability → sensitivity analysis → spatial prediction.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- S6 MODEL SHOOTOUT -->
+  <section class="th-section th-section--light" id="th-models">
+    <div class="th-container">
+      <div class="th-reveal">
+        <div class="th-section-label">05 · Algorithm Comparison</div>
+        <h2 class="th-heading">Five algorithms. One winner. Here's the evidence.</h2>
+      </div>
+      <div class="th-model-layout">
+        <div class="th-table-wrap th-reveal">
+          <table class="th-model-table">
+            <thead><tr><th>Rank</th><th>Model</th><th>R²</th><th>RMSE</th><th>MAE</th><th>Composite Score</th><th>Verdict</th></tr></thead>
+            <tbody>
+              <tr class="th-model-row th-active" data-model="rf" data-image="scatter-rf.jpg" data-r2="0.8129" data-rmse="1.6227" data-label="Random Forest"><td>1</td><td><button class="th-model-button" type="button">Random Forest</button></td><td>0.8129</td><td>1.6227</td><td>1.3355</td><td>2.1779</td><td>✦ Best</td></tr>
+              <tr class="th-model-row" data-model="gb" data-image="scatter-gb.jpg" data-r2="0.7896" data-rmse="1.6569" data-label="Gradient Boosting"><td>2</td><td><button class="th-model-button" type="button">Gradient Boosting</button></td><td>0.7896</td><td>1.6569</td><td>1.3545</td><td>2.1314</td><td>Strong</td></tr>
+              <tr class="th-model-row" data-model="svm" data-image="scatter-svm.jpg" data-r2="0.7281" data-rmse="1.6955" data-label="Support Vector Machine"><td>3</td><td><button class="th-model-button" type="button">Support Vector Machine</button></td><td>0.7281</td><td>1.6955</td><td>1.4053</td><td>2.0295</td><td>Moderate</td></tr>
+              <tr class="th-model-row" data-model="mlp" data-image="scatter-mlp.jpg" data-r2="0.5912" data-rmse="2.0792" data-label="Multilayer Perceptron"><td>4</td><td><button class="th-model-button" type="button">Multilayer Perceptron</button></td><td>0.5912</td><td>2.0792</td><td>1.6939</td><td>1.6625</td><td>Weak</td></tr>
+              <tr class="th-model-row" data-model="knn" data-image="scatter-knn.jpg" data-r2="0.5705" data-rmse="2.1305" data-label="K-Nearest Neighbours"><td>5</td><td><button class="th-model-button" type="button">K-Nearest Neighbours</button></td><td>0.5705</td><td>2.1305</td><td>1.6627</td><td>1.6413</td><td>Weak</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="th-model-preview th-reveal" aria-live="polite">
+          <img id="th-model-preview-image" src="../images/projects/thesis/scatter-rf.jpg" alt="Random Forest scatter plot." loading="lazy" data-fallback-label="scatter-rf.jpg">
+          <div class="th-model-preview-copy">
+            <strong id="th-model-preview-metric">Random Forest · R² = 0.8129 · RMSE = 1.6227</strong>
+            <span id="th-model-preview-caption">Active model: Random Forest. Highest explained variance and lowest error among the five algorithms.</span>
+          </div>
+        </div>
+      </div>
+      <div class="th-r2-chart th-bar-animate th-reveal" aria-label="R squared model comparison">
+        <div class="th-bar-row"><span class="th-bar-label">Random Forest</span><div class="th-bar-track"><div class="th-bar-fill th-bar-fill--amber" style="--th-target:81.29%"></div></div><span class="th-bar-value">0.8129</span></div>
+        <div class="th-bar-row"><span class="th-bar-label">Gradient Boosting</span><div class="th-bar-track"><div class="th-bar-fill" style="--th-target:78.96%"></div></div><span class="th-bar-value">0.7896</span></div>
+        <div class="th-bar-row"><span class="th-bar-label">SVM</span><div class="th-bar-track"><div class="th-bar-fill" style="--th-target:72.81%"></div></div><span class="th-bar-value">0.7281</span></div>
+        <div class="th-bar-row"><span class="th-bar-label">MLP</span><div class="th-bar-track"><div class="th-bar-fill" style="--th-target:59.12%"></div></div><span class="th-bar-value">0.5912</span></div>
+        <div class="th-bar-row"><span class="th-bar-label">KNN</span><div class="th-bar-track"><div class="th-bar-fill" style="--th-target:57.05%"></div></div><span class="th-bar-value">0.5705</span></div>
+      </div>
+      <pre class="th-formula th-reveal"><code>Composite Score = ⅓ × (1/RMSE + 1/MAE + R²)</code></pre>
+    </div>
+  </section>
+
+  <!-- S7 FEATURE IMPORTANCE -->
+  <section class="th-section th-section--dark" id="th-feature-importance">
+    <div class="th-container">
+      <div class="th-reveal">
+        <div class="th-section-label">06 · What Drives Soil Carbon?</div>
+        <h2 class="th-heading">Slope and vegetation dominate. Climate is secondary.</h2>
+        <p class="th-lead">Feature importance across all five models consistently identified Slope (RF: 0.361, GB: 0.409) and NDVI (RF: 0.296, GB: 0.222) as dominant predictors. This aligns with the classical clorpt framework — relief and organisms drive SOC at local scales where macro-climate is uniform.</p>
+      </div>
+      <div class="th-two-figure">
+        <figure class="th-figure th-figure--contain th-reveal"><img src="../images/projects/thesis/feature-importance-rf.jpg" alt="Random Forest feature importance." loading="lazy" data-lightbox data-caption="Random Forest: Slope (0.361) › NDVI (0.296) › VV (0.101) › TRI (0.089)" role="button" tabindex="0" data-fallback-label="feature-importance-rf.jpg"><figcaption>Random Forest: Slope (0.361) › NDVI (0.296) › VV (0.101) › TRI (0.089)</figcaption></figure>
+        <figure class="th-figure th-figure--contain th-reveal"><img src="../images/projects/thesis/shap-beeswarm.jpg" alt="SHAP beeswarm plot for Random Forest." loading="lazy" data-lightbox data-caption="SHAP beeswarm: high Slope values strongly push SOC predictions upward. NDVI confirms vegetation–carbon coupling." role="button" tabindex="0" data-fallback-label="shap-beeswarm.jpg"><figcaption>SHAP beeswarm: high Slope values push SOC upward. NDVI confirms vegetation–carbon coupling.</figcaption></figure>
+      </div>
+      <div class="th-feature-bars th-feature-animate th-reveal">
+        <div class="th-feature-bar"><span class="th-feature-name">SLOPE</span><div class="th-feature-track"><div class="th-feature-fill th-feature-fill--amber" style="--th-target:36.1%"></div></div><span class="th-feature-value">36.1%</span></div>
+        <div class="th-feature-bar"><span class="th-feature-name">NDVI</span><div class="th-feature-track"><div class="th-feature-fill th-feature-fill--green" style="--th-target:29.6%"></div></div><span class="th-feature-value">29.6%</span></div>
+        <div class="th-feature-bar"><span class="th-feature-name">VV</span><div class="th-feature-track"><div class="th-feature-fill th-feature-fill--steel" style="--th-target:10.1%"></div></div><span class="th-feature-value">10.1%</span></div>
+        <div class="th-feature-bar"><span class="th-feature-name">TRI</span><div class="th-feature-track"><div class="th-feature-fill th-feature-fill--amber-muted" style="--th-target:8.9%"></div></div><span class="th-feature-value">8.9%</span></div>
+        <div class="th-feature-bar"><span class="th-feature-name">BSI</span><div class="th-feature-track"><div class="th-feature-fill" style="--th-target:4.5%"></div></div><span class="th-feature-value">4.5%</span></div>
+        <div class="th-feature-bar"><span class="th-feature-name">DEM</span><div class="th-feature-track"><div class="th-feature-fill" style="--th-target:4.2%"></div></div><span class="th-feature-value">4.2%</span></div>
+        <div class="th-feature-bar"><span class="th-feature-name">RED2</span><div class="th-feature-track"><div class="th-feature-fill" style="--th-target:2.7%"></div></div><span class="th-feature-value">2.7%</span></div>
+        <div class="th-feature-bar"><span class="th-feature-name">TEMPERATURE</span><div class="th-feature-track"><div class="th-feature-fill" style="--th-target:2.3%"></div></div><span class="th-feature-value">2.3%</span></div>
+        <div class="th-feature-bar"><span class="th-feature-name">PRECIPITATION</span><div class="th-feature-track"><div class="th-feature-fill" style="--th-target:1.6%"></div></div><span class="th-feature-value">1.6%</span></div>
+      </div>
+      <div class="th-insight-grid">
+        <article class="th-insight th-reveal"><h3>Topography dominates</h3><p>Slope is #1 in 4 of 5 models. Even in Khulna's near-flat delta, micro-slope differences of &lt;1° determine runoff, erosion, and organic matter retention.</p></article>
+        <article class="th-insight th-reveal"><h3>Vegetation is the carbon pump</h3><p>NDVI ranks #1 in MLP, #2 in RF and GB. Higher canopy cover = more litterfall, root turnover, and SOC input — confirming organisms as a key clorpt factor.</p></article>
+        <article class="th-insight th-reveal"><h3>Radar adds what optics misses</h3><p>Sentinel-1 VV ranked #3 in RF. Cloud-penetrating radar captures surface moisture and structural roughness where Sentinel-2 has monsoon cloud gaps.</p></article>
+      </div>
+      <div class="th-importance-gallery" aria-label="Feature importance plots for all models">
+        <figure class="th-figure th-figure--contain"><img src="../images/projects/thesis/feature-importance-rf.jpg" alt="RF importance" loading="lazy" data-lightbox data-caption="Random Forest feature importance" role="button" tabindex="0" data-fallback-label="feature-importance-rf.jpg"></figure>
+        <figure class="th-figure th-figure--contain"><img src="../images/projects/thesis/feature-importance-gb.jpg" alt="GB importance" loading="lazy" data-lightbox data-caption="Gradient Boosting feature importance" role="button" tabindex="0" data-fallback-label="feature-importance-gb.jpg"></figure>
+        <figure class="th-figure th-figure--contain"><img src="../images/projects/thesis/feature-importance-svm.jpg" alt="SVM importance" loading="lazy" data-lightbox data-caption="Support Vector Machine feature importance" role="button" tabindex="0" data-fallback-label="feature-importance-svm.jpg"></figure>
+        <figure class="th-figure th-figure--contain"><img src="../images/projects/thesis/feature-importance-mlp.jpg" alt="MLP importance" loading="lazy" data-lightbox data-caption="Multilayer Perceptron feature importance" role="button" tabindex="0" data-fallback-label="feature-importance-mlp.jpg"></figure>
+        <figure class="th-figure th-figure--contain"><img src="../images/projects/thesis/feature-importance-knn.jpg" alt="KNN importance" loading="lazy" data-lightbox data-caption="K-Nearest Neighbours feature importance" role="button" tabindex="0" data-fallback-label="feature-importance-knn.jpg"></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- S8 SOC SPATIAL MAPS -->
+  <section class="th-section th-section--light" id="th-spatial-maps">
+    <div class="th-container">
+      <div class="th-reveal">
+        <div class="th-section-label">07 · Mapping Carbon Across Khulna</div>
+        <h2 class="th-heading">Higher in the south. Lower inland. The delta pattern revealed.</h2>
+        <p class="th-lead">The RF model produced a spatially coherent SOC map ranging from 0.6% to 15.2% across Khulna district. A clear south-to-north gradient emerges: coastal upazilas (Koyra, Dacope) with mangrove and wetland cover show the highest SOC; northern agricultural upazilas (Paikgachha, Dumuria) are SOC-depleted.</p>
+      </div>
+      <div class="th-map-grid">
+        <article class="th-map-card th-reveal"><img src="../images/projects/thesis/soc-map-rf.jpg" alt="RF SOC map" loading="lazy" data-lightbox data-caption="Random Forest SOC prediction" role="button" tabindex="0" data-fallback-label="soc-map-rf.jpg"><div class="th-map-card-body"><h3>Random Forest</h3><span class="th-map-r2">R² = 0.81</span><p>Most spatially diverse — recommended for policy</p></div></article>
+        <article class="th-map-card th-reveal"><img src="../images/projects/thesis/soc-map-gb.jpg" alt="GB SOC map" loading="lazy" data-lightbox data-caption="Gradient Boosting SOC prediction" role="button" tabindex="0" data-fallback-label="soc-map-gb.jpg"><div class="th-map-card-body"><h3>Gradient Boosting</h3><span class="th-map-r2">R² = 0.79</span><p>Uniform distribution — conservative estimate</p></div></article>
+        <article class="th-map-card th-reveal"><img src="../images/projects/thesis/soc-map-svm.jpg" alt="SVM SOC map" loading="lazy" data-lightbox data-caption="Support Vector Machine SOC prediction" role="button" tabindex="0" data-fallback-label="soc-map-svm.jpg"><div class="th-map-card-body"><h3>Support Vector Machine</h3><span class="th-map-r2">R² = 0.73</span><p>Clustered — moderate confidence</p></div></article>
+        <article class="th-map-card th-reveal"><img src="../images/projects/thesis/soc-map-mlp.jpg" alt="MLP SOC map" loading="lazy" data-lightbox data-caption="Multilayer Perceptron SOC prediction" role="button" tabindex="0" data-fallback-label="soc-map-mlp.jpg"><div class="th-map-card-body"><h3>Multilayer Perceptron</h3><span class="th-map-r2">R² = 0.59</span><p>Overfit — unrealistically high values district-wide</p></div></article>
+        <article class="th-map-card th-reveal"><img src="../images/projects/thesis/soc-map-knn.jpg" alt="KNN SOC map" loading="lazy" data-lightbox data-caption="K-Nearest Neighbours SOC prediction" role="button" tabindex="0" data-fallback-label="soc-map-knn.jpg"><div class="th-map-card-body"><h3>K-Nearest Neighbours</h3><span class="th-map-r2">R² = 0.57</span><p>Compressed range — poor spatial variability</p></div></article>
+      </div>
+      <figure class="th-figure th-figure--contain th-rf-map th-reveal">
+        <img src="../images/projects/thesis/soc-spatial-distribution.jpg" alt="Full RF SOC spatial distribution map." loading="lazy" data-lightbox data-caption="Random Forest prediction · SOC 0.6%–15.2% · 10 m resolution · Khulna District, Bangladesh" role="button" tabindex="0" data-fallback-label="soc-spatial-distribution.jpg">
+        <div class="th-rf-caption">Random Forest prediction · SOC 0.6%–15.2% · 10 m resolution · Khulna District, Bangladesh</div>
+      </figure>
+      <div class="th-table-wrap th-upazila-wrap th-reveal">
+        <table class="th-upazila-table">
+          <thead><tr><th>Upazila</th><th>Mean SOC (%)</th><th>Dominant Class</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr class="th-upazila-row"><td>Koyra</td><td>~9.0</td><td>High–Very High</td><td>84% area in High/Very High. Mangrove proximity.</td></tr>
+            <tr class="th-upazila-row"><td>Dacope</td><td>~8.0</td><td>High</td><td>Coastal tidal influence. Wetland SOC accumulation.</td></tr>
+            <tr class="th-upazila-row"><td>Phultala</td><td>~7.0</td><td>Moderate–High</td><td>Central urban fringe. Transitional.</td></tr>
+            <tr class="th-upazila-row"><td>Terokhada</td><td>~6.5</td><td>Moderate</td><td>Mixed agriculture. Mid-range.</td></tr>
+            <tr class="th-upazila-row"><td>Dighalia</td><td>~6.5</td><td>Moderate</td><td>River proximity. Moderate organic input.</td></tr>
+            <tr class="th-upazila-row"><td>Rupsha</td><td>~6.0</td><td>Moderate</td><td>Near Khulna metro. Periurban land use.</td></tr>
+            <tr class="th-upazila-row"><td>Batiaghata</td><td>~5.0</td><td>Low</td><td>Agricultural. Low organic input.</td></tr>
+            <tr class="th-upazila-row"><td>Dumuria</td><td>~4.0</td><td>Low</td><td>Intensively farmed. SOC-depleted.</td></tr>
+            <tr class="th-upazila-row"><td>Paikgachha</td><td>~3.0</td><td>Very Low</td><td>&gt;99% Very Low/Low. Highest SOC depletion.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figure class="th-figure th-figure--contain th-upazila-map th-reveal">
+        <img src="../images/projects/thesis/soc-upazila-map.jpg" alt="Upazila-wise spatial distribution of predicted SOC." loading="lazy" data-lightbox data-caption="Upazila-wise SOC distribution. Koyra (SW) to Paikgachha (NE): the carbon gradient of coastal Bangladesh." role="button" tabindex="0" data-fallback-label="soc-upazila-map.jpg">
+        <figcaption>Upazila-wise spatial distribution of predicted SOC. Koyra (SW) to Paikgachha (NE): the carbon gradient of coastal Bangladesh.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- S9 LAND COVER -->
+  <section class="th-section th-section--dark" id="th-land-cover">
+    <div class="th-container">
+      <div class="th-reveal">
+        <div class="th-section-label">08 · Carbon Across Land Cover</div>
+        <h2 class="th-heading">Forests hold the carbon. Croplands are losing it.</h2>
+      </div>
+      <div class="th-land-chart th-land-animate th-reveal">
+        <!-- FIX 3: bars scaled to max=8.35, real data from Table 5 -->
+        <div class="th-land-row"><span class="th-land-label">Trees (Forest)</span><div class="th-land-track"><div class="th-land-fill th-lf-green" style="--th-target:100%"></div></div><span class="th-land-value">8.35%</span></div>
+        <div class="th-land-row"><span class="th-land-label">Rangeland</span><div class="th-land-track"><div class="th-land-fill th-lf-green2" style="--th-target:90.7%"></div></div><span class="th-land-value">7.57%</span></div>
+        <div class="th-land-row"><span class="th-land-label">Built Area</span><div class="th-land-track"><div class="th-land-fill th-lf-grey" style="--th-target:69.9%"></div></div><span class="th-land-value">5.84%</span></div>
+        <div class="th-land-row"><span class="th-land-label">Flooded Veg.</span><div class="th-land-track"><div class="th-land-fill th-lf-steel" style="--th-target:67.5%"></div></div><span class="th-land-value">5.64%</span></div>
+        <div class="th-land-row"><span class="th-land-label">Water</span><div class="th-land-track"><div class="th-land-fill th-lf-blue" style="--th-target:61.0%"></div></div><span class="th-land-value">5.10%</span></div>
+        <div class="th-land-row"><span class="th-land-label">Crops</span><div class="th-land-track"><div class="th-land-fill th-lf-amber" style="--th-target:58.4%"></div></div><span class="th-land-value">4.88%</span></div>
+        <div class="th-land-row"><span class="th-land-label">Bare Ground</span><div class="th-land-track"><div class="th-land-fill th-lf-amber-dark" style="--th-target:58.1%"></div></div><span class="th-land-value">4.85%</span></div>
+      </div>
+      <div class="th-finding-callout th-reveal">Forests (8.35%) hold 72% more SOC than croplands (4.88%). Converting forest to agriculture in Khulna results in an estimated ~3.5 percentage point SOC loss per unit area — a direct carbon debt.</div>
+
+      <!-- FIX 2+3: Range chart with real Table 5 data, no false disclaimer -->
+      <div class="th-range-chart th-reveal">
+        <h3>Within-class SOC variability (Table 5)</h3>
+        <!-- Scale: max possible = 15.19 (Trees max). Bar track = 100% = 15.19 -->
+        <div class="th-whisker-row">
+          <span class="th-land-label">Trees</span>
+          <div class="th-whisker-track">
+            <div class="th-whisker-bar" style="left:13.1%;width:87.7%"></div>
+            <span class="th-mean-dot" style="left:54.9%"></span>
+          </div>
+          <span class="th-whisker-meta">1.996–15.186 · mean 8.35</span>
+        </div>
+        <div class="th-whisker-row">
+          <span class="th-land-label">Rangeland</span>
+          <div class="th-whisker-track">
+            <div class="th-whisker-bar" style="left:20.3%;width:74.5%"></div>
+            <span class="th-mean-dot" style="left:49.7%"></span>
+          </div>
+          <span class="th-whisker-meta">3.091–14.438 · mean 7.57</span>
+        </div>
+        <div class="th-whisker-row">
+          <span class="th-land-label">Built Area</span>
+          <div class="th-whisker-track">
+            <div class="th-whisker-bar" style="left:12.0%;width:51.9%"></div>
+            <span class="th-mean-dot" style="left:38.4%"></span>
+          </div>
+          <span class="th-whisker-meta">1.829–9.724 · mean 5.84</span>
+        </div>
+        <div class="th-whisker-row">
+          <span class="th-land-label">Flooded Veg.</span>
+          <div class="th-whisker-track">
+            <div class="th-whisker-bar" style="left:10.5%;width:47.7%"></div>
+            <span class="th-mean-dot" style="left:37.1%"></span>
+          </div>
+          <span class="th-whisker-meta">1.602–8.844 · mean 5.64</span>
+        </div>
+        <div class="th-whisker-row">
+          <span class="th-land-label">Water</span>
+          <div class="th-whisker-track">
+            <div class="th-whisker-bar" style="left:5.2%;width:87.5%"></div>
+            <span class="th-mean-dot" style="left:33.5%"></span>
+          </div>
+          <span class="th-whisker-meta">0.787–14.114 · mean 5.10</span>
+        </div>
+        <div class="th-whisker-row">
+          <span class="th-land-label">Crops</span>
+          <div class="th-whisker-track">
+            <div class="th-whisker-bar" style="left:4.0%;width:51.1%"></div>
+            <span class="th-mean-dot" style="left:32.1%"></span>
+          </div>
+          <span class="th-whisker-meta">0.611–8.362 · mean 4.88</span>
+        </div>
+        <div class="th-whisker-row">
+          <span class="th-land-label">Bare Ground</span>
+          <div class="th-whisker-track">
+            <div class="th-whisker-bar" style="left:20.2%;width:61.7%"></div>
+            <span class="th-mean-dot" style="left:31.9%"></span>
+          </div>
+          <span class="th-whisker-meta">3.064–12.456 · mean 4.85</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- S10 SENSITIVITY -->
+  <section class="th-section th-section--light" id="th-sensitivity">
+    <div class="th-container">
+      <div class="th-reveal">
+        <div class="th-section-label">09 · Model Robustness</div>
+        <h2 class="th-heading">What happens when the data is wrong? RF barely flinches.</h2>
+        <p class="th-lead">Perturbation-based sensitivity analysis shifted each predictor by ±10% and measured ΔRMSE. This tests whether models remain reliable in real-world deployment where satellite data has noise, cloud contamination, or temporal mismatch.</p>
+      </div>
+      <div class="th-robust-grid">
+        <article class="th-robust-card th-reveal"><h3>Random Forest</h3><span class="th-verdict">🟢 MOST STABLE</span><p>ΔRMSE &lt; ±0.07 for most predictors. NDVI −10% raises RMSE by only +0.21. Slope and TRI perturbations cause &lt;0.07 shift. Recommended for operational deployment.</p></article>
+        <article class="th-robust-card th-reveal"><h3>Gradient Boosting</h3><span class="th-verdict">🟡 STABLE OVERALL</span><p>NDVI −10% raises RMSE by +0.27 — highest among ensemble models. SLOPE −10% raises RMSE by +0.14. Use RF for robustness, GB for accuracy cross-check.</p></article>
+        <article class="th-robust-card th-reveal"><h3>SVM</h3><span class="th-verdict">🟡 CLIMATE-SENSITIVE</span><p>TEMPERATURE ±10% causes ΔRMSE = ±1.56 — a critical failure mode. PRECIPITATION perturbations also destabilizing (+0.38/+0.43). Avoid for operational use.</p></article>
+        <article class="th-robust-card th-reveal"><h3>MLP</h3><span class="th-verdict">🔴 CRITICALLY UNSTABLE</span><p>TEMPERATURE ±10% causes ΔRMSE = +41.5 (catastrophic). PRECIPITATION −10% raises RMSE by +0.85. Neural network sensitivity unresolved with 201 samples.</p></article>
+        <article class="th-robust-card th-reveal"><h3>KNN</h3><span class="th-verdict">🔴 HIGHLY SENSITIVE</span><p>TEMPERATURE −10% causes ΔRMSE = +0.72. PRECIPITATION −10% raises RMSE by +0.35. Distance-based methods highly unstable under feature noise.</p></article>
+      </div>
+      <!-- FIX 4: Full sensitivity table with real Table 4 values for all 5 models -->
+      <div class="th-sensitivity-wrap th-reveal">
+        <table class="th-sensitivity-table">
+          <thead>
+            <tr><th>Predictor (−10%)</th><th>RF ΔRMSE</th><th>GB ΔRMSE</th><th>SVM ΔRMSE</th><th>MLP ΔRMSE</th><th>KNN ΔRMSE</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>NDVI</td><td class="th-heat-stable">+0.208</td><td class="th-heat-mid">+0.268</td><td class="th-heat-stable">+0.031</td><td class="th-heat-mid">+0.194</td><td class="th-heat-stable">+0.070</td></tr>
+            <tr><td>SLOPE</td><td class="th-heat-stable">+0.067</td><td class="th-heat-mid">+0.144</td><td class="th-heat-mid">+0.112</td><td class="th-heat-mid">+0.163</td><td class="th-heat-mid">+0.163</td></tr>
+            <tr><td>VV</td><td class="th-heat-stable">+0.001</td><td class="th-heat-stable">−0.086</td><td class="th-heat-stable">−0.084</td><td class="th-heat-stable">−0.133</td><td class="th-heat-stable">−0.143</td></tr>
+            <tr><td>DEM</td><td class="th-heat-stable">+0.031</td><td class="th-heat-stable">+0.087</td><td class="th-heat-stable">+0.027</td><td class="th-heat-stable">+0.005</td><td class="th-heat-stable">+0.051</td></tr>
+            <tr><td>BSI</td><td class="th-heat-stable">+0.047</td><td class="th-heat-stable">+0.069</td><td class="th-heat-stable">+0.068</td><td class="th-heat-stable">+0.028</td><td class="th-heat-stable">+0.065</td></tr>
+            <tr><td>TRI</td><td class="th-heat-stable">+0.032</td><td class="th-heat-stable">+0.019</td><td class="th-heat-stable">+0.036</td><td class="th-heat-stable">+0.048</td><td class="th-heat-stable">+0.039</td></tr>
+            <tr><td>PRECIPITATION</td><td class="th-heat-stable">+0.036</td><td class="th-heat-stable">−0.158</td><td class="th-heat-high">+0.378</td><td class="th-heat-high">+0.849</td><td class="th-heat-high">−0.351</td></tr>
+            <tr><td>TEMPERATURE</td><td class="th-heat-stable">−0.011</td><td class="th-heat-stable">−0.040</td><td class="th-heat-critical">+1.556</td><td class="th-heat-critical">+41.51</td><td class="th-heat-high">+0.720</td></tr>
+            <tr><td>RED2</td><td class="th-heat-stable">+0.015</td><td class="th-heat-stable">+0.068</td><td class="th-heat-stable">+0.013</td><td class="th-heat-stable">−0.182</td><td class="th-heat-stable">+0.089</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- S11 SPATIAL VALIDATION -->
+  <section class="th-section th-section--dark" id="th-spatial-validation">
+    <div class="th-container">
+      <div class="th-reveal">
+        <div class="th-section-label">10 · Spatial Validation</div>
+        <h2 class="th-heading">The predictions cluster where they should. Moran's I confirms it.</h2>
+      </div>
+      <div class="th-validation-grid">
+        <figure class="th-figure th-figure--contain th-reveal">
+          <img src="../images/projects/thesis/moran-spatial-autocorrelation.jpg" alt="Moran's I spatial autocorrelation chart." loading="lazy" data-lightbox data-caption="Moran's I = 0.1447 · z = 3.653 · p = 0.000259" role="button" tabindex="0" data-fallback-label="moran-spatial-autocorrelation.jpg">
+          <figcaption>Moran's I spatial autocorrelation test for the predicted SOC surface.</figcaption>
+        </figure>
+        <div class="th-validation-card th-reveal">
+          <div class="th-validation-metric"><strong>Moran's I = 0.1447</strong><span>Significant positive spatial autocorrelation</span></div>
+          <div class="th-validation-metric"><strong>z-score = 3.653</strong><span>Highly significant (p &lt; 0.01)</span></div>
+          <div class="th-validation-metric"><strong>p-value = 0.000259</strong><span>Clustering is not random</span></div>
+          <p>SOC values in Khulna are spatially clustered — high SOC zones neighbour high SOC zones. This validates that RF predictions are physically coherent with landscape structure, not random noise.</p>
+        </div>
+      </div>
+      <div class="th-validation-note th-reveal">This is the study's spatial robustness proof. Most undergraduate SOC studies report only R² and RMSE. Adding Moran's I spatial autocorrelation testing places this work at the methodological level of peer-reviewed digital soil mapping literature.</div>
+    </div>
+  </section>
+
+  <!-- S12 FINDINGS -->
+  <section class="th-section th-section--light" id="th-findings">
+    <div class="th-container">
+      <div class="th-reveal">
+        <div class="th-section-label">11 · Findings &amp; Implications</div>
+        <h2 class="th-heading">What this means for Bangladesh — and for the planet.</h2>
+      </div>
+      <div class="th-findings-grid">
+        <article class="th-finding-card th-reveal"><span class="th-finding-num">01</span><h3>Random Forest wins</h3><p>RF (R²=0.81) outperforms GB, SVM, MLP and KNN. Ensemble tree methods are optimal for SOC prediction with moderate sample sizes and correlated RS covariates.</p></article>
+        <article class="th-finding-card th-reveal"><span class="th-finding-num">02</span><h3>Slope + NDVI are universal controls</h3><p>Topography and vegetation dominate in 4 of 5 models. Even in a near-flat delta, micro-relief determines SOC fate. Organisms and relief are the dominant clorpt factors at this scale.</p></article>
+        <article class="th-finding-card th-reveal"><span class="th-finding-num">03</span><h3>Sentinel-1 SAR adds irreplaceable value</h3><p>VV backscatter ranked 3rd in RF. Radar penetrates cloud cover ubiquitous in Bangladesh's monsoon climate, capturing soil moisture and roughness unavailable to optical sensors.</p></article>
+        <article class="th-finding-card th-reveal"><span class="th-finding-num">04</span><h3>A clear south–north carbon gradient</h3><p>Koyra (coast, mangrove, ~9% SOC) to Paikgachha (inland, agriculture, ~3% SOC). Protecting coastal upazilas is protecting carbon.</p></article>
+        <article class="th-finding-card th-reveal"><span class="th-finding-num">05</span><h3>Croplands are SOC sinks</h3><p>Mean SOC in crops (4.88%) is 41% lower than in forests (8.35%). Carbon-smart agriculture — cover crops, residue retention — could add measurable SOC stocks.</p></article>
+        <article class="th-finding-card th-reveal"><span class="th-finding-num">06</span><h3>First fine-scale SOC map of Khulna</h3><p>No prior study produced a 10 m resolution, wall-to-wall SOC surface for this region. This is a baseline for carbon accounting, soil health monitoring, and climate adaptation planning.</p></article>
+      </div>
+      <aside class="th-policy th-reveal">
+        <h3>Policy implications</h3>
+        <ul>
+          <li>This map can directly support Bangladesh's Nationally Determined Contribution (NDC) to the Paris Agreement — providing spatially explicit soil carbon stock estimates per hectare.</li>
+          <li>Identifies high-SOC zones (Koyra, Dacope mangroves) for immediate conservation priority.</li>
+          <li>Identifies SOC-depleted zones (Paikgachha, Dumuria croplands) for targeted carbon farming intervention.</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- S13 LIMITATIONS -->
+  <section class="th-section th-section--dark" id="th-limitations">
+    <div class="th-container">
+      <div class="th-reveal">
+        <div class="th-section-label">12 · Limitations &amp; Future Directions</div>
+        <h2 class="th-heading">What this study does not yet solve.</h2>
+      </div>
+      <div class="th-limit-grid">
+        <div class="th-limit-column th-reveal">
+          <h3>Limitations</h3>
+          <ul class="th-limit-list">
+            <li>Restricted to 0–20 cm topsoil. Subsoil SOC (which can exceed surface stocks in some deltaic soils) not modeled.</li>
+            <li>201 samples over 4,394 km² (~4.6 pts/100 km²). Fine-scale heterogeneity in polders and mangrove margins may be underrepresented.</li>
+            <li>Intrinsic soil properties (texture, mineralogy, parent material) excluded — no SRDI laboratory data available for these variables.</li>
+            <li>Temporal snapshot only. SOC dynamics under seasonal flooding and cyclone events not captured.</li>
+            <li>No formal uncertainty quantification (prediction intervals, quantile forests) — scope limitation.</li>
+          </ul>
+        </div>
+        <div class="th-limit-column th-reveal">
+          <h3>Future directions</h3>
+          <ul class="th-limit-list th-limit-list--future">
+            <li>Multi-depth sampling (0–20, 20–50, 50–100 cm) to estimate full profile SOC stocks for carbon accounting.</li>
+            <li>Time-series Sentinel data — seasonal NDVI composites, flood-period SAR — to capture temporal SOC dynamics.</li>
+            <li>Integration of soil texture and mineralogy from laboratory data to improve model parsimony.</li>
+            <li>Transferability testing to adjacent coastal districts (Satkhira, Bagerhat) and pan-Bangladesh SOC mapping.</li>
+            <li>Quantile RF or Gaussian Process models for uncertainty mapping — producing confidence envelopes around SOC predictions.</li>
+            <li>Deep learning approaches (CNN on image patches, Graph Neural Networks for spatial autocorrelation) for next-generation accuracy.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- S14 PUBLICATION -->
+  <section class="th-section th-section--light" id="th-publication">
+    <div class="th-container">
+      <div class="th-reveal">
+        <div class="th-section-label">13 · Related Publication</div>
+        <h2 class="th-heading">This thesis contributed to peer-reviewed science.</h2>
+      </div>
+      <article class="th-publication th-reveal">
+        <p class="th-publication-citation"><strong>Faisal, W., Sarkar, S. K., Huq, K. T., Noor, T. A., &amp; Rafi, A. H. (2025).</strong> Machine Learning Integrated Approach for modeling crop production in Bangladesh. <em>Smart Agricultural Technology</em>, 101403.</p>
+        <a class="th-doi" href="https://doi.org/10.1016/j.atech.2025.101403" target="_blank" rel="noopener noreferrer" aria-label="Open publication DOI in a new tab">DOI · 10.1016/j.atech.2025.101403 ↗</a>
+        <p class="th-publication-note">Co-authored publication applying the same ML-for-agriculture framework developed and refined through this thesis research. Published in Smart Agricultural Technology (Elsevier), 2025.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- S15 STACK -->
+  <section class="th-section th-section--dark" id="th-stack">
+    <div class="th-container">
+      <div class="th-reveal">
+        <div class="th-section-label">14 · Tools &amp; Stack</div>
+        <h2 class="th-heading">The full pipeline.</h2>
+      </div>
+      <div class="th-stack-grid">
+        <article class="th-stack-category th-reveal"><h3>◉ Satellite Data</h3><div class="th-tag-row"><span class="th-tag">Sentinel-2</span><span class="th-tag">Sentinel-1 GRD</span><span class="th-tag">SRTM DEM</span><span class="th-tag">ERA5-Land</span></div></article>
+        <article class="th-stack-category th-reveal"><h3>⌘ Processing Platform</h3><div class="th-tag-row"><span class="th-tag">Google Earth Engine</span><span class="th-tag">ArcGIS Pro 10.8</span><span class="th-tag">Extract Multi Values to Point</span></div></article>
+        <article class="th-stack-category th-reveal"><h3>λ Machine Learning</h3><div class="th-tag-row"><span class="th-tag">scikit-learn</span><span class="th-tag">Random Forest</span><span class="th-tag">Gradient Boosting</span><span class="th-tag">SVR (RBF)</span><span class="th-tag">MLP</span><span class="th-tag">KNN</span><span class="th-tag">SHAP</span><span class="th-tag">Moran's I</span></div></article>
+        <article class="th-stack-category th-reveal"><h3>⌖ Geospatial Analysis</h3><div class="th-tag-row"><span class="th-tag">Python</span><span class="th-tag">GeoPandas</span><span class="th-tag">Rasterio</span><span class="th-tag">NumPy</span><span class="th-tag">Pandas</span><span class="th-tag">Pearson Correlation</span><span class="th-tag">VIF Filtering</span></div></article>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<nav class="th-footer-nav" aria-label="Project navigation">
+  <div class="th-footer-grid">
+    <a class="th-footer-card" href="../index.html#projects"><span>←</span><strong>Portfolio projects</strong></a>
+    <a class="th-footer-card" href="https://doi.org/10.1016/j.atech.2025.101403" target="_blank" rel="noopener noreferrer"><strong>Read the publication</strong><span>→</span></a>
+  </div>
+</nav>
+
+<div class="th-lightbox" id="th-lightbox" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Image lightbox">
+  <div class="th-lightbox-inner">
+    <button class="th-lightbox-close" type="button" aria-label="Close image lightbox">×</button>
+    <img class="th-lightbox-image" id="th-lightbox-image" src="" alt="">
+    <div class="th-lightbox-caption" id="th-lightbox-caption" aria-live="polite"></div>
+  </div>
+</div>
+
+<button class="th-back-top" type="button" aria-label="Back to top">↑</button>
+
+<script>
+(() => {
+  "use strict";
+  const RM = window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+
+  /* Image fallback */
+  document.querySelectorAll("img[data-fallback-label]").forEach(img => {
+    img.addEventListener("error", () => {
+      if (img.classList.contains("th-hero-bg")) { img.style.display="none"; return; }
+      const fb = document.createElement("div");
+      fb.className = "th-img-fallback";
+      fb.setAttribute("role","img");
+      fb.setAttribute("aria-label","Image unavailable: "+(img.dataset.fallbackLabel||""));
+      fb.textContent = "IMAGE UNAVAILABLE · "+(img.dataset.fallbackLabel||img.src);
+      img.parentNode && img.parentNode.replaceChild(fb, img);
+    }, {once:true});
+  });
+
+  /* Reveal + bar animations */
+  const els = document.querySelectorAll(".th-reveal,.th-bar-animate,.th-feature-animate,.th-land-animate");
+  if (RM || !("IntersectionObserver" in window)) {
+    els.forEach(el => el.classList.add("th-visible"));
+  } else {
+    const ro = new IntersectionObserver((entries,obs) => {
+      entries.forEach(e => { if(!e.isIntersecting) return; e.target.classList.add("th-visible"); obs.unobserve(e.target); });
+    }, {rootMargin:"0px 0px -8% 0px",threshold:0.12});
+    els.forEach(el => ro.observe(el));
+  }
+
+  /* Counters */
+  const easeOut = t => 1-Math.pow(1-t,3);
+  const fmtNum = (v,d) => v.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+  const runCounter = node => {
+    if (node.dataset.done) return; node.dataset.done="1";
+    const target=+node.dataset.counter, decimals=+(node.dataset.decimals||0);
+    if (RM) { node.textContent=fmtNum(target,decimals); return; }
+    const t0=performance.now();
+    const tick=now => {
+      const p=Math.min((now-t0)/1500,1);
+      node.textContent=fmtNum(target*easeOut(p),decimals);
+      if(p<1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
+  const counters=document.querySelectorAll("[data-counter]");
+  if ("IntersectionObserver" in window && !RM) {
+    const co=new IntersectionObserver((entries,obs) => {
+      entries.forEach(e => { if(!e.isIntersecting) return; runCounter(e.target); obs.unobserve(e.target); });
+    },{threshold:0.6});
+    counters.forEach(n=>co.observe(n));
+  } else { counters.forEach(runCounter); }
+
+  /* Model switcher */
+  const modelRows=[...document.querySelectorAll(".th-model-row")];
+  const pvImg=document.getElementById("th-model-preview-image");
+  const pvMetric=document.getElementById("th-model-preview-metric");
+  const pvCap=document.getElementById("th-model-preview-caption");
+  const verdicts={rf:"Highest explained variance and lowest error among the five algorithms.",gb:"Strong ensemble performance, slightly behind RF on explained variance.",svm:"Moderate fit, with substantial sensitivity to climate-variable perturbation.",mlp:"Weak fit and severe perturbation instability relative to ensemble models.",knn:"Lowest explained variance and compressed spatial variability in SOC predictions."};
+  const activateModel=row => {
+    modelRows.forEach(r=>r.classList.toggle("th-active",r===row));
+    pvImg.src="../images/projects/thesis/"+row.dataset.image;
+    pvImg.alt=row.dataset.label+" scatter plot";
+    pvImg.dataset.fallbackLabel=row.dataset.image;
+    pvMetric.textContent=row.dataset.label+" · R² = "+row.dataset.r2+" · RMSE = "+row.dataset.rmse;
+    pvCap.textContent="Active: "+row.dataset.label+". "+verdicts[row.dataset.model];
+  };
+  modelRows.forEach(row => {
+    row.addEventListener("click",()=>activateModel(row));
+    const btn=row.querySelector(".th-model-button");
+    btn && btn.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();activateModel(row);} });
+  });
+
+  /* Upazila table */
+  const uRows=document.querySelectorAll(".th-upazila-row");
+  uRows.forEach(row => {
+    row.setAttribute("tabindex","0"); row.setAttribute("role","button");
+    const act=()=>uRows.forEach(r=>r.classList.toggle("th-active",r===row));
+    row.addEventListener("click",act);
+    row.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();act();} });
+  });
+
+  /* Lightbox */
+  const lb=document.getElementById("th-lightbox");
+  const lbImg=document.getElementById("th-lightbox-image");
+  const lbCap=document.getElementById("th-lightbox-caption");
+  const lbClose=lb.querySelector(".th-lightbox-close");
+  let prevFocus=null;
+  const openLB=img=>{ if(!img||!img.src) return; prevFocus=document.activeElement; lbImg.src=img.currentSrc||img.src; lbImg.alt=img.alt||""; lbCap.textContent=img.dataset.caption||img.alt||""; lb.classList.add("th-open"); lb.setAttribute("aria-hidden","false"); document.body.classList.add("th-lock"); lbClose.focus(); };
+  const closeLB=()=>{ lb.classList.remove("th-open"); lb.setAttribute("aria-hidden","true"); document.body.classList.remove("th-lock"); lbImg.src=""; prevFocus&&prevFocus.focus&&prevFocus.focus(); };
+  document.querySelectorAll("img[data-lightbox]").forEach(img => {
+    img.addEventListener("click",()=>openLB(img));
+    img.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();openLB(img);} });
+  });
+  lbClose.addEventListener("click",closeLB);
+  lb.addEventListener("click",e=>{ if(e.target===lb) closeLB(); });
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&lb.classList.contains("th-open")) closeLB(); });
+
+  /* Back to top */
+  const bt=document.querySelector(".th-back-top");
+  window.addEventListener("scroll",()=>bt.classList.toggle("th-show",scrollY>300),{passive:true});
+  bt.addEventListener("click",()=>window.scrollTo({top:0,behavior:RM?"auto":"smooth"}));
+
+  /* Smooth anchor scroll */
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener("click",e=>{ const t=document.querySelector(a.getAttribute("href")); if(!t) return; e.preventDefault(); t.scrollIntoView({behavior:RM?"auto":"smooth",block:"start"}); });
+  });
+
+  /* Guarded mobile nav */
+  const hdr=document.querySelector(".site-header");
+  const mtoggle=document.querySelector(".menu-toggle");
+  const navLinks=document.querySelector(".nav-links");
+  if(hdr&&mtoggle&&navLinks&&hdr.dataset.navInit!=="true"){
+    hdr.dataset.navInit="true";
+    mtoggle.setAttribute("aria-expanded","false");
+    mtoggle.addEventListener("click",()=>{ const exp=mtoggle.getAttribute("aria-expanded")==="true"; mtoggle.setAttribute("aria-expanded",String(!exp)); navLinks.classList.toggle("open",!exp); hdr.classList.toggle("nav-open",!exp); });
+    navLinks.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>{ mtoggle.setAttribute("aria-expanded","false"); navLinks.classList.remove("open"); hdr.classList.remove("nav-open"); }));
+  }
+})();
+</script>
+</body>
+</html>
+
+<!-- IMAGE MANIFEST
+soc-spatial-map-rf.jpg
+study-area-map.jpg
+predictor-ndvi.jpg
+predictor-red2.jpg
+predictor-bsi.jpg
+predictor-precipitation.jpg
+predictor-temperature.jpg
+predictor-vv.jpg
+predictor-elevation.jpg
+predictor-slope.jpg
+predictor-tri.jpg
+correlation-matrix.jpg
+methodology-flowchart.jpg
+scatter-rf.jpg
+scatter-gb.jpg
+scatter-svm.jpg
+scatter-mlp.jpg
+scatter-knn.jpg
+feature-importance-rf.jpg
+shap-beeswarm.jpg
+feature-importance-gb.jpg
+feature-importance-svm.jpg
+feature-importance-mlp.jpg
+feature-importance-knn.jpg
+soc-map-rf.jpg
+soc-map-gb.jpg
+soc-map-svm.jpg
+soc-map-mlp.jpg
+soc-map-knn.jpg
+soc-spatial-distribution.jpg
+soc-upazila-map.jpg
+moran-spatial-autocorrelation.jpg
+-->
