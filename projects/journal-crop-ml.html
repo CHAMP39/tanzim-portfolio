@@ -1,0 +1,3412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Machine Learning Crop Suitability in Bangladesh | Tanzim Al Noor</title>
+  <meta
+    name="description"
+    content="Peer-reviewed Elsevier research co-authored by Tanzim Al Noor using ANN, Random Forest and SVM to model crop suitability across Bangladesh."
+  >
+
+  <link rel="stylesheet" href="../styles.css">
+
+  <style>
+    :root {
+      --jc-forest: #0a1f14;
+      --jc-forest-2: #0d291b;
+      --jc-forest-3: #123522;
+      --jc-gold: #c9a227;
+      --jc-gold-soft: #e1c766;
+      --jc-earth: #7a4f2e;
+      --jc-teal: #2a9d8f;
+      --jc-offwhite: #f0ece4;
+      --jc-parchment: #f7f3eb;
+      --jc-ink: #132219;
+      --jc-muted: #677169;
+      --jc-border-dark: rgba(240, 236, 228, 0.14);
+      --jc-border-light: rgba(10, 31, 20, 0.14);
+      --jc-shadow: 0 24px 70px rgba(0, 0, 0, 0.18);
+      --jc-radius-sm: 12px;
+      --jc-radius: 20px;
+      --jc-radius-lg: 32px;
+      --jc-max: 1440px;
+      --jc-transition: 280ms cubic-bezier(.2,.8,.2,1);
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background: var(--jc-forest);
+    }
+
+    body {
+      margin: 0;
+      background: var(--jc-forest);
+      color: var(--jc-offwhite);
+      font-family: "Inter", sans-serif;
+      overflow-x: hidden;
+    }
+
+    body.jc-lightbox-open {
+      overflow: hidden;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .jc-main {
+      overflow: hidden;
+    }
+
+    .jc-container {
+      width: min(calc(100% - 32px), var(--jc-max));
+      margin-inline: auto;
+    }
+
+    .jc-section {
+      position: relative;
+      padding: 88px 0;
+    }
+
+    .jc-section--dark {
+      background: var(--jc-forest);
+      color: var(--jc-offwhite);
+    }
+
+    .jc-section--dark-2 {
+      background: var(--jc-forest-2);
+      color: var(--jc-offwhite);
+    }
+
+    .jc-section--light {
+      background: var(--jc-parchment);
+      color: var(--jc-ink);
+    }
+
+    .jc-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 18px;
+      color: var(--jc-gold);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .76rem;
+      font-weight: 700;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .jc-label::before {
+      width: 30px;
+      height: 1px;
+      content: "";
+      background: currentColor;
+    }
+
+    .jc-heading {
+      max-width: 1000px;
+      margin: 0;
+      font-family: "Fraunces", serif;
+      font-size: clamp(2.4rem, 7vw, 5.8rem);
+      font-weight: 650;
+      line-height: .98;
+      letter-spacing: -.045em;
+      text-wrap: balance;
+    }
+
+    .jc-heading--medium {
+      font-size: clamp(2.2rem, 6vw, 4.7rem);
+    }
+
+    .jc-intro {
+      max-width: 850px;
+      margin: 24px 0 0;
+      font-size: clamp(1rem, 2vw, 1.18rem);
+      line-height: 1.75;
+      opacity: .82;
+    }
+
+    .jc-mono {
+      font-family: "JetBrains Mono", monospace;
+    }
+
+    .jc-gold {
+      color: var(--jc-gold);
+    }
+
+    .jc-reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition:
+        opacity 700ms cubic-bezier(.2,.8,.2,1),
+        transform 700ms cubic-bezier(.2,.8,.2,1);
+    }
+
+    .jc-reveal.jc-visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* HERO */
+    .jc-hero {
+      position: relative;
+      min-height: 100svh;
+      display: flex;
+      align-items: flex-end;
+      background:
+        linear-gradient(
+          90deg,
+          rgba(10, 31, 20, .92) 0%,
+          rgba(10, 31, 20, .84) 42%,
+          rgba(10, 31, 20, .56) 100%
+        ),
+        url("../images/projects/journal/bangladesh-crop-map.jpg") center / cover no-repeat;
+      isolation: isolate;
+    }
+
+    .jc-hero::after {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      content: "";
+      background:
+        linear-gradient(to top, rgba(10,31,20,.9), transparent 45%),
+        radial-gradient(circle at 78% 25%, rgba(201,162,39,.13), transparent 32%);
+      pointer-events: none;
+    }
+
+    .jc-hero.jc-image-missing {
+      background: var(--jc-forest);
+    }
+
+    .jc-hero-missing {
+      position: absolute;
+      top: 120px;
+      right: 24px;
+      display: none;
+      z-index: 2;
+      color: rgba(240,236,228,.45);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .72rem;
+      letter-spacing: .06em;
+    }
+
+    .jc-hero.jc-image-missing .jc-hero-missing {
+      display: block;
+    }
+
+    .jc-hero-inner {
+      width: min(calc(100% - 32px), var(--jc-max));
+      margin-inline: auto;
+      padding: 145px 0 118px;
+    }
+
+    .jc-open-badge {
+      position: absolute;
+      top: 104px;
+      right: max(16px, calc((100vw - var(--jc-max)) / 2));
+      z-index: 3;
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 15px;
+      border: 1px solid rgba(201,162,39,.5);
+      border-radius: 999px;
+      background: var(--jc-gold);
+      color: var(--jc-forest);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .68rem;
+      font-weight: 800;
+      box-shadow: var(--jc-shadow);
+    }
+
+    .jc-hero-eyebrow {
+      max-width: 920px;
+      margin: 0 0 18px;
+      color: var(--jc-gold-soft);
+      font-family: "JetBrains Mono", monospace;
+      font-size: clamp(.72rem, 1.6vw, .9rem);
+      line-height: 1.6;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .jc-hero-title {
+      max-width: 1180px;
+      margin: 0;
+      font-family: "Fraunces", serif;
+      font-size: clamp(3.35rem, 10vw, 8rem);
+      font-weight: 700;
+      line-height: .88;
+      letter-spacing: -.06em;
+      text-wrap: balance;
+    }
+
+    .jc-hero-subhead {
+      max-width: 890px;
+      margin: 28px 0 0;
+      color: rgba(240,236,228,.82);
+      font-size: clamp(1.02rem, 2vw, 1.28rem);
+      line-height: 1.72;
+    }
+
+    .jc-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 32px;
+    }
+
+    .jc-chip {
+      display: inline-flex;
+      padding: 9px 12px;
+      border: 1px solid rgba(201,162,39,.72);
+      border-radius: 999px;
+      color: var(--jc-gold-soft);
+      background: rgba(10,31,20,.38);
+      backdrop-filter: blur(7px);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .72rem;
+    }
+
+    .jc-hero-bottom {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      border-top: 1px solid rgba(240,236,228,.15);
+      background: rgba(10,31,20,.63);
+      backdrop-filter: blur(12px);
+    }
+
+    .jc-hero-bottom-inner {
+      width: min(calc(100% - 32px), var(--jc-max));
+      min-height: 72px;
+      margin-inline: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 7px;
+      padding: 13px 0;
+      color: rgba(240,236,228,.65);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .67rem;
+      line-height: 1.6;
+    }
+
+    .jc-scroll-label {
+      color: var(--jc-gold-soft);
+    }
+
+    /* IDENTITY STRIP */
+    .jc-identity {
+      background: var(--jc-forest-2);
+      border-top: 1px solid var(--jc-border-dark);
+      border-bottom: 1px solid var(--jc-border-dark);
+    }
+
+    .jc-identity-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+
+    .jc-fact {
+      min-width: 0;
+      padding: 22px 16px;
+      border-bottom: 1px solid var(--jc-border-dark);
+    }
+
+    .jc-fact:last-child {
+      border-bottom: 0;
+    }
+
+    .jc-fact-label {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--jc-gold);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .63rem;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+    }
+
+    .jc-fact-value {
+      color: rgba(240,236,228,.82);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .7rem;
+      line-height: 1.6;
+    }
+
+    /* PROBLEM */
+    .jc-card-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 42px;
+    }
+
+    .jc-problem-card {
+      min-height: 100%;
+      padding: 26px;
+      border-left: 4px solid var(--jc-gold);
+      border-radius: 0 var(--jc-radius) var(--jc-radius) 0;
+      background: var(--jc-forest);
+      color: var(--jc-offwhite);
+      box-shadow: 0 18px 45px rgba(10,31,20,.12);
+    }
+
+    .jc-problem-card h3 {
+      margin: 0 0 14px;
+      font-family: "Fraunces", serif;
+      font-size: 1.65rem;
+      line-height: 1.1;
+    }
+
+    .jc-problem-card p {
+      margin: 0;
+      color: rgba(240,236,228,.72);
+      font-size: .95rem;
+      line-height: 1.72;
+    }
+
+    /* FIX 4: Changed from <blockquote> styled as a quotation to a finding panel */
+    .jc-finding-callout {
+      max-width: 1100px;
+      margin: 58px 0 0;
+      padding: 28px 30px;
+      border-left: 4px solid var(--jc-gold);
+      border-radius: 0 var(--jc-radius) var(--jc-radius) 0;
+      background: rgba(10,31,20,.06);
+    }
+
+    .jc-finding-callout-label {
+      display: block;
+      margin-bottom: 10px;
+      color: var(--jc-earth);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .63rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+    }
+
+    .jc-finding-callout p {
+      margin: 0;
+      color: var(--jc-earth);
+      font-family: "Fraunces", serif;
+      font-size: clamp(1.5rem, 3.5vw, 2.8rem);
+      font-style: italic;
+      line-height: 1.22;
+      letter-spacing: -.02em;
+    }
+
+    /* AUTHORS */
+    .jc-author-strip {
+      display: grid;
+      grid-auto-columns: minmax(265px, 84vw);
+      grid-auto-flow: column;
+      gap: 14px;
+      overflow-x: auto;
+      margin-top: 40px;
+      padding: 5px 3px 20px;
+      scroll-snap-type: x mandatory;
+    }
+
+    .jc-author-card {
+      scroll-snap-align: start;
+      padding: 23px;
+      border: 1px solid var(--jc-border-dark);
+      border-radius: var(--jc-radius);
+      background: rgba(255,255,255,.025);
+    }
+
+    .jc-author-card--mine {
+      border-color: var(--jc-gold);
+      box-shadow: inset 0 0 0 1px rgba(201,162,39,.2);
+    }
+
+    .jc-author-name {
+      margin: 0;
+      font-family: "Fraunces", serif;
+      font-size: 1.5rem;
+    }
+
+    .jc-author-mark {
+      display: block;
+      margin-top: 6px;
+      color: var(--jc-gold);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .66rem;
+      text-transform: uppercase;
+    }
+
+    .jc-author-affiliation {
+      margin: 18px 0 12px;
+      color: rgba(240,236,228,.54);
+      font-size: .75rem;
+      line-height: 1.5;
+    }
+
+    .jc-author-roles {
+      margin: 0;
+      color: rgba(240,236,228,.75);
+      font-size: .84rem;
+      line-height: 1.65;
+    }
+
+    .jc-contribution-note {
+      max-width: 1060px;
+      margin-top: 34px;
+      padding: 22px 25px;
+      border-left: 4px solid var(--jc-gold);
+      background: rgba(201,162,39,.06);
+      color: rgba(240,236,228,.82);
+      line-height: 1.75;
+    }
+
+    /* STUDY AREA */
+    .jc-study-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 28px;
+      margin-top: 42px;
+    }
+
+    .jc-image-shell {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--jc-radius);
+      background: #06120c;
+      box-shadow: var(--jc-shadow);
+    }
+
+    .jc-image-shell img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      cursor: zoom-in;
+      transition: transform var(--jc-transition), opacity var(--jc-transition);
+    }
+
+    .jc-image-shell:hover img {
+      transform: scale(1.015);
+    }
+
+    .jc-image-shell.jc-is-missing img {
+      display: none;
+    }
+
+    .jc-img-fallback {
+      display: none;
+      min-height: 260px;
+      align-items: center;
+      justify-content: center;
+      padding: 25px;
+      color: rgba(240,236,228,.44);
+      text-align: center;
+      font-family: "JetBrains Mono", monospace;
+      font-size: .72rem;
+      letter-spacing: .05em;
+    }
+
+    .jc-image-shell.jc-is-missing .jc-img-fallback {
+      display: flex;
+    }
+
+    .jc-figure-caption {
+      margin: 14px 2px 0;
+      color: var(--jc-muted);
+      font-size: .78rem;
+      line-height: 1.6;
+    }
+
+    .jc-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--jc-border-light);
+      border-radius: var(--jc-radius);
+      background: var(--jc-border-light);
+    }
+
+    .jc-stat {
+      min-height: 126px;
+      padding: 19px;
+      background: var(--jc-parchment);
+    }
+
+    .jc-stat-number {
+      display: block;
+      color: var(--jc-gold);
+      font-family: "Fraunces", serif;
+      font-size: clamp(1.7rem, 5vw, 3rem);
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .jc-stat-label {
+      display: block;
+      margin-top: 9px;
+      color: var(--jc-muted);
+      font-size: .72rem;
+      line-height: 1.45;
+    }
+
+    .jc-variable-panel {
+      margin-top: 50px;
+    }
+
+    .jc-subtitle {
+      margin: 0 0 20px;
+      font-family: "Fraunces", serif;
+      font-size: clamp(1.65rem, 4vw, 2.8rem);
+      letter-spacing: -.03em;
+    }
+
+    .jc-variable-groups {
+      display: grid;
+      gap: 22px;
+    }
+
+    .jc-variable-group h4 {
+      margin: 0 0 10px;
+      color: var(--jc-earth);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .67rem;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+
+    .jc-variable-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .jc-variable-btn {
+      min-height: 48px;
+      padding: 11px;
+      border: 1px solid var(--jc-border-light);
+      border-radius: 10px;
+      background: transparent;
+      color: var(--jc-ink);
+      cursor: pointer;
+      text-align: left;
+      font-family: "JetBrains Mono", monospace;
+      font-size: .68rem;
+      transition:
+        background var(--jc-transition),
+        border-color var(--jc-transition),
+        color var(--jc-transition),
+        transform var(--jc-transition);
+    }
+
+    .jc-variable-btn:hover,
+    .jc-variable-btn:focus-visible,
+    .jc-variable-btn[aria-pressed="true"] {
+      border-color: var(--jc-gold);
+      background: var(--jc-forest);
+      color: var(--jc-offwhite);
+      transform: translateY(-2px);
+    }
+
+    .jc-variable-description {
+      min-height: 76px;
+      margin-top: 18px;
+      padding: 18px 20px;
+      border-left: 3px solid var(--jc-gold);
+      background: rgba(201,162,39,.08);
+      color: var(--jc-ink);
+      font-size: .9rem;
+      line-height: 1.65;
+    }
+
+    /* VARIABLE IMAGE VIEWER */
+    .jc-variable-image-wrap {
+      margin-top: 24px;
+      display: none;
+    }
+
+    .jc-variable-image-wrap.jc-var-img-active {
+      display: block;
+    }
+
+    .jc-variable-img-shell {
+      aspect-ratio: 16 / 9;
+      background: #06120c;
+    }
+
+    /* PIPELINE */
+    .jc-pipeline {
+      position: relative;
+      max-width: 1020px;
+      margin: 50px auto 0;
+      padding-left: 36px;
+    }
+
+    .jc-pipeline::before {
+      position: absolute;
+      top: 10px;
+      bottom: 10px;
+      left: 9px;
+      width: 1px;
+      content: "";
+      background: linear-gradient(var(--jc-gold), rgba(201,162,39,.12));
+    }
+
+    .jc-pipeline-step {
+      position: relative;
+      margin-bottom: 22px;
+      padding: 24px;
+      border: 1px solid var(--jc-border-dark);
+      border-radius: var(--jc-radius);
+      background: rgba(255,255,255,.025);
+    }
+
+    .jc-pipeline-step::before {
+      position: absolute;
+      top: 30px;
+      left: -33px;
+      width: 13px;
+      height: 13px;
+      border: 3px solid var(--jc-forest);
+      border-radius: 50%;
+      content: "";
+      background: var(--jc-gold);
+      box-shadow: 0 0 0 1px var(--jc-gold);
+    }
+
+    .jc-step-number {
+      color: var(--jc-gold);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .68rem;
+    }
+
+    .jc-pipeline-step h3 {
+      margin: 8px 0 10px;
+      font-family: "Fraunces", serif;
+      font-size: 1.5rem;
+    }
+
+    .jc-pipeline-step p {
+      margin: 0;
+      color: rgba(240,236,228,.68);
+      line-height: 1.72;
+      font-size: .9rem;
+    }
+
+    .jc-full-figure {
+      margin-top: 45px;
+    }
+
+    .jc-full-figure .jc-image-shell {
+      aspect-ratio: 16 / 8.5;
+    }
+
+    /* MODEL SHOOTOUT */
+    .jc-model-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      margin-top: 40px;
+    }
+
+    .jc-table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--jc-border-light);
+      border-radius: var(--jc-radius);
+    }
+
+    .jc-table {
+      width: 100%;
+      min-width: 720px;
+      border-collapse: collapse;
+      font-size: .82rem;
+    }
+
+    .jc-table th {
+      padding: 13px 15px;
+      background: var(--jc-forest);
+      color: var(--jc-gold-soft);
+      text-align: left;
+      font-family: "JetBrains Mono", monospace;
+      font-size: .65rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .jc-table td {
+      padding: 15px;
+      border-top: 1px solid var(--jc-border-light);
+    }
+
+    .jc-model-row {
+      cursor: pointer;
+      transition: background var(--jc-transition), color var(--jc-transition);
+    }
+
+    .jc-model-row:hover,
+    .jc-model-row.jc-selected {
+      background: rgba(201,162,39,.12);
+    }
+
+    .jc-model-row.jc-selected td:first-child {
+      color: var(--jc-earth);
+      font-weight: 800;
+    }
+
+    .jc-roc-panel .jc-image-shell {
+      aspect-ratio: 4 / 3;
+      background: #07150e;
+    }
+
+    .jc-bars {
+      display: grid;
+      gap: 18px;
+      margin-top: 42px;
+    }
+
+    .jc-bar-row {
+      display: grid;
+      grid-template-columns: 115px 1fr 54px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .jc-bar-label,
+    .jc-bar-value {
+      font-family: "JetBrains Mono", monospace;
+      font-size: .72rem;
+    }
+
+    .jc-bar-track {
+      height: 11px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(10,31,20,.1);
+    }
+
+    .jc-bar-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      transition: width 1200ms cubic-bezier(.2,.8,.2,1);
+    }
+
+    .jc-bar-fill--ann {
+      background: var(--jc-gold);
+    }
+
+    .jc-bar-fill--rf {
+      background: var(--jc-teal);
+    }
+
+    .jc-bar-fill--svm {
+      background: var(--jc-earth);
+    }
+
+    .jc-mini-table {
+      margin-top: 38px;
+    }
+
+    /* FEATURE IMPORTANCE */
+    .jc-insight-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 40px;
+    }
+
+    .jc-insight-card {
+      padding: 24px;
+      border-left: 4px solid var(--jc-gold);
+      border-radius: 0 var(--jc-radius) var(--jc-radius) 0;
+      background: rgba(255,255,255,.03);
+    }
+
+    .jc-insight-card h3 {
+      margin: 0 0 10px;
+      font-family: "Fraunces", serif;
+      font-size: 1.5rem;
+    }
+
+    .jc-insight-card p {
+      margin: 0;
+      color: rgba(240,236,228,.7);
+      line-height: 1.65;
+    }
+
+    .jc-crop-strip {
+      display: grid;
+      grid-auto-columns: minmax(245px, 79vw);
+      grid-auto-flow: column;
+      gap: 12px;
+      overflow-x: auto;
+      margin-top: 34px;
+      padding-bottom: 15px;
+      scroll-snap-type: x mandatory;
+    }
+
+    .jc-crop-finding {
+      scroll-snap-align: start;
+      padding: 22px;
+      border: 1px solid var(--jc-border-dark);
+      border-radius: var(--jc-radius);
+      background: rgba(255,255,255,.025);
+    }
+
+    .jc-crop-finding h4 {
+      margin: 0;
+      font-family: "Fraunces", serif;
+      font-size: 1.5rem;
+    }
+
+    .jc-predictors {
+      display: block;
+      margin: 9px 0 11px;
+      color: var(--jc-gold);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .67rem;
+      line-height: 1.5;
+    }
+
+    .jc-crop-finding p {
+      margin: 0;
+      color: rgba(240,236,228,.67);
+      font-size: .82rem;
+      line-height: 1.55;
+    }
+
+    .jc-gallery {
+      display: grid;
+      grid-auto-columns: minmax(280px, 84vw);
+      grid-auto-flow: column;
+      gap: 16px;
+      overflow-x: auto;
+      margin-top: 42px;
+      padding-bottom: 16px;
+    }
+
+    .jc-gallery .jc-image-shell {
+      aspect-ratio: 4 / 3;
+    }
+
+    /* MAPS */
+    .jc-tabs {
+      display: inline-flex;
+      gap: 5px;
+      margin-top: 32px;
+      padding: 5px;
+      border: 1px solid var(--jc-border-light);
+      border-radius: 999px;
+      background: rgba(10,31,20,.035);
+    }
+
+    .jc-tab {
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--jc-muted);
+      cursor: pointer;
+      font-family: "JetBrains Mono", monospace;
+      font-size: .68rem;
+      transition: background var(--jc-transition), color var(--jc-transition);
+    }
+
+    .jc-tab[aria-selected="true"] {
+      background: var(--jc-forest);
+      color: var(--jc-gold-soft);
+    }
+
+    .jc-map-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      margin-top: 28px;
+    }
+
+    .jc-map-card {
+      overflow: hidden;
+      border: 1px solid var(--jc-border-light);
+      border-radius: var(--jc-radius);
+      background: rgba(255,255,255,.42);
+    }
+
+    .jc-map-card .jc-image-shell {
+      aspect-ratio: 4 / 4.8;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    .jc-map-copy {
+      padding: 18px;
+    }
+
+    .jc-map-copy h3 {
+      margin: 0 0 7px;
+      font-family: "Fraunces", serif;
+      font-size: 1.45rem;
+    }
+
+    .jc-map-copy p {
+      margin: 0;
+      color: var(--jc-muted);
+      font-size: .82rem;
+      line-height: 1.55;
+    }
+
+    .jc-summary-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      margin-top: 50px;
+    }
+
+    .jc-summary-card h3 {
+      margin: 0 0 12px;
+      font-family: "Fraunces", serif;
+      font-size: 1.5rem;
+    }
+
+    .jc-summary-card .jc-image-shell {
+      aspect-ratio: 4 / 3.25;
+    }
+
+    /* DISTRICT TABLE */
+    .jc-table-tools {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 35px;
+    }
+
+    .jc-search {
+      width: 100%;
+      max-width: 440px;
+      padding: 13px 16px;
+      border: 1px solid var(--jc-border-dark);
+      border-radius: 999px;
+      outline: 0;
+      background: rgba(255,255,255,.035);
+      color: var(--jc-offwhite);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .75rem;
+    }
+
+    .jc-search::placeholder {
+      color: rgba(240,236,228,.35);
+    }
+
+    .jc-search:focus {
+      border-color: var(--jc-gold);
+    }
+
+    .jc-dark-table {
+      margin-top: 20px;
+      border-color: var(--jc-border-dark);
+    }
+
+    .jc-dark-table .jc-table th {
+      background: rgba(255,255,255,.035);
+    }
+
+    .jc-dark-table .jc-table td {
+      border-color: var(--jc-border-dark);
+      color: rgba(240,236,228,.77);
+    }
+
+    .jc-district-row {
+      cursor: pointer;
+    }
+
+    .jc-district-row:hover,
+    .jc-district-row.jc-selected {
+      background: rgba(201,162,39,.1);
+    }
+
+    .jc-data-note {
+      margin-top: 18px;
+      padding: 17px 20px;
+      border-left: 3px solid var(--jc-gold);
+      background: rgba(201,162,39,.06);
+      color: rgba(240,236,228,.72);
+      font-size: .82rem;
+      line-height: 1.65;
+    }
+
+    .jc-table-empty {
+      padding: 40px !important;
+      text-align: center;
+      color: rgba(240,236,228,.55) !important;
+      font-family: "JetBrains Mono", monospace;
+      font-size: .72rem;
+    }
+
+    /* FINDINGS */
+    .jc-findings {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 42px;
+    }
+
+    .jc-finding {
+      min-height: 100%;
+      padding: 27px;
+      border: 1px solid var(--jc-border-light);
+      border-radius: var(--jc-radius);
+      background: rgba(255,255,255,.42);
+    }
+
+    .jc-finding-num {
+      display: block;
+      color: var(--jc-gold);
+      font-family: "Fraunces", serif;
+      font-size: 3.7rem;
+      font-weight: 700;
+      line-height: .85;
+    }
+
+    .jc-finding h3 {
+      margin: 22px 0 11px;
+      font-family: "Fraunces", serif;
+      font-size: 1.45rem;
+      line-height: 1.15;
+    }
+
+    .jc-finding p {
+      margin: 0;
+      color: var(--jc-muted);
+      font-size: .88rem;
+      line-height: 1.68;
+    }
+
+    .jc-policy {
+      margin-top: 34px;
+      padding: 28px;
+      border-radius: var(--jc-radius);
+      background: var(--jc-forest);
+      color: var(--jc-offwhite);
+    }
+
+    .jc-policy h3 {
+      margin: 0 0 18px;
+      font-family: "Fraunces", serif;
+      font-size: 1.7rem;
+    }
+
+    .jc-policy ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .jc-policy li {
+      margin: 10px 0;
+      color: rgba(240,236,228,.72);
+      line-height: 1.65;
+    }
+
+    .jc-policy li::marker {
+      color: var(--jc-gold);
+    }
+
+    /* LIMITATIONS */
+    .jc-two-col {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 28px;
+      margin-top: 42px;
+    }
+
+    .jc-list-panel {
+      padding: 26px;
+      border: 1px solid var(--jc-border-dark);
+      border-radius: var(--jc-radius);
+      background: rgba(255,255,255,.025);
+    }
+
+    .jc-list-panel h3 {
+      margin: 0 0 18px;
+      font-family: "Fraunces", serif;
+      font-size: 1.75rem;
+    }
+
+    .jc-list-panel ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .jc-list-panel li {
+      position: relative;
+      margin: 14px 0;
+      padding-left: 19px;
+      color: rgba(240,236,228,.7);
+      line-height: 1.65;
+    }
+
+    .jc-list-panel--limitations li::before,
+    .jc-list-panel--future li::before {
+      position: absolute;
+      left: 0;
+      content: "—";
+      font-weight: 800;
+    }
+
+    .jc-list-panel--limitations li::before {
+      color: var(--jc-gold);
+    }
+
+    .jc-list-panel--future li::before {
+      color: var(--jc-teal);
+    }
+
+    /* PUBLICATION */
+    .jc-publication-card {
+      margin-top: 40px;
+      padding: 30px;
+      border-left: 5px solid var(--jc-gold);
+      border-radius: 0 var(--jc-radius-lg) var(--jc-radius-lg) 0;
+      background: var(--jc-forest);
+      color: var(--jc-offwhite);
+      box-shadow: var(--jc-shadow);
+    }
+
+    .jc-citation {
+      margin: 0;
+      font-family: "Fraunces", serif;
+      font-size: clamp(1.3rem, 3vw, 2rem);
+      line-height: 1.48;
+    }
+
+    .jc-doi-btn {
+      display: inline-flex;
+      align-items: center;
+      margin-top: 26px;
+      padding: 12px 17px;
+      border-radius: 999px;
+      background: var(--jc-gold);
+      color: var(--jc-forest);
+      text-decoration: none;
+      font-family: "JetBrains Mono", monospace;
+      font-size: .7rem;
+      font-weight: 800;
+      transition: transform var(--jc-transition), background var(--jc-transition);
+    }
+
+    .jc-doi-btn:hover {
+      transform: translateY(-2px);
+      background: var(--jc-gold-soft);
+    }
+
+    .jc-open-note {
+      margin: 22px 0 0;
+      color: rgba(240,236,228,.53);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .68rem;
+      line-height: 1.6;
+    }
+
+    .jc-keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 17px;
+    }
+
+    .jc-keyword {
+      padding: 7px 10px;
+      border: 1px solid var(--jc-border-dark);
+      border-radius: 999px;
+      color: rgba(240,236,228,.69);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .64rem;
+    }
+
+    /* STACK */
+    .jc-stack-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 38px;
+    }
+
+    .jc-stack-card {
+      padding: 24px;
+      border: 1px solid var(--jc-border-dark);
+      border-radius: var(--jc-radius);
+      background: rgba(255,255,255,.025);
+    }
+
+    .jc-stack-card h3 {
+      margin: 0 0 16px;
+      color: var(--jc-gold-soft);
+      font-family: "Fraunces", serif;
+      font-size: 1.35rem;
+    }
+
+    .jc-stack-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .jc-stack-tag {
+      padding: 8px 10px;
+      border: 1px solid var(--jc-border-dark);
+      border-radius: 9px;
+      color: rgba(240,236,228,.68);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .64rem;
+      line-height: 1.4;
+    }
+
+    /* FOOTER NAV */
+    .jc-footer-nav {
+      padding: 26px 0 70px;
+      background: var(--jc-forest);
+    }
+
+    .jc-footer-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .jc-footer-card {
+      display: flex;
+      flex-direction: column;
+      min-height: 150px;
+      justify-content: space-between;
+      padding: 23px;
+      border: 1px solid var(--jc-border-dark);
+      border-radius: var(--jc-radius);
+      background: rgba(255,255,255,.025);
+      color: var(--jc-offwhite);
+      text-decoration: none;
+      transition:
+        border-color var(--jc-transition),
+        background var(--jc-transition),
+        transform var(--jc-transition);
+    }
+
+    .jc-footer-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--jc-gold);
+      background: rgba(201,162,39,.06);
+    }
+
+    .jc-footer-kicker {
+      color: rgba(240,236,228,.4);
+      font-family: "JetBrains Mono", monospace;
+      font-size: .65rem;
+      text-transform: uppercase;
+    }
+
+    .jc-footer-title {
+      font-family: "Fraunces", serif;
+      font-size: 1.8rem;
+    }
+
+    /* LIGHTBOX */
+    .jc-lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(3,11,7,.94);
+      backdrop-filter: blur(12px);
+    }
+
+    .jc-lightbox.jc-open {
+      display: grid;
+    }
+
+    .jc-lightbox-inner {
+      width: min(1200px, 100%);
+      max-height: 94vh;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      gap: 12px;
+    }
+
+    .jc-lightbox img {
+      width: 100%;
+      max-height: 82vh;
+      object-fit: contain;
+      border-radius: 12px;
+      background: var(--jc-forest);
+    }
+
+    .jc-lightbox-caption {
+      color: rgba(240,236,228,.7);
+      font-size: .78rem;
+      line-height: 1.55;
+    }
+
+    .jc-lightbox-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(240,236,228,.22);
+      border-radius: 50%;
+      background: rgba(10,31,20,.76);
+      color: var(--jc-offwhite);
+      cursor: pointer;
+      font-size: 1.5rem;
+    }
+
+    /* BACK TO TOP */
+    .jc-back-top {
+      position: fixed;
+      z-index: 5000;
+      right: 18px;
+      bottom: 18px;
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(201,162,39,.45);
+      border-radius: 50%;
+      background: var(--jc-gold);
+      color: var(--jc-forest);
+      cursor: pointer;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+      box-shadow: 0 12px 35px rgba(0,0,0,.22);
+      transition:
+        opacity var(--jc-transition),
+        visibility var(--jc-transition),
+        transform var(--jc-transition);
+    }
+
+    .jc-back-top.jc-show {
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+    }
+
+    /* 640 */
+    @media (min-width: 640px) {
+      .jc-container {
+        width: min(calc(100% - 56px), var(--jc-max));
+      }
+
+      .jc-section {
+        padding: 110px 0;
+      }
+
+      .jc-hero-inner,
+      .jc-hero-bottom-inner {
+        width: min(calc(100% - 56px), var(--jc-max));
+      }
+
+      .jc-hero-bottom-inner {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .jc-card-grid,
+      .jc-findings {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .jc-variable-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .jc-map-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .jc-summary-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .jc-stack-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .jc-footer-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    /* 1024 */
+    @media (min-width: 1024px) {
+      .jc-section {
+        padding: 135px 0;
+      }
+
+      .jc-identity-grid {
+        grid-template-columns:
+          minmax(150px, .8fr)
+          minmax(140px, .65fr)
+          minmax(190px, 1fr)
+          minmax(210px, 1.15fr)
+          minmax(330px, 2.05fr)
+          minmax(160px, .8fr)
+          minmax(240px, 1.25fr);
+      }
+
+      .jc-fact {
+        padding: 20px 14px;
+        border-right: 1px solid var(--jc-border-dark);
+        border-bottom: 0;
+      }
+
+      .jc-fact:last-child {
+        border-right: 0;
+      }
+
+      .jc-card-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .jc-study-layout {
+        grid-template-columns: minmax(0, 3fr) minmax(340px, 2fr);
+        align-items: start;
+      }
+
+      .jc-model-layout {
+        grid-template-columns: minmax(0, 1.35fr) minmax(340px, .65fr);
+        align-items: start;
+      }
+
+      .jc-insight-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .jc-crop-strip {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-auto-flow: initial;
+        grid-auto-columns: initial;
+        overflow: visible;
+      }
+
+      .jc-gallery {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-auto-flow: initial;
+        grid-auto-columns: initial;
+        overflow: visible;
+      }
+
+      .jc-gallery > :last-child {
+        grid-column: span 2;
+        width: 50%;
+      }
+
+      .jc-map-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .jc-findings {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .jc-two-col {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .jc-stack-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+      }
+
+      .jc-reveal {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="site-header">
+  <nav class="nav">
+    <a href="../index.html" class="brand">
+      <svg class="pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0Z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+      Tanzim&nbsp;Al&nbsp;Noor
+    </a>
+    <ul class="nav-links">
+      <li><a href="../index.html#about">About</a></li>
+      <li><a href="../index.html#skills">Skills</a></li>
+      <li><a href="../index.html#experience">Experience</a></li>
+      <li><a href="../index.html#projects">Projects</a></li>
+      <li><a href="../index.html#research">Research</a></li>
+      <li><a href="../index.html#education">Education</a></li>
+      <li><a href="../index.html#contact">Contact</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="../Tanzim_Al_Noor_CV.pdf" class="btn btn-ghost btn-sm" download>Download CV</a>
+      <a href="../index.html#contact" class="btn btn-primary btn-sm">Get in Touch</a>
+      <button class="menu-toggle" aria-label="Toggle menu" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<main class="jc-main">
+
+  <!-- S0 HERO -->
+  <section class="jc-hero" id="top" aria-labelledby="jc-hero-title">
+    <span class="jc-hero-missing">bangladesh-crop-map.jpg · image unavailable</span>
+
+    <div class="jc-open-badge">
+      Open Access · CC BY 4.0 · Elsevier
+    </div>
+
+    <div class="jc-hero-inner">
+      <p class="jc-hero-eyebrow">
+        Peer-Reviewed Publication · Smart Agricultural Technology · Elsevier · 2025
+      </p>
+
+      <h1 class="jc-hero-title" id="jc-hero-title">
+        Modeling where Bangladesh's crops grow best.
+      </h1>
+
+      <p class="jc-hero-subhead">
+        A national-scale machine learning framework integrating 13 climatic,
+        geospatial, geological and topographic variables — ANN, Random Forest,
+        and SVM — to predict suitability for 8 major crops across 64 districts
+        of Bangladesh.
+      </p>
+
+      <div class="jc-chip-row" aria-label="Research highlights">
+        <span class="jc-chip">ANN · ROC-AUC = 0.93</span>
+        <span class="jc-chip">Random Forest · 0.90</span>
+        <span class="jc-chip">SVM · 0.87</span>
+        <span class="jc-chip">National-scale GIS</span>
+      </div>
+    </div>
+
+    <div class="jc-hero-bottom">
+      <div class="jc-hero-bottom-inner">
+        <span>
+          Smart Agric. Technol. 12 (2025) 101403 · DOI:
+          10.1016/j.atech.2025.101403
+        </span>
+        <span class="jc-scroll-label">Scroll to explore ↓</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- S1 IDENTITY -->
+  <!-- FIX 1: Removed fabricated received/accepted dates. Only the confirmed publication date is shown. -->
+  <section class="jc-identity" aria-label="Publication metadata">
+    <div class="jc-identity-grid">
+      <div class="jc-fact">
+        <span class="jc-fact-label">Journal</span>
+        <span class="jc-fact-value">Smart Agricultural Technology (Elsevier)</span>
+      </div>
+
+      <div class="jc-fact">
+        <span class="jc-fact-label">Volume</span>
+        <span class="jc-fact-value">12 (2025) · Article 101403</span>
+      </div>
+
+      <div class="jc-fact">
+        <span class="jc-fact-label">DOI</span>
+        <span class="jc-fact-value">10.1016/j.atech.2025.101403</span>
+      </div>
+
+      <div class="jc-fact">
+        <span class="jc-fact-label">Published</span>
+        <span class="jc-fact-value">Available online 1 September 2025</span>
+      </div>
+
+      <div class="jc-fact">
+        <span class="jc-fact-label">My role</span>
+        <span class="jc-fact-value">
+          Co-author · Writing, Visualization, Validation, Software, Resources,
+          Methodology, Investigation, Formal analysis, Data curation,
+          Conceptualization
+        </span>
+      </div>
+
+      <div class="jc-fact">
+        <span class="jc-fact-label">Models</span>
+        <span class="jc-fact-value">ANN · Random Forest · SVM</span>
+      </div>
+
+      <div class="jc-fact">
+        <span class="jc-fact-label">Status</span>
+        <span class="jc-fact-value">Published · Open Access · CC BY 4.0</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- S2 PROBLEM -->
+  <section class="jc-section jc-section--light" id="problem">
+    <div class="jc-container">
+      <div class="jc-reveal">
+        <p class="jc-label">01 · Why This Research Matters</p>
+        <h2 class="jc-heading jc-heading--medium">
+          70.1% of Bangladesh's land feeds a nation. We mapped where it can do so best.
+        </h2>
+      </div>
+
+      <div class="jc-card-grid">
+        <article class="jc-problem-card jc-reveal">
+          <h3>The Food Security Crisis</h3>
+          <p>
+            Bangladesh's 170+ million people depend on agriculture for 17.5% of
+            GDP and 48.4% of employment. Climate change — unpredictable monsoons,
+            salinity intrusion, rising temperatures — is eroding crop
+            suitability without warning.
+          </p>
+        </article>
+
+        <article class="jc-problem-card jc-reveal">
+          <h3>The Spatial Gap</h3>
+          <p>
+            Traditional agricultural planning ignores topographic and
+            geospatial nuance. Prior studies focused on single crops or limited
+            variables. No study had mapped multi-crop suitability at district
+            level integrating climatic, geospatial, geological, and
+            topographic variables simultaneously.
+          </p>
+        </article>
+
+        <article class="jc-problem-card jc-reveal">
+          <h3>The ML Opportunity</h3>
+          <p>
+            ANN, RF and SVM, trained on 13 environmental layers and validated
+            with ROC-AUC, can produce district-level, crop-specific suitability
+            maps that support precision agriculture at national scale — a
+            first for Bangladesh.
+          </p>
+        </article>
+      </div>
+
+      <!-- FIX 4: Removed <blockquote> framing (no direct paper quote was supplied).
+           Replaced with a finding callout clearly attributed to the study's results. -->
+      <div class="jc-finding-callout jc-reveal">
+        <span class="jc-finding-callout-label">Key spatial finding</span>
+        <p>
+          Tangail, Naogaon and Sylhet emerged as the nation's most productive
+          agricultural zones. Bandarban and Rangamati remained the most constrained
+          — not by policy, but by topography and climate.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- S3 AUTHORSHIP -->
+  <section class="jc-section jc-section--dark" id="authorship">
+    <div class="jc-container">
+      <div class="jc-reveal">
+        <p class="jc-label">02 · Authorship</p>
+        <h2 class="jc-heading jc-heading--medium">
+          Five researchers. One national framework. My contributions.
+        </h2>
+      </div>
+
+      <div class="jc-author-strip" aria-label="Research authors">
+        <article class="jc-author-card jc-reveal">
+          <h3 class="jc-author-name">Wasik Faisal</h3>
+          <p class="jc-author-affiliation">KUET · Department of URP</p>
+          <p class="jc-author-roles">
+            Writing, Visualization, Validation, Software, Resources,
+            Methodology, Investigation, Formal analysis, Data curation,
+            Conceptualization
+          </p>
+        </article>
+
+        <article class="jc-author-card jc-reveal">
+          <h3 class="jc-author-name">Showmitra Kumar Sarkar</h3>
+          <span class="jc-author-mark">Corresponding author</span>
+          <p class="jc-author-affiliation">KUET · Department of URP</p>
+          <p class="jc-author-roles">
+            Writing, Review &amp; Editing, Visualization, Supervision, Software,
+            Resources, Methodology, Investigation, Data curation,
+            Conceptualization
+          </p>
+        </article>
+
+        <article class="jc-author-card jc-reveal">
+          <h3 class="jc-author-name">Khandaker Tanzim Huq</h3>
+          <p class="jc-author-affiliation">KUET · Department of URP</p>
+          <p class="jc-author-roles">
+            Writing, Visualization, Software, Methodology, Investigation,
+            Formal analysis, Data curation, Conceptualization
+          </p>
+        </article>
+
+        <article class="jc-author-card jc-author-card--mine jc-reveal">
+          <h3 class="jc-author-name">Tanzim Al Noor</h3>
+          <span class="jc-author-mark">Co-author · highlighted</span>
+          <p class="jc-author-affiliation">KUET · Department of URP</p>
+          <p class="jc-author-roles">
+            Writing, Visualization, Validation, Software, Resources,
+            Methodology, Investigation, Formal analysis, Data curation,
+            Conceptualization
+          </p>
+        </article>
+
+        <article class="jc-author-card jc-reveal">
+          <h3 class="jc-author-name">Al Hossain Rafi</h3>
+          <p class="jc-author-affiliation">KUET · Department of URP</p>
+          <p class="jc-author-roles">
+            Writing, Visualization, Validation, Software, Resources,
+            Methodology, Investigation, Formal analysis, Data curation,
+            Conceptualization
+          </p>
+        </article>
+      </div>
+
+      <aside class="jc-contribution-note jc-reveal">
+        As co-author, I contributed to the full research lifecycle: from
+        conceptualization and data curation through model implementation,
+        result visualization, and manuscript writing. This paper represents
+        the applied ML framework developed alongside my Bachelor's thesis on
+        soil carbon prediction — demonstrating how the same geospatial ML
+        pipeline generalizes from SOC mapping to national crop suitability.
+      </aside>
+    </div>
+  </section>
+
+  <!-- S4 STUDY AREA -->
+  <section class="jc-section jc-section--light" id="study-area">
+    <div class="jc-container">
+      <div class="jc-reveal">
+        <p class="jc-label">03 · Study Area &amp; Data</p>
+        <h2 class="jc-heading jc-heading--medium">
+          147,570 km². 64 districts. 13 environmental layers.
+        </h2>
+      </div>
+
+      <div class="jc-study-layout">
+        <figure class="jc-reveal">
+          <div class="jc-image-shell">
+            <img
+              src="../images/projects/journal/study-area-map.jpg"
+              alt="Study area map of Bangladesh"
+              loading="lazy"
+              data-lightbox
+              data-caption="Bangladesh study area: 88°01′ to 92°00′E, 20°34′ to 26°38′N."
+              role="button"
+              tabindex="0"
+            >
+            <span class="jc-img-fallback">study-area-map.jpg · image unavailable</span>
+          </div>
+          <figcaption class="jc-figure-caption">
+            Bangladesh: 88°01′ to 92°00′E, 20°34′ to 26°38′N. Flat deltaic
+            plains dominate 80% of the land area; hilly terrain in the
+            southeast creates agricultural marginal zones.
+          </figcaption>
+        </figure>
+
+        <div class="jc-stats jc-reveal">
+          <div class="jc-stat">
+            <span
+              class="jc-stat-number"
+              data-counter
+              data-target="147570"
+              data-prefix=""
+              data-suffix=" km²"
+            >0</span>
+            <span class="jc-stat-label">National area</span>
+          </div>
+
+          <div class="jc-stat">
+            <span
+              class="jc-stat-number"
+              data-counter
+              data-target="170"
+              data-suffix="+ million"
+            >0</span>
+            <span class="jc-stat-label">Population (2023)</span>
+          </div>
+
+          <div class="jc-stat">
+            <span class="jc-stat-number" data-counter data-target="64">0</span>
+            <span class="jc-stat-label">Spatial resolution of suitability mapping</span>
+          </div>
+
+          <div class="jc-stat">
+            <span class="jc-stat-number" data-counter data-target="13">0</span>
+            <span class="jc-stat-label">Environmental predictor layers</span>
+          </div>
+
+          <div class="jc-stat">
+            <span class="jc-stat-number" data-counter data-target="8">0</span>
+            <span class="jc-stat-label">
+              Aman, Aush, Boro, Jute, Lentil, Maize, Potato, Wheat
+            </span>
+          </div>
+
+          <div class="jc-stat">
+            <span class="jc-stat-number" data-counter data-target="200">0</span>
+            <span class="jc-stat-label">
+              100 crop + 100 non-crop validation locations
+            </span>
+          </div>
+
+          <div class="jc-stat">
+            <span
+              class="jc-stat-number"
+              data-counter
+              data-target="80"
+              data-suffix=" / 20"
+            >0</span>
+            <span class="jc-stat-label">Training / testing split</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="jc-variable-panel jc-reveal">
+        <h3 class="jc-subtitle">12-variable explorer</h3>
+
+        <div class="jc-variable-groups">
+          <div class="jc-variable-group">
+            <h4>Climatic · 5</h4>
+            <div class="jc-variable-grid">
+              <button class="jc-variable-btn" type="button" aria-pressed="false"
+                data-description="Seasonal rainfall controls water availability — high in southeast, low in northwest. Direct determinator of irrigation need.">
+                Precipitation
+              </button>
+              <button class="jc-variable-btn" type="button" aria-pressed="false"
+                data-description="Landsat-derived. Elevated in west and southeast. High heat stress reduces yields during flowering and grain-filling stages.">
+                Land Surface Temperature
+              </button>
+              <button class="jc-variable-btn" type="button" aria-pressed="false"
+                data-description="High solar radiation boosts photosynthesis — but prolonged sunshine without rainfall creates water stress.">
+                Sunny Days
+              </button>
+              <button class="jc-variable-btn" type="button" aria-pressed="false"
+                data-description="MOD16 ET dataset. The single most influential predictor across all 8 crops and all 3 models.">
+                Evapotranspiration
+              </button>
+              <button class="jc-variable-btn" type="button" aria-pressed="false"
+                data-description="Bangladesh cloud cover is generally low. Persistent cloudiness reduces photosynthesis efficiency.">
+                Cloud Ratio
+              </button>
+            </div>
+          </div>
+
+          <div class="jc-variable-group">
+            <h4>Geospatial · 4</h4>
+            <div class="jc-variable-grid">
+              <button class="jc-variable-btn" type="button" aria-pressed="false"
+                data-description="Elevated in the southwest coastal zone. Least influential overall predictor — but long-term impact growing under climate change.">
+                Soil Salinity
+              </button>
+              <button class="jc-variable-btn" type="button" aria-pressed="false"
+                data-description="Monthly climate water balance data. Crucial for lentil and jute production.">
+                Soil Moisture
+              </button>
+              <button class="jc-variable-btn" type="button" aria-pressed="false"
+                data-description="Silt/Loam/Clay dominant. Governs water retention and nutrient capacity.">
+                Soil Type
+              </button>
+              <button class="jc-variable-btn" type="button" aria-pressed="false"
+                data-description="Elevated in north, low overall. Saline groundwater degrades irrigation potential.">
+                Groundwater Quality
+              </button>
+            </div>
+          </div>
+
+          <div class="jc-variable-group">
+            <h4>Topographic · 3</h4>
+            <div class="jc-variable-grid">
+              <button class="jc-variable-btn" type="button" aria-pressed="false"
+                data-description="SRTM-derived. Elevated in southeast (Chittagong Hill Tracts). Low-lying plains dominate agricultural zones.">
+                DEM (Elevation)
+              </button>
+              <button class="jc-variable-btn" type="button" aria-pressed="false"
+                data-description="Steeper slopes in the southeast reduce suitability for mechanized farming.">
+                Slope
+              </button>
+              <button class="jc-variable-btn" type="button" aria-pressed="false"
+                data-description="Solar radiation exposure affects soil temperature and moisture.">
+                Aspect
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <div
+          class="jc-variable-description"
+          id="jc-variable-description"
+          aria-live="polite"
+        >
+          Select a variable to inspect its role in the national suitability model.
+        </div>
+
+        <!-- Variable map image viewer -->
+        <div class="jc-variable-image-wrap jc-reveal" id="jc-variable-image-wrap" aria-live="polite">
+          <div class="jc-image-shell jc-variable-img-shell" id="jc-variable-img-shell">
+            <img
+              id="jc-variable-img"
+              src=""
+              alt=""
+              loading="lazy"
+              data-lightbox
+              role="button"
+              tabindex="0"
+            >
+            <span class="jc-img-fallback" id="jc-variable-img-fallback">Select a variable above to view its spatial distribution map.</span>
+          </div>
+          <p class="jc-figure-caption" id="jc-variable-img-caption"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- S5 METHODOLOGY -->
+  <!-- FIX 5a & 5b: Removed unverified hyperparameter values (random_state=41, C=1.0, gamma='scale')
+       that were not present in the supplied spec. Methodology descriptions now match only what was provided. -->
+  <section class="jc-section jc-section--dark" id="methodology">
+    <div class="jc-container">
+      <div class="jc-reveal">
+        <p class="jc-label">04 · Analytical Framework</p>
+        <h2 class="jc-heading jc-heading--medium">
+          From 13 satellite layers to a national crop suitability atlas.
+        </h2>
+      </div>
+
+      <div class="jc-pipeline">
+        <article class="jc-pipeline-step jc-reveal">
+          <span class="jc-step-number">STEP 01</span>
+          <h3>Multi-source Data Compilation</h3>
+          <p>
+            GIS and RS architecture. 13 thematic layers compiled from BARC,
+            Landsat, MOD16 ET, Monthly Climate Water Balance, Open Topography
+            SRTM, and Bangladesh Agriculture Research Council. All layers
+            harmonized to WGS 1984 UTM Zone 45.
+          </p>
+        </article>
+
+        <article class="jc-pipeline-step jc-reveal">
+          <span class="jc-step-number">STEP 02</span>
+          <h3>Crop Event Data</h3>
+          <p>
+            100 georeferenced crop locations from BARC crop suitability map +
+            100 random non-crop control points. 200 total validation points
+            distributed across Bangladesh's 64 districts.
+          </p>
+        </article>
+
+        <article class="jc-pipeline-step jc-reveal">
+          <span class="jc-step-number">STEP 03</span>
+          <h3>Model Construction — ANN</h3>
+          <p>
+            MLPClassifier with 2 hidden layers (100 + 50 neurons), ReLU
+            activation, max 5,000 iterations. 80% training / 20% testing split.
+          </p>
+        </article>
+
+        <article class="jc-pipeline-step jc-reveal">
+          <span class="jc-step-number">STEP 04</span>
+          <h3>Model Construction — Random Forest</h3>
+          <p>
+            Ensemble of bootstrapped decision trees. Non-parametric, handles
+            collinear predictors. Balanced 80% training / 20% testing partition.
+          </p>
+        </article>
+
+        <article class="jc-pipeline-step jc-reveal">
+          <span class="jc-step-number">STEP 05</span>
+          <h3>Model Construction — SVM</h3>
+          <p>
+            RBF and linear kernels tested. 80% training / 20% testing split.
+            Handles non-linear multi-factor interactions between climate and
+            topographic inputs.
+          </p>
+        </article>
+
+        <article class="jc-pipeline-step jc-reveal">
+          <span class="jc-step-number">STEP 06</span>
+          <h3>Validation — ROC-AUC</h3>
+          <p>
+            AUC benchmarks: 0.91–1.00 Excellent · 0.81–0.90 Very Good ·
+            0.71–0.80 Good · 0.61–0.70 Satisfactory. Final model selected per
+            crop on highest AUC score.
+          </p>
+        </article>
+      </div>
+
+      <figure class="jc-full-figure jc-reveal">
+        <div class="jc-image-shell">
+          <img
+            src="../images/projects/journal/methodology-flowchart.jpg"
+            alt="Methodology flowchart"
+            loading="lazy"
+            data-lightbox
+            data-caption="Research methodology: multi-source geospatial data compilation, crop event sampling, ANN, Random Forest, SVM and ROC-AUC validation."
+            role="button"
+            tabindex="0"
+          >
+          <span class="jc-img-fallback">methodology-flowchart.jpg · image unavailable</span>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- S6 MODEL PERFORMANCE -->
+  <!-- FIX 2 & 3: RF "Worst Crop" and SVM "Best/Worst Crop" values were fabricated.
+       Crop-by-crop RF and SVM AUC values were not supplied in the spec.
+       Those cells now show "—" with a note. Only ANN crop-by-crop values are shown,
+       as those were fully supplied. -->
+  <section class="jc-section jc-section--light" id="models">
+    <div class="jc-container">
+      <div class="jc-reveal">
+        <p class="jc-label">05 · Model Performance</p>
+        <h2 class="jc-heading jc-heading--medium">
+          ANN leads. RF follows. All three beat the benchmark.
+        </h2>
+      </div>
+
+      <div class="jc-model-layout">
+        <div class="jc-table-wrap jc-reveal">
+          <table class="jc-table" aria-label="ROC-AUC model comparison">
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Avg AUC</th>
+                <th>Best Crop</th>
+                <th>Worst Crop</th>
+                <th>Verdict</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                class="jc-model-row jc-selected"
+                tabindex="0"
+                data-model="ann"
+                aria-selected="true"
+              >
+                <td>ANN</td>
+                <td class="jc-mono">0.93</td>
+                <td>Boro <span class="jc-mono">(0.96)</span></td>
+                <td>Jute <span class="jc-mono">(0.85)</span></td>
+                <td>✦ Best overall</td>
+              </tr>
+              <tr
+                class="jc-model-row"
+                tabindex="0"
+                data-model="rf"
+                aria-selected="false"
+              >
+                <td>Random Forest</td>
+                <td class="jc-mono">0.90</td>
+                <td class="jc-mono">—</td>
+                <td class="jc-mono">—</td>
+                <td>Strong ensemble</td>
+              </tr>
+              <tr
+                class="jc-model-row"
+                tabindex="0"
+                data-model="svm"
+                aria-selected="false"
+              >
+                <td>SVM</td>
+                <td class="jc-mono">0.87</td>
+                <td class="jc-mono">—</td>
+                <td class="jc-mono">—</td>
+                <td>Moderate</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <figure class="jc-roc-panel jc-reveal">
+          <div class="jc-image-shell">
+            <img
+              id="jc-roc-image"
+              src="../images/projects/journal/roc-ann-summary.jpg"
+              alt="ANN ROC curve summary"
+              loading="lazy"
+              data-lightbox
+              data-caption="ANN ROC-AUC summary."
+              role="button"
+              tabindex="0"
+            >
+            <span class="jc-img-fallback">roc-ann-summary.jpg · image unavailable</span>
+          </div>
+          <figcaption class="jc-figure-caption" id="jc-roc-caption">
+            ANN · Average ROC-AUC = 0.93
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="jc-bars jc-reveal" aria-label="Average AUC comparison">
+        <div class="jc-bar-row">
+          <span class="jc-bar-label">ANN</span>
+          <div class="jc-bar-track">
+            <div class="jc-bar-fill jc-bar-fill--ann" data-bar="93"></div>
+          </div>
+          <span class="jc-bar-value">93%</span>
+        </div>
+
+        <div class="jc-bar-row">
+          <span class="jc-bar-label">Random Forest</span>
+          <div class="jc-bar-track">
+            <div class="jc-bar-fill jc-bar-fill--rf" data-bar="90"></div>
+          </div>
+          <span class="jc-bar-value">90%</span>
+        </div>
+
+        <div class="jc-bar-row">
+          <span class="jc-bar-label">SVM</span>
+          <div class="jc-bar-track">
+            <div class="jc-bar-fill jc-bar-fill--svm" data-bar="87"></div>
+          </div>
+          <span class="jc-bar-value">87%</span>
+        </div>
+      </div>
+
+      <aside class="jc-data-note jc-reveal" style="margin-top:24px; background:rgba(201,162,39,.06); border-left:3px solid var(--jc-gold); padding:17px 20px; color:var(--jc-muted); font-size:.82rem; line-height:1.65;">
+        Crop-by-crop AUC values for Random Forest and SVM were not supplied in the source data and are shown as —. Only ANN crop-level results were provided in full.
+      </aside>
+
+      <div class="jc-mini-table jc-reveal">
+        <h3 class="jc-subtitle">ANN · crop-by-crop AUC</h3>
+        <div class="jc-table-wrap">
+          <table class="jc-table" aria-label="ANN crop-by-crop AUC">
+            <thead>
+              <tr>
+                <th>Aman</th>
+                <th>Aush</th>
+                <th>Boro</th>
+                <th>Jute</th>
+                <th>Lentil</th>
+                <th>Maize</th>
+                <th>Potato</th>
+                <th>Wheat</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="jc-mono">
+                <td>0.94</td>
+                <td>0.92</td>
+                <td>0.96</td>
+                <td>0.85</td>
+                <td>0.91</td>
+                <td>0.92</td>
+                <td>0.87</td>
+                <td>0.92</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- S7 FEATURE IMPORTANCE -->
+  <section class="jc-section jc-section--dark" id="feature-importance">
+    <div class="jc-container">
+      <div class="jc-reveal">
+        <p class="jc-label">06 · What Drives Crop Suitability?</p>
+        <h2 class="jc-heading jc-heading--medium">
+          Evapotranspiration dominates. Salinity barely registers.
+        </h2>
+
+        <p class="jc-intro">
+          Across all three models and all 8 crops, evapotranspiration (ET)
+          consistently emerged as the most influential predictor — reflecting
+          the critical role of water balance and atmospheric demand in
+          determining crop yield across Bangladesh. Soil moisture ranked second
+          in the ANN model; ET ranked first in RF and SVM. Soil salinity had the
+          least overall impact across all models.
+        </p>
+      </div>
+
+      <div class="jc-insight-grid">
+        <article class="jc-insight-card jc-reveal">
+          <h3>ANN says:</h3>
+          <p>
+            Soil moisture most influential. Groundwater quality moderate.
+            Aspect low. ET consistently high across crops.
+          </p>
+        </article>
+
+        <article class="jc-insight-card jc-reveal">
+          <h3>Random Forest says:</h3>
+          <p>
+            ET highest overall, especially for water-intensive crops
+            (Boro, Wheat, Maize, Potato). Rainfall moderate. Soil salinity lowest.
+          </p>
+        </article>
+
+        <article class="jc-insight-card jc-reveal">
+          <h3>SVM says:</h3>
+          <p>
+            ET and soil salinity high. Rainfall and slope moderate.
+            DEM and soil type low influence.
+          </p>
+        </article>
+      </div>
+
+      <div class="jc-crop-strip">
+        <article class="jc-crop-finding jc-reveal">
+          <h4>Aman</h4>
+          <span class="jc-predictors">ET · Soil Moisture</span>
+          <p>Rain-fed paddy. Atmospheric demand and root-zone moisture determine yield.</p>
+        </article>
+
+        <article class="jc-crop-finding jc-reveal">
+          <h4>Aush</h4>
+          <span class="jc-predictors">ET · Soil Moisture</span>
+          <p>Early monsoon rice. Moisture at planting is critical.</p>
+        </article>
+
+        <article class="jc-crop-finding jc-reveal">
+          <h4>Boro</h4>
+          <span class="jc-predictors">ET · DEM</span>
+          <p>Irrigated dry-season rice. Highest ET sensitivity of all crops.</p>
+        </article>
+
+        <article class="jc-crop-finding jc-reveal">
+          <h4>Jute</h4>
+          <span class="jc-predictors">ET · Slope</span>
+          <p>Flood-tolerant fiber crop. Topographic position controls waterlogging risk.</p>
+        </article>
+
+        <article class="jc-crop-finding jc-reveal">
+          <h4>Lentil</h4>
+          <span class="jc-predictors">Soil Moisture · Groundwater</span>
+          <p>Dry-season pulse. Soil nutrient retention is decisive.</p>
+        </article>
+
+        <article class="jc-crop-finding jc-reveal">
+          <h4>Maize</h4>
+          <span class="jc-predictors">ET · Rainfall</span>
+          <p>Water-intensive grain. Irrigation availability shapes suitability.</p>
+        </article>
+
+        <article class="jc-crop-finding jc-reveal">
+          <h4>Potato</h4>
+          <span class="jc-predictors">Soil Moisture · ET</span>
+          <p>High-value tuber. Root-zone moisture and heat balance are critical.</p>
+        </article>
+
+        <article class="jc-crop-finding jc-reveal">
+          <h4>Wheat</h4>
+          <span class="jc-predictors">ET · Rainfall</span>
+          <p>Temperature and water-demand sensitive during grain-filling.</p>
+        </article>
+      </div>
+
+      <div class="jc-gallery">
+        <figure class="jc-reveal">
+          <div class="jc-image-shell">
+            <img
+              src="../images/projects/journal/feature-importance-ann.jpg"
+              alt="ANN feature importance chart"
+              loading="lazy"
+              data-lightbox
+              data-caption="ANN feature importance."
+              role="button"
+              tabindex="0"
+            >
+            <span class="jc-img-fallback">feature-importance-ann.jpg · image unavailable</span>
+          </div>
+        </figure>
+
+        <figure class="jc-reveal">
+          <div class="jc-image-shell">
+            <img
+              src="../images/projects/journal/feature-importance-rf.jpg"
+              alt="Random Forest feature importance chart"
+              loading="lazy"
+              data-lightbox
+              data-caption="Random Forest feature importance."
+              role="button"
+              tabindex="0"
+            >
+            <span class="jc-img-fallback">feature-importance-rf.jpg · image unavailable</span>
+          </div>
+        </figure>
+
+        <figure class="jc-reveal">
+          <div class="jc-image-shell">
+            <img
+              src="../images/projects/journal/feature-importance-svm.jpg"
+              alt="SVM feature importance chart"
+              loading="lazy"
+              data-lightbox
+              data-caption="SVM feature importance."
+              role="button"
+              tabindex="0"
+            >
+            <span class="jc-img-fallback">feature-importance-svm.jpg · image unavailable</span>
+          </div>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- S8 MAPS -->
+  <section class="jc-section jc-section--light" id="suitability-atlas">
+    <div class="jc-container">
+      <div class="jc-reveal">
+        <p class="jc-label">07 · National Suitability Atlas</p>
+        <h2 class="jc-heading jc-heading--medium">
+          8 crops. 3 models. 64 districts. Every map tells a story.
+        </h2>
+
+        <p class="jc-intro">
+          The suitability maps produced by all three models reveal consistent
+          spatial patterns: northern and central districts (Tangail, Naogaon,
+          Sylhet, Dinajpur, Mymensingh) cluster as high-suitability zones. The
+          Chittagong Hill Tracts (Rangamati, Bandarban) consistently appear as
+          the least suitable regions due to challenging topography and climate
+          constraints.
+        </p>
+      </div>
+
+      <div
+        class="jc-tabs jc-reveal"
+        role="tablist"
+        aria-label="Crop suitability model"
+      >
+        <button
+          class="jc-tab"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          data-map-model="ann"
+        >
+          ANN
+        </button>
+
+        <button
+          class="jc-tab"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          data-map-model="rf"
+        >
+          Random Forest
+        </button>
+
+        <button
+          class="jc-tab"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          data-map-model="svm"
+        >
+          SVM
+        </button>
+      </div>
+
+      <div
+        class="jc-map-grid"
+        id="jc-map-grid"
+        aria-live="polite"
+      ></div>
+
+      <div class="jc-summary-grid">
+        <article class="jc-summary-card jc-reveal">
+          <h3>ANN · district summary</h3>
+          <div class="jc-image-shell">
+            <img
+              src="../images/projects/journal/ann-district-map.jpg"
+              alt="ANN district-wide suitability map"
+              loading="lazy"
+              data-lightbox
+              data-caption="ANN district-wide crop suitability summary."
+              role="button"
+              tabindex="0"
+            >
+            <span class="jc-img-fallback">ann-district-map.jpg · image unavailable</span>
+          </div>
+        </article>
+
+        <article class="jc-summary-card jc-reveal">
+          <h3>Random Forest · district summary</h3>
+          <div class="jc-image-shell">
+            <img
+              src="../images/projects/journal/rf-district-map.jpg"
+              alt="Random Forest district-wide suitability map"
+              loading="lazy"
+              data-lightbox
+              data-caption="Random Forest district-wide crop suitability summary."
+              role="button"
+              tabindex="0"
+            >
+            <span class="jc-img-fallback">rf-district-map.jpg · image unavailable</span>
+          </div>
+        </article>
+
+        <article class="jc-summary-card jc-reveal">
+          <h3>SVM · district summary</h3>
+          <div class="jc-image-shell">
+            <img
+              src="../images/projects/journal/svm-district-map.jpg"
+              alt="SVM district-wide suitability map"
+              loading="lazy"
+              data-lightbox
+              data-caption="SVM district-wide crop suitability summary."
+              role="button"
+              tabindex="0"
+            >
+            <span class="jc-img-fallback">svm-district-map.jpg · image unavailable</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- S9 DISTRICTS -->
+  <section class="jc-section jc-section--dark" id="district-rankings">
+    <div class="jc-container">
+      <div class="jc-reveal">
+        <p class="jc-label">08 · District Rankings</p>
+        <h2 class="jc-heading jc-heading--medium">
+          Tangail grows most. Rangamati struggles most. The data ranks every district.
+        </h2>
+      </div>
+
+      <div class="jc-table-tools jc-reveal">
+        <div
+          class="jc-tabs"
+          role="tablist"
+          aria-label="District ranking model"
+        >
+          <button
+            class="jc-tab"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            data-district-model="ann"
+          >
+            ANN
+          </button>
+          <button
+            class="jc-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            data-district-model="rf"
+          >
+            RF
+          </button>
+          <button
+            class="jc-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            data-district-model="svm"
+          >
+            SVM
+          </button>
+        </div>
+
+        <label>
+          <span
+            class="jc-mono"
+            style="display:block;margin:0 0 8px;color:rgba(240,236,228,.48);font-size:.65rem;"
+          >
+            FILTER DISTRICT
+          </span>
+          <input
+            class="jc-search"
+            id="jc-district-search"
+            type="search"
+            placeholder="Type Tangail, Sylhet, Rangamati..."
+            aria-label="Filter district table"
+            autocomplete="off"
+          >
+        </label>
+      </div>
+
+      <div class="jc-table-wrap jc-dark-table jc-reveal">
+        <table class="jc-table" aria-label="District crop suitability rankings">
+          <thead>
+            <tr>
+              <th>District</th>
+              <th>Very Suitable (%)</th>
+              <th>Suitable (%)</th>
+              <th>Mod. Suitable (%)</th>
+              <th>Marginally Suitable (%)</th>
+              <th>Not Suitable (%)</th>
+              <th>Grand Total (%)</th>
+            </tr>
+          </thead>
+          <tbody id="jc-district-body"></tbody>
+        </table>
+      </div>
+
+      <!-- FIX 6 (warning): Added explicit count note so users know this is a partial dataset -->
+      <aside class="jc-data-note jc-reveal">
+        Showing 9 of 64 districts — only these rows were supplied in the source data.
+        Grand Total % represents each district's share of Bangladesh's total
+        agricultural land area.
+      </aside>
+
+      <aside class="jc-data-note jc-reveal">
+        Data integrity note: the supplied project brief includes district names
+        and Grand Total percentages for a subset of ANN rows, but does not
+        include the five category percentages or row-level RF/SVM values.
+        Unspecified cells are shown as "—" rather than estimated.
+      </aside>
+    </div>
+  </section>
+
+  <!-- S10 FINDINGS -->
+  <section class="jc-section jc-section--light" id="findings">
+    <div class="jc-container">
+      <div class="jc-reveal">
+        <p class="jc-label">09 · Key Findings</p>
+        <h2 class="jc-heading jc-heading--medium">
+          Six discoveries that advance precision agriculture in Bangladesh.
+        </h2>
+      </div>
+
+      <div class="jc-findings">
+        <article class="jc-finding jc-reveal">
+          <span class="jc-finding-num">01</span>
+          <h3>ANN is the best model</h3>
+          <p>
+            Average ROC-AUC = 0.93 across 8 crops. Outperforms RF (0.90) and
+            SVM (0.87). MLPClassifier with 2 hidden layers captures complex
+            non-linear interactions between climate, soil, and topography.
+          </p>
+        </article>
+
+        <article class="jc-finding jc-reveal">
+          <span class="jc-finding-num">02</span>
+          <h3>Evapotranspiration is the master variable</h3>
+          <p>
+            ET ranked #1 in RF and SVM, and high across all ANN crop models.
+            This highlights the critical role of water balance in Bangladesh's
+            monsoon-dominated agricultural system.
+          </p>
+        </article>
+
+        <article class="jc-finding jc-reveal">
+          <span class="jc-finding-num">03</span>
+          <h3>Soil salinity barely matters — for now</h3>
+          <p>
+            Salinity ranked lowest across all models. But with coastal
+            salinization accelerating under climate change, this finding serves
+            as a baseline: future models will likely show increasing salinity
+            impact.
+          </p>
+        </article>
+
+        <article class="jc-finding jc-reveal">
+          <span class="jc-finding-num">04</span>
+          <h3>Northern and central districts are the breadbasket</h3>
+          <p>
+            Tangail, Naogaon, Sylhet, and Dinajpur consistently score highest
+            Very Suitable classifications. These districts are Bangladesh's
+            most reliable agricultural zones across all three models.
+          </p>
+        </article>
+
+        <article class="jc-finding jc-reveal">
+          <span class="jc-finding-num">05</span>
+          <h3>Hill tracts are structurally constrained</h3>
+          <p>
+            Rangamati (3.95% of total, lowest suitability) and Bandarban
+            (3.19%) face topographic and climatic barriers that ML confirms as
+            structural, not addressable by policy alone. Marginal zones need
+            adaptation strategies, not yield targets.
+          </p>
+        </article>
+
+        <article class="jc-finding jc-reveal">
+          <span class="jc-finding-num">06</span>
+          <h3>First national multi-crop ML framework for Bangladesh</h3>
+          <p>
+            No prior study integrated this breadth of climatic, geospatial,
+            geological, and topographic variables with three ML models for
+            8 crops simultaneously. This is a methodological baseline for
+            precision agriculture research in South Asia.
+          </p>
+        </article>
+      </div>
+
+      <aside class="jc-policy jc-reveal">
+        <h3>Policy implications</h3>
+        <ul>
+          <li>
+            Map-driven investment in irrigation infrastructure should prioritize
+            very suitable districts where ET is high and irrigation can unlock
+            yield potential.
+          </li>
+          <li>
+            Carbon-smart agriculture and salinity-tolerant crop varieties
+            should be piloted in Rangamati, Bandarban, and coastal Khulna
+            districts.
+          </li>
+          <li>
+            National food security planning should weight Tangail, Naogaon,
+            and Mymensingh as strategic agricultural reserves requiring
+            conservation from urban encroachment.
+          </li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- S11 LIMITATIONS -->
+  <section class="jc-section jc-section--dark" id="limitations">
+    <div class="jc-container">
+      <div class="jc-reveal">
+        <p class="jc-label">10 · Limitations &amp; Future Directions</p>
+        <h2 class="jc-heading jc-heading--medium">
+          What this study does not yet answer.
+        </h2>
+      </div>
+
+      <div class="jc-two-col">
+        <article class="jc-list-panel jc-list-panel--limitations jc-reveal">
+          <h3>Limitations</h3>
+          <ul>
+            <li>
+              Cross-sectional study — lacks temporal data, cannot capture
+              inter-annual or seasonal variation in suitability
+            </li>
+            <li>
+              Socio-economic variables absent — farmer income, land tenure,
+              market access, pest and disease incidence not included
+            </li>
+            <li>
+              200 validation points across 147,570 km² — adequate for
+              national-scale but insufficient for sub-district precision
+            </li>
+            <li>
+              Consistency in data quality assumed across all 64 districts —
+              resolution and availability vary in practice
+            </li>
+          </ul>
+        </article>
+
+        <article class="jc-list-panel jc-list-panel--future jc-reveal">
+          <h3>Future directions</h3>
+          <ul>
+            <li>
+              Time-series satellite data integration — seasonal NDVI,
+              flood-period SAR — to capture temporal suitability dynamics
+            </li>
+            <li>
+              Socio-economic overlay — add farmer income, input costs, market
+              proximity to improve actionability
+            </li>
+            <li>
+              Deep learning approaches — CNN on raster stacks, Graph Neural
+              Networks for spatial autocorrelation
+            </li>
+            <li>
+              Sub-district resolution — upazila-level mapping using
+              higher-density ground truth
+            </li>
+            <li>
+              Transferability to neighboring countries — replicable methodology
+              applicable to India, Myanmar, Nepal with similar
+              agro-ecological conditions
+            </li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- S12 PUBLICATION -->
+  <section class="jc-section jc-section--light" id="citation">
+    <div class="jc-container">
+      <div class="jc-reveal">
+        <p class="jc-label">11 · Full Citation</p>
+        <h2 class="jc-heading jc-heading--medium">
+          Published in Smart Agricultural Technology, Elsevier.
+        </h2>
+      </div>
+
+      <article class="jc-publication-card jc-reveal">
+        <p class="jc-citation">
+          <strong>
+            Faisal, W., Sarkar, S. K., Huq, K. T., Noor, T. A., &amp; Rafi,
+            A. H. (2025).
+          </strong>
+          Machine learning integrated approach for modeling crop production in
+          Bangladesh. <em>Smart Agricultural Technology</em>, 12, 101403.
+        </p>
+
+        <a
+          class="jc-doi-btn"
+          href="https://doi.org/10.1016/j.atech.2025.101403"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          DOI · 10.1016/j.atech.2025.101403 ↗
+        </a>
+
+        <p class="jc-open-note">
+          Open Access · CC BY 4.0 · © 2025 The Authors · Published by Elsevier B.V.
+        </p>
+
+        <div class="jc-keywords" aria-label="Publication keywords">
+          <span class="jc-keyword">Agriculture</span>
+          <span class="jc-keyword">Machine learning</span>
+          <span class="jc-keyword">Crop production</span>
+          <span class="jc-keyword">Modeling</span>
+          <span class="jc-keyword">Bangladesh</span>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- S13 STACK -->
+  <section class="jc-section jc-section--dark" id="stack">
+    <div class="jc-container">
+      <div class="jc-reveal">
+        <p class="jc-label">12 · Tools &amp; Stack</p>
+        <h2 class="jc-heading jc-heading--medium">
+          The full pipeline.
+        </h2>
+      </div>
+
+      <div class="jc-stack-grid">
+        <article class="jc-stack-card jc-reveal">
+          <h3>Satellite &amp; Remote Sensing</h3>
+          <div class="jc-stack-tags">
+            <span class="jc-stack-tag">Landsat (LST)</span>
+            <span class="jc-stack-tag">MOD16 ET</span>
+            <span class="jc-stack-tag">BARC Climate Data</span>
+            <span class="jc-stack-tag">Open Topography SRTM</span>
+          </div>
+        </article>
+
+        <article class="jc-stack-card jc-reveal">
+          <h3>GIS Processing</h3>
+          <div class="jc-stack-tags">
+            <span class="jc-stack-tag">ArcGIS</span>
+            <span class="jc-stack-tag">WGS 1984 UTM Zone 45</span>
+            <span class="jc-stack-tag">Multi-value extraction</span>
+            <span class="jc-stack-tag">Thematic layer compilation</span>
+          </div>
+        </article>
+
+        <article class="jc-stack-card jc-reveal">
+          <h3>Machine Learning</h3>
+          <div class="jc-stack-tags">
+            <span class="jc-stack-tag">Python</span>
+            <span class="jc-stack-tag">scikit-learn</span>
+            <span class="jc-stack-tag">MLPClassifier (ANN)</span>
+            <span class="jc-stack-tag">RandomForestClassifier</span>
+            <span class="jc-stack-tag">SVC (SVM)</span>
+            <span class="jc-stack-tag">ROC-AUC validation</span>
+          </div>
+        </article>
+
+        <article class="jc-stack-card jc-reveal">
+          <h3>Agricultural Data</h3>
+          <div class="jc-stack-tags">
+            <span class="jc-stack-tag">BARC crop suitability maps</span>
+            <span class="jc-stack-tag">Crop event points</span>
+            <span class="jc-stack-tag">Non-crop control points</span>
+            <span class="jc-stack-tag">Bangladesh Bureau of Statistics</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- FOOTER NAV -->
+<nav class="jc-footer-nav" aria-label="Project navigation">
+  <div class="jc-container">
+    <div class="jc-footer-grid">
+      <a class="jc-footer-card" href="../index.html#projects">
+        <span class="jc-footer-kicker">← Previous</span>
+        <span class="jc-footer-title">Portfolio projects</span>
+      </a>
+
+      <a
+        class="jc-footer-card"
+        href="https://doi.org/10.1016/j.atech.2025.101403"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <span class="jc-footer-kicker">Publication ↗</span>
+        <span class="jc-footer-title">Read the paper →</span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- LIGHTBOX -->
+<div
+  class="jc-lightbox"
+  id="jc-lightbox"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Expanded research figure"
+  aria-hidden="true"
+>
+  <button
+    class="jc-lightbox-close"
+    id="jc-lightbox-close"
+    type="button"
+    aria-label="Close image"
+  >
+    ×
+  </button>
+
+  <div class="jc-lightbox-inner">
+    <img id="jc-lightbox-image" src="" alt="">
+    <div
+      class="jc-lightbox-caption"
+      id="jc-lightbox-caption"
+      aria-live="polite"
+    ></div>
+  </div>
+</div>
+
+<button
+  class="jc-back-top"
+  id="jc-back-top"
+  type="button"
+  aria-label="Back to top"
+>
+  ↑
+</button>
+
+<script>
+  (() => {
+    "use strict";
+
+    const prefersReducedMotion =
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    /* -------------------------------------------------------
+       MOBILE NAV
+    ------------------------------------------------------- */
+    const header = document.querySelector(".site-header");
+    const menuToggle = document.querySelector(".menu-toggle");
+    const navLinks = document.querySelector(".nav-links");
+
+    if (header && menuToggle && navLinks && header.dataset.navInit !== "true") {
+      header.dataset.navInit = "true";
+
+      menuToggle.addEventListener("click", () => {
+        const isOpen = header.classList.toggle("nav-open");
+        menuToggle.setAttribute("aria-expanded", String(isOpen));
+      });
+
+      navLinks.addEventListener("click", event => {
+        if (event.target.closest("a")) {
+          header.classList.remove("nav-open");
+          menuToggle.setAttribute("aria-expanded", "false");
+        }
+      });
+    }
+
+    /* -------------------------------------------------------
+       HERO BACKGROUND FALLBACK
+    ------------------------------------------------------- */
+    const hero = document.querySelector(".jc-hero");
+    const heroLoader = new Image();
+    heroLoader.onerror = () => hero?.classList.add("jc-image-missing");
+    heroLoader.src = "../images/projects/journal/bangladesh-crop-map.jpg";
+
+    /* -------------------------------------------------------
+       IMAGE FALLBACK
+    ------------------------------------------------------- */
+    function bindImageFallback(img) {
+      if (!img || img.dataset.jcFallbackBound === "true") return;
+      img.dataset.jcFallbackBound = "true";
+
+      img.addEventListener("error", () => {
+        img.closest(".jc-image-shell")?.classList.add("jc-is-missing");
+      });
+
+      if (img.complete && img.naturalWidth === 0) {
+        img.closest(".jc-image-shell")?.classList.add("jc-is-missing");
+      }
+    }
+
+    document.querySelectorAll(".jc-image-shell img").forEach(bindImageFallback);
+
+    /* -------------------------------------------------------
+       REVEAL ANIMATIONS
+    ------------------------------------------------------- */
+    const revealItems = document.querySelectorAll(".jc-reveal");
+
+    if (prefersReducedMotion || !("IntersectionObserver" in window)) {
+      revealItems.forEach(item => item.classList.add("jc-visible"));
+    } else {
+      const revealObserver = new IntersectionObserver(
+        entries => {
+          entries.forEach((entry, index) => {
+            if (!entry.isIntersecting) return;
+            window.setTimeout(() => {
+              entry.target.classList.add("jc-visible");
+            }, Math.min(index * 45, 220));
+            revealObserver.unobserve(entry.target);
+          });
+        },
+        { threshold: 0.12, rootMargin: "0px 0px -6% 0px" }
+      );
+      revealItems.forEach(item => revealObserver.observe(item));
+    }
+
+    /* -------------------------------------------------------
+       COUNTERS
+    ------------------------------------------------------- */
+    const counterElements = document.querySelectorAll("[data-counter]");
+
+    function easeOutCubic(v) { return 1 - Math.pow(1 - v, 3); }
+
+    function animateCounter(el) {
+      if (el.dataset.counted === "true") return;
+      el.dataset.counted = "true";
+
+      const target = Number(el.dataset.target || 0);
+      const suffix = el.dataset.suffix || "";
+      const prefix = el.dataset.prefix || "";
+      const duration = 1500;
+      const start = performance.now();
+
+      const render = v => {
+        el.textContent = prefix + Math.round(v).toLocaleString("en-US") + suffix;
+      };
+
+      if (prefersReducedMotion) { render(target); return; }
+
+      const frame = now => {
+        const p = Math.min((now - start) / duration, 1);
+        render(target * easeOutCubic(p));
+        if (p < 1) requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+    }
+
+    if ("IntersectionObserver" in window) {
+      const co = new IntersectionObserver(
+        entries => {
+          entries.forEach(e => {
+            if (!e.isIntersecting) return;
+            animateCounter(e.target);
+            co.unobserve(e.target);
+          });
+        },
+        { threshold: 0.5 }
+      );
+      counterElements.forEach(el => co.observe(el));
+    } else {
+      counterElements.forEach(animateCounter);
+    }
+
+    /* -------------------------------------------------------
+       VARIABLE EXPLORER
+    ------------------------------------------------------- */
+    const variableButtons = document.querySelectorAll(".jc-variable-btn");
+    const variableDescription = document.getElementById("jc-variable-description");
+    const variableImgWrap    = document.getElementById("jc-variable-image-wrap");
+    const variableImgShell   = document.getElementById("jc-variable-img-shell");
+    const variableImg        = document.getElementById("jc-variable-img");
+    const variableImgCaption = document.getElementById("jc-variable-img-caption");
+    const variableImgFallback = document.getElementById("jc-variable-img-fallback");
+
+    // Map button text → image filename stem and caption (12 predictor variables)
+    const variableImageMap = {
+      "Precipitation":            { file: "var-precipitation",      caption: "Spatial distribution of precipitation across Bangladesh's 64 districts." },
+      "Land Surface Temperature": { file: "var-lst",                caption: "Landsat-derived land surface temperature." },
+      "Sunny Days":               { file: "var-sunny-days",         caption: "Annual sunny day distribution across Bangladesh." },
+      "Evapotranspiration":       { file: "var-evapotranspiration", caption: "MOD16 evapotranspiration — the single most influential predictor variable." },
+      "Cloud Ratio":              { file: "var-cloud-ratio",        caption: "Cloud ratio distribution across Bangladesh." },
+      "Soil Salinity":            { file: "var-soil-salinity",      caption: "Soil salinity — elevated in the southwest coastal zone." },
+      "Soil Moisture":            { file: "var-soil-moisture",      caption: "Monthly climate water balance — soil moisture across districts." },
+      "Soil Type":                { file: "var-soil-type",          caption: "Soil type classification: Silt, Loam, Clay dominant." },
+      "Groundwater Quality":      { file: "var-groundwater",        caption: "Groundwater quality — elevated salinity in northern districts." },
+      "DEM (Elevation)":          { file: "var-dem",                caption: "SRTM-derived digital elevation model — elevation peaks in the southeast." },
+      "Slope":                    { file: "var-slope",              caption: "Slope — steeper terrain in the Chittagong Hill Tracts." },
+      "Aspect":                   { file: "var-aspect",             caption: "Aspect — solar radiation exposure across the landscape." }
+    };
+
+    variableButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        variableButtons.forEach(b => b.setAttribute("aria-pressed", "false"));
+        btn.setAttribute("aria-pressed", "true");
+
+        const label = btn.textContent.trim();
+        if (variableDescription) variableDescription.textContent = btn.dataset.description || "";
+
+        // Swap image
+        const meta = variableImageMap[label];
+        if (meta && variableImg && variableImgWrap) {
+          const src = `../images/projects/journal/${meta.file}.jpg`;
+          variableImgShell?.classList.remove("jc-is-missing");
+          variableImgFallback.textContent = `${meta.file}.jpg · image unavailable`;
+          variableImg.src = src;
+          variableImg.alt = meta.caption;
+          variableImg.dataset.caption = meta.caption;
+          if (variableImgCaption) variableImgCaption.textContent = meta.caption;
+          variableImgWrap.classList.add("jc-var-img-active");
+          bindImageFallback(variableImg);
+          bindLightboxTarget(variableImg);
+        }
+      });
+    });
+
+    /* -------------------------------------------------------
+       ROC MODEL SWITCHER
+    ------------------------------------------------------- */
+    const rocImage = document.getElementById("jc-roc-image");
+    const rocCaption = document.getElementById("jc-roc-caption");
+    const modelRows = document.querySelectorAll(".jc-model-row");
+
+    const rocModels = {
+      ann: {
+        src: "../images/projects/journal/roc-ann-summary.jpg",
+        alt: "ANN ROC curve summary",
+        caption: "ANN · Average ROC-AUC = 0.93",
+        fallback: "roc-ann-summary.jpg · image unavailable"
+      },
+      rf: {
+        src: "../images/projects/journal/roc-rf-summary.jpg",
+        alt: "Random Forest ROC curve summary",
+        caption: "Random Forest · Average ROC-AUC = 0.90",
+        fallback: "roc-rf-summary.jpg · image unavailable"
+      },
+      svm: {
+        src: "../images/projects/journal/roc-svm-summary.jpg",
+        alt: "SVM ROC curve summary",
+        caption: "SVM · Average ROC-AUC = 0.87",
+        fallback: "roc-svm-summary.jpg · image unavailable"
+      }
+    };
+
+    function selectModelRow(row) {
+      const model = row.dataset.model;
+      const config = rocModels[model];
+      if (!config || !rocImage) return;
+
+      modelRows.forEach(r => { r.classList.remove("jc-selected"); r.setAttribute("aria-selected", "false"); });
+      row.classList.add("jc-selected");
+      row.setAttribute("aria-selected", "true");
+
+      const shell = rocImage.closest(".jc-image-shell");
+      shell?.classList.remove("jc-is-missing");
+      rocImage.src = config.src;
+      rocImage.alt = config.alt;
+      rocImage.dataset.caption = config.caption;
+
+      const fallback = shell?.querySelector(".jc-img-fallback");
+      if (fallback) fallback.textContent = config.fallback;
+      if (rocCaption) rocCaption.textContent = config.caption;
+    }
+
+    modelRows.forEach(row => {
+      row.addEventListener("click", () => selectModelRow(row));
+      row.addEventListener("keydown", e => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectModelRow(row); }
+      });
+    });
+
+    /* -------------------------------------------------------
+       AUC BARS
+    ------------------------------------------------------- */
+    const barFills = document.querySelectorAll("[data-bar]");
+
+    function animateBars() {
+      barFills.forEach(bar => { bar.style.width = `${bar.dataset.bar}%`; });
+    }
+
+    if (prefersReducedMotion || !("IntersectionObserver" in window)) {
+      animateBars();
+    } else {
+      const barsContainer = document.querySelector(".jc-bars");
+      if (barsContainer) {
+        const bo = new IntersectionObserver(
+          entries => { if (entries.some(e => e.isIntersecting)) { animateBars(); bo.disconnect(); } },
+          { threshold: 0.35 }
+        );
+        bo.observe(barsContainer);
+      }
+    }
+
+    /* -------------------------------------------------------
+       CROP MAP SWITCHER
+       FIX 5: "Best district" row removed from map cards —
+       no per-crop district data was supplied in the spec.
+    ------------------------------------------------------- */
+    const cropMapGrid = document.getElementById("jc-map-grid");
+
+    const cropMetadata = [
+      { key: "aman",   name: "Aman",   interpretation: "Rain-fed rice suitability follows monsoon water balance and moisture availability." },
+      { key: "aush",   name: "Aush",   interpretation: "Early-season rice responds strongly to moisture availability at establishment." },
+      { key: "boro",   name: "Boro",   interpretation: "Irrigated dry-season rice shows particularly strong evapotranspiration sensitivity." },
+      { key: "jute",   name: "Jute",   interpretation: "Topographic position influences waterlogging risk for this flood-tolerant fibre crop." },
+      { key: "lentil", name: "Lentil", interpretation: "Dry-season suitability depends strongly on soil moisture and groundwater conditions." },
+      { key: "maize",  name: "Maize",  interpretation: "Water demand and rainfall patterns shape suitability for this intensive grain crop." },
+      { key: "potato", name: "Potato", interpretation: "Root-zone moisture and heat balance are critical for productive potato areas." },
+      { key: "wheat",  name: "Wheat",  interpretation: "Water demand and rainfall influence conditions during sensitive grain-filling stages." }
+    ];
+
+    const modelLabels = { ann: "ANN", rf: "Random Forest", svm: "SVM" };
+
+    function createCropMapCard(model, crop) {
+      const fileName = `${model}-${crop.key}.jpg`;
+      const src = `../images/projects/journal/${fileName}`;
+
+      const article = document.createElement("article");
+      article.className = "jc-map-card jc-reveal jc-visible";
+
+      article.innerHTML = `
+        <div class="jc-image-shell">
+          <img
+            src="${src}"
+            alt="${modelLabels[model]} ${crop.name} suitability map"
+            loading="lazy"
+            data-lightbox
+            data-caption="${modelLabels[model]} · ${crop.name} crop suitability map."
+            role="button"
+            tabindex="0"
+          >
+          <span class="jc-img-fallback">${fileName} · image unavailable</span>
+        </div>
+        <div class="jc-map-copy">
+          <h3>${crop.name}</h3>
+          <p>${crop.interpretation}</p>
+        </div>
+      `;
+
+      const img = article.querySelector("img");
+      bindImageFallback(img);
+      bindLightboxTarget(img);
+      return article;
+    }
+
+    function renderCropMaps(model) {
+      if (!cropMapGrid) return;
+      cropMapGrid.replaceChildren();
+      cropMetadata.forEach(crop => cropMapGrid.appendChild(createCropMapCard(model, crop)));
+    }
+
+    const mapTabs = document.querySelectorAll("[data-map-model]");
+    mapTabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        mapTabs.forEach(t => t.setAttribute("aria-selected", "false"));
+        tab.setAttribute("aria-selected", "true");
+        renderCropMaps(tab.dataset.mapModel);
+      });
+    });
+
+    renderCropMaps("ann");
+
+    /* -------------------------------------------------------
+       DISTRICT TABLE
+    ------------------------------------------------------- */
+    const districtData = {
+      ann: [
+        { district: "Tangail",    verySuitable: null, suitable: null, moderate: null, marginal: null, notSuitable: null, total: 2.646 },
+        { district: "Naogaon",    verySuitable: null, suitable: null, moderate: null, marginal: null, notSuitable: null, total: 2.567 },
+        { district: "Sylhet",     verySuitable: null, suitable: null, moderate: null, marginal: null, notSuitable: null, total: 2.557 },
+        { district: "Dinajpur",   verySuitable: null, suitable: null, moderate: null, marginal: null, notSuitable: null, total: 2.557 },
+        { district: "Mymensingh", verySuitable: null, suitable: null, moderate: null, marginal: null, notSuitable: null, total: 3.272 },
+        { district: "Rangamati",  verySuitable: null, suitable: null, moderate: null, marginal: null, notSuitable: null, total: 3.949 },
+        { district: "Bandarban",  verySuitable: null, suitable: null, moderate: null, marginal: null, notSuitable: null, total: 3.192 },
+        { district: "Sunamganj",  verySuitable: null, suitable: null, moderate: null, marginal: null, notSuitable: null, total: 2.802 },
+        { district: "Chittagong", verySuitable: null, suitable: null, moderate: null, marginal: null, notSuitable: null, total: 2.904 }
+      ],
+      rf: [],
+      svm: []
+    };
+
+    const districtBody = document.getElementById("jc-district-body");
+    const districtSearch = document.getElementById("jc-district-search");
+    const districtTabs = document.querySelectorAll("[data-district-model]");
+    let activeDistrictModel = "ann";
+
+    function pct(v) { return Number.isFinite(v) ? v.toFixed(3) : "—"; }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&", "&amp;").replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+    }
+
+    function renderDistrictTable() {
+      if (!districtBody) return;
+      const query = (districtSearch?.value || "").trim().toLowerCase();
+      const rows = districtData[activeDistrictModel] || [];
+      districtBody.replaceChildren();
+
+      if (!rows.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td class="jc-table-empty" colspan="7">Row-level ${modelLabels[activeDistrictModel]} district percentages were not supplied in the source data.</td>`;
+        districtBody.appendChild(tr);
+        return;
+      }
+
+      const filtered = rows.filter(r => r.district.toLowerCase().includes(query));
+
+      if (!filtered.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td class="jc-table-empty" colspan="7">No district matches "${escapeHtml(query)}".</td>`;
+        districtBody.appendChild(tr);
+        return;
+      }
+
+      filtered.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.className = "jc-district-row";
+        tr.tabIndex = 0;
+        tr.innerHTML = `
+          <td>${escapeHtml(item.district)}</td>
+          <td class="jc-mono">${pct(item.verySuitable)}</td>
+          <td class="jc-mono">${pct(item.suitable)}</td>
+          <td class="jc-mono">${pct(item.moderate)}</td>
+          <td class="jc-mono">${pct(item.marginal)}</td>
+          <td class="jc-mono">${pct(item.notSuitable)}</td>
+          <td class="jc-mono">${pct(item.total)}</td>
+        `;
+        const select = () => {
+          districtBody.querySelectorAll(".jc-district-row").forEach(r => r.classList.remove("jc-selected"));
+          tr.classList.add("jc-selected");
+        };
+        tr.addEventListener("click", select);
+        tr.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(); } });
+        districtBody.appendChild(tr);
+      });
+    }
+
+    districtSearch?.addEventListener("input", renderDistrictTable);
+
+    districtTabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        districtTabs.forEach(t => t.setAttribute("aria-selected", "false"));
+        tab.setAttribute("aria-selected", "true");
+        activeDistrictModel = tab.dataset.districtModel;
+        renderDistrictTable();
+      });
+    });
+
+    renderDistrictTable();
+
+    /* -------------------------------------------------------
+       LIGHTBOX
+    ------------------------------------------------------- */
+    const lightbox = document.getElementById("jc-lightbox");
+    const lightboxImage = document.getElementById("jc-lightbox-image");
+    const lightboxCaption = document.getElementById("jc-lightbox-caption");
+    const lightboxClose = document.getElementById("jc-lightbox-close");
+    let lastLightboxTrigger = null;
+
+    function openLightbox(target) {
+      if (!lightbox || !lightboxImage || !target) return;
+      if (target.closest(".jc-image-shell")?.classList.contains("jc-is-missing")) return;
+
+      lastLightboxTrigger = target;
+      lightboxImage.src = target.currentSrc || target.src;
+      lightboxImage.alt = target.alt || "";
+      lightboxCaption.textContent = target.dataset.caption || target.alt || "";
+      lightbox.classList.add("jc-open");
+      lightbox.setAttribute("aria-hidden", "false");
+      document.body.classList.add("jc-lightbox-open");
+      requestAnimationFrame(() => lightboxClose?.focus());
+    }
+
+    function closeLightbox() {
+      if (!lightbox) return;
+      lightbox.classList.remove("jc-open");
+      lightbox.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("jc-lightbox-open");
+      if (lightboxImage) lightboxImage.src = "";
+      lastLightboxTrigger?.focus();
+      lastLightboxTrigger = null;
+    }
+
+    function bindLightboxTarget(target) {
+      if (!target || target.dataset.jcLightboxBound === "true") return;
+      target.dataset.jcLightboxBound = "true";
+      target.addEventListener("click", () => openLightbox(target));
+      target.addEventListener("keydown", e => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openLightbox(target); }
+      });
+    }
+
+    document.querySelectorAll("[data-lightbox]").forEach(bindLightboxTarget);
+    lightboxClose?.addEventListener("click", closeLightbox);
+    lightbox?.addEventListener("click", e => { if (e.target === lightbox) closeLightbox(); });
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape" && lightbox?.classList.contains("jc-open")) closeLightbox();
+    });
+
+    /* -------------------------------------------------------
+       BACK TO TOP
+    ------------------------------------------------------- */
+    const backTop = document.getElementById("jc-back-top");
+
+    window.addEventListener("scroll", () => {
+      backTop?.classList.toggle("jc-show", window.scrollY > 300);
+    }, { passive: true });
+
+    backTop?.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
+    });
+
+  })();
+</script>
+
+<!-- IMAGE MANIFEST
+bangladesh-crop-map.jpg
+study-area-map.jpg
+methodology-flowchart.jpg
+roc-ann-summary.jpg
+roc-rf-summary.jpg
+roc-svm-summary.jpg
+feature-importance-ann.jpg
+feature-importance-rf.jpg
+feature-importance-svm.jpg
+ann-aman.jpg ann-aush.jpg ann-boro.jpg ann-jute.jpg ann-lentil.jpg ann-maize.jpg ann-potato.jpg ann-wheat.jpg
+ann-district-map.jpg
+rf-aman.jpg rf-aush.jpg rf-boro.jpg rf-jute.jpg rf-lentil.jpg rf-maize.jpg rf-potato.jpg rf-wheat.jpg
+rf-district-map.jpg
+svm-aman.jpg svm-aush.jpg svm-boro.jpg svm-jute.jpg svm-lentil.jpg svm-maize.jpg svm-potato.jpg svm-wheat.jpg
+svm-district-map.jpg
+-->
+</body>
+</html>
