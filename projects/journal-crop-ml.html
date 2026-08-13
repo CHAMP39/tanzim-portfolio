@@ -1555,6 +1555,130 @@
         transform: none;
       }
     }
+
+    /* Final visual QA refinements */
+    .jc-hero {
+      overflow: hidden;
+    }
+
+    .jc-hero-title {
+      color: var(--jc-offwhite);
+      text-shadow: 0 3px 28px rgba(0, 0, 0, .48);
+      overflow-wrap: anywhere;
+    }
+
+    .jc-study-layout figure .jc-image-shell {
+      background: var(--jc-parchment);
+    }
+
+    .jc-study-layout figure .jc-image-shell img {
+      max-height: 680px;
+      object-fit: contain;
+    }
+
+    .jc-model-layout > * {
+      min-width: 0;
+    }
+
+    .jc-roc-panel .jc-image-shell img {
+      object-fit: contain;
+    }
+
+    @media (max-width: 1349px) {
+      .jc-model-layout {
+        grid-template-columns: 1fr !important;
+      }
+
+      .jc-roc-panel {
+        width: min(100%, 720px);
+        margin-inline: auto;
+      }
+    }
+
+    @media (max-width: 1320px) and (min-width: 861px) {
+      .nav-links {
+        gap: 16px;
+        font-size: .84rem;
+      }
+
+      .nav-cta .btn-ghost {
+        display: none;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .nav {
+        padding-inline: 16px;
+      }
+
+      .brand {
+        min-width: 0;
+        font-size: 1rem;
+        white-space: nowrap;
+      }
+
+      .nav-cta {
+        gap: 4px;
+      }
+
+      .nav-cta .btn {
+        display: none;
+      }
+
+      .menu-toggle {
+        display: flex;
+        flex: 0 0 auto;
+      }
+
+      .jc-hero {
+        min-height: max(760px, 100svh);
+      }
+
+      .jc-open-badge {
+        top: 92px;
+        left: 16px;
+        right: 16px;
+        justify-content: center;
+        border-radius: 14px;
+        text-align: center;
+        line-height: 1.45;
+        white-space: normal;
+      }
+
+      .jc-hero-inner {
+        padding: 185px 0 142px;
+      }
+
+      .jc-hero-title {
+        font-size: clamp(2.65rem, 12vw, 3.2rem);
+        line-height: 1;
+        letter-spacing: -.045em;
+      }
+
+      .jc-hero-subhead {
+        margin-top: 22px;
+        font-size: 1rem;
+        line-height: 1.62;
+      }
+
+      .jc-chip-row {
+        margin-top: 24px;
+      }
+
+      .jc-table-wrap {
+        scrollbar-color: rgba(10,31,20,.35) transparent;
+        scrollbar-width: thin;
+      }
+
+      .jc-table-wrap::-webkit-scrollbar {
+        height: 6px;
+      }
+
+      .jc-table-wrap::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(10,31,20,.35);
+      }
+    }
   </style>
 </head>
 
