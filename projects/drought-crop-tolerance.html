@@ -1,0 +1,3622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Climate Crisis, Food Security & Crop Drought Tolerance | Tanzim Al Noor</title>
+
+  <meta
+    name="description"
+    content="An SSRN working paper co-authored by Tanzim Al Noor using Random Forest, SHAP and geospatial analysis to investigate drought tolerance across five major crops in Bangladesh."
+  >
+
+  <link rel="stylesheet" href="../styles.css">
+
+  <style>
+    :root {
+      --dc-night: #07130f;
+      --dc-forest: #102b20;
+      --dc-forest-2: #16392b;
+      --dc-crop: #748f43;
+      --dc-crop-soft: #a6b975;
+      --dc-monsoon: #3f88a8;
+      --dc-monsoon-soft: #83bed1;
+      --dc-amber: #d89a2b;
+      --dc-amber-soft: #f0c46e;
+      --dc-earth: #8a5534;
+      --dc-warning: #c75a43;
+      --dc-sand: #f3ead7;
+      --dc-parchment: #faf5e9;
+      --dc-offwhite: #f0eee8;
+      --dc-ink: #17251d;
+      --dc-muted: #68746c;
+      --dc-dark-border: rgba(240, 238, 232, 0.14);
+      --dc-light-border: rgba(16, 43, 32, 0.16);
+      --dc-shadow: 0 28px 80px rgba(3, 15, 10, 0.2);
+      --dc-radius-sm: 12px;
+      --dc-radius: 22px;
+      --dc-radius-lg: 34px;
+      --dc-max: 1440px;
+      --dc-transition: 280ms cubic-bezier(.2, .8, .2, 1);
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background: var(--dc-night);
+    }
+
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      background: var(--dc-night);
+      color: var(--dc-offwhite);
+      font-family: "Inter", sans-serif;
+    }
+
+    body.dc-lightbox-open {
+      overflow: hidden;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      color: inherit;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .dc-main {
+      overflow: hidden;
+    }
+
+    .dc-container {
+      width: min(calc(100% - 32px), var(--dc-max));
+      margin-inline: auto;
+    }
+
+    .dc-section {
+      position: relative;
+      padding: 88px 0;
+    }
+
+    .dc-section--dark {
+      background:
+        radial-gradient(
+          circle at 90% 5%,
+          rgba(63, 136, 168, 0.08),
+          transparent 28%
+        ),
+        var(--dc-night);
+      color: var(--dc-offwhite);
+    }
+
+    .dc-section--forest {
+      background:
+        radial-gradient(
+          circle at 8% 15%,
+          rgba(216, 154, 43, 0.07),
+          transparent 26%
+        ),
+        var(--dc-forest);
+      color: var(--dc-offwhite);
+    }
+
+    .dc-section--light {
+      background:
+        linear-gradient(
+          rgba(250, 245, 233, 0.98),
+          rgba(250, 245, 233, 0.98)
+        ),
+        repeating-linear-gradient(
+          0deg,
+          rgba(138, 85, 52, 0.035) 0,
+          rgba(138, 85, 52, 0.035) 1px,
+          transparent 1px,
+          transparent 5px
+        );
+      color: var(--dc-ink);
+    }
+
+    .dc-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 18px;
+      color: var(--dc-amber);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .dc-label::before {
+      width: 30px;
+      height: 1px;
+      content: "";
+      background: currentColor;
+    }
+
+    .dc-heading {
+      max-width: 1080px;
+      margin: 0;
+      font-family: "Fraunces", serif;
+      font-size: clamp(2.45rem, 7vw, 5.8rem);
+      font-weight: 650;
+      line-height: 0.98;
+      letter-spacing: -0.05em;
+      text-wrap: balance;
+    }
+
+    .dc-heading--medium {
+      font-size: clamp(2.3rem, 6vw, 4.8rem);
+    }
+
+    .dc-intro {
+      max-width: 880px;
+      margin: 24px 0 0;
+      font-size: clamp(1rem, 2vw, 1.18rem);
+      line-height: 1.75;
+      opacity: 0.8;
+    }
+
+    .dc-mono {
+      font-family: "JetBrains Mono", monospace;
+    }
+
+    .dc-reveal {
+      opacity: 0;
+      transform: translateY(25px);
+      transition:
+        opacity 700ms cubic-bezier(.2, .8, .2, 1),
+        transform 700ms cubic-bezier(.2, .8, .2, 1);
+    }
+
+    .dc-reveal.dc-visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* HERO */
+
+    .dc-hero {
+      position: relative;
+      min-height: 100svh;
+      display: flex;
+      align-items: flex-end;
+      isolation: isolate;
+      background:
+        linear-gradient(
+          90deg,
+          rgba(7, 19, 15, 0.96) 0%,
+          rgba(7, 19, 15, 0.88) 43%,
+          rgba(7, 19, 15, 0.58) 100%
+        ),
+        url("../images/projects/drought/drought-tolerance-hero.jpg")
+        center / cover no-repeat;
+    }
+
+    .dc-hero::before {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      content: "";
+      background:
+        radial-gradient(
+          circle at 80% 22%,
+          rgba(216, 154, 43, 0.17),
+          transparent 30%
+        ),
+        linear-gradient(
+          to top,
+          rgba(7, 19, 15, 0.94),
+          transparent 48%
+        );
+      pointer-events: none;
+    }
+
+    .dc-hero.dc-image-missing {
+      background:
+        radial-gradient(
+          circle at 75% 20%,
+          rgba(216, 154, 43, 0.14),
+          transparent 30%
+        ),
+        linear-gradient(120deg, var(--dc-night), var(--dc-forest));
+    }
+
+    .dc-hero-missing {
+      position: absolute;
+      top: 120px;
+      right: 22px;
+      display: none;
+      color: rgba(240, 238, 232, 0.4);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.68rem;
+    }
+
+    .dc-hero.dc-image-missing .dc-hero-missing {
+      display: block;
+    }
+
+    .dc-hero-inner {
+      width: min(calc(100% - 32px), var(--dc-max));
+      margin-inline: auto;
+      padding: 150px 0 120px;
+    }
+
+    .dc-status-badge {
+      position: absolute;
+      top: 104px;
+      right: max(16px, calc((100vw - var(--dc-max)) / 2));
+      z-index: 3;
+      padding: 10px 15px;
+      border: 1px solid rgba(216, 154, 43, 0.56);
+      border-radius: 999px;
+      background: var(--dc-amber);
+      color: var(--dc-night);
+      box-shadow: var(--dc-shadow);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.68rem;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+    }
+
+    .dc-hero-eyebrow {
+      max-width: 920px;
+      margin: 0 0 19px;
+      color: var(--dc-amber-soft);
+      font-family: "JetBrains Mono", monospace;
+      font-size: clamp(0.7rem, 1.5vw, 0.88rem);
+      line-height: 1.65;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .dc-hero-title {
+      max-width: 1180px;
+      margin: 0;
+      font-family: "Fraunces", serif;
+      font-size: clamp(3.3rem, 10vw, 8rem);
+      font-weight: 700;
+      line-height: 0.88;
+      letter-spacing: -0.065em;
+      text-wrap: balance;
+    }
+
+    .dc-hero-subhead {
+      max-width: 920px;
+      margin: 28px 0 0;
+      color: rgba(240, 238, 232, 0.8);
+      font-size: clamp(1rem, 2vw, 1.27rem);
+      line-height: 1.72;
+    }
+
+    .dc-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 31px;
+    }
+
+    .dc-chip {
+      padding: 9px 12px;
+      border: 1px solid rgba(216, 154, 43, 0.67);
+      border-radius: 999px;
+      background: rgba(7, 19, 15, 0.42);
+      color: var(--dc-amber-soft);
+      backdrop-filter: blur(7px);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.7rem;
+    }
+
+    .dc-hero-bottom {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      border-top: 1px solid rgba(240, 238, 232, 0.14);
+      background: rgba(7, 19, 15, 0.7);
+      backdrop-filter: blur(12px);
+    }
+
+    .dc-hero-bottom-inner {
+      width: min(calc(100% - 32px), var(--dc-max));
+      min-height: 72px;
+      margin-inline: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 7px;
+      padding: 13px 0;
+      color: rgba(240, 238, 232, 0.58);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.65rem;
+      line-height: 1.6;
+    }
+
+    .dc-scroll-label {
+      color: var(--dc-amber-soft);
+    }
+
+    /* IDENTITY STRIP */
+
+    .dc-identity {
+      border-top: 1px solid var(--dc-dark-border);
+      border-bottom: 1px solid var(--dc-dark-border);
+      background: var(--dc-forest);
+    }
+
+    .dc-identity-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+
+    .dc-fact {
+      min-width: 0;
+      padding: 22px 16px;
+      border-bottom: 1px solid var(--dc-dark-border);
+    }
+
+    .dc-fact:last-child {
+      border-bottom: 0;
+    }
+
+    .dc-fact-label {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--dc-amber);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.61rem;
+      font-weight: 800;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+
+    .dc-fact-value {
+      color: rgba(240, 238, 232, 0.8);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.68rem;
+      line-height: 1.55;
+    }
+
+    /* GENERIC CARDS */
+
+    .dc-card-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 42px;
+    }
+
+    .dc-dark-card {
+      min-height: 100%;
+      padding: 27px;
+      border-left: 4px solid var(--dc-amber);
+      border-radius: 0 var(--dc-radius) var(--dc-radius) 0;
+      background: var(--dc-night);
+      color: var(--dc-offwhite);
+      box-shadow: 0 18px 46px rgba(7, 19, 15, 0.13);
+    }
+
+    .dc-dark-card--blue {
+      border-left-color: var(--dc-monsoon);
+    }
+
+    .dc-dark-card--green {
+      border-left-color: var(--dc-crop);
+    }
+
+    .dc-dark-card h3 {
+      margin: 0 0 14px;
+      font-family: "Fraunces", serif;
+      font-size: 1.62rem;
+      line-height: 1.12;
+    }
+
+    .dc-dark-card p {
+      margin: 0;
+      color: rgba(240, 238, 232, 0.7);
+      font-size: 0.92rem;
+      line-height: 1.72;
+    }
+
+    .dc-question-callout {
+      max-width: 1100px;
+      margin: 55px 0 0;
+      padding: 30px 0 0 27px;
+      border-left: 2px solid var(--dc-amber);
+      color: var(--dc-earth);
+      font-family: "Fraunces", serif;
+      font-size: clamp(1.7rem, 4vw, 3.15rem);
+      font-style: italic;
+      line-height: 1.18;
+      letter-spacing: -0.025em;
+    }
+
+    /* AUTHORSHIP */
+
+    .dc-author-strip {
+      display: grid;
+      grid-auto-columns: minmax(270px, 84vw);
+      grid-auto-flow: column;
+      gap: 14px;
+      overflow-x: auto;
+      margin-top: 40px;
+      padding: 5px 3px 20px;
+      scroll-snap-type: x mandatory;
+    }
+
+    .dc-author-card {
+      scroll-snap-align: start;
+      padding: 23px;
+      border: 1px solid var(--dc-dark-border);
+      border-radius: var(--dc-radius);
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .dc-author-card--mine {
+      border-color: var(--dc-amber);
+      background:
+        linear-gradient(
+          135deg,
+          rgba(216, 154, 43, 0.12),
+          rgba(216, 154, 43, 0.025)
+        );
+      box-shadow: inset 0 0 0 1px rgba(216, 154, 43, 0.16);
+    }
+
+    .dc-author-name {
+      margin: 0;
+      font-family: "Fraunces", serif;
+      font-size: 1.48rem;
+    }
+
+    .dc-author-mark {
+      display: block;
+      margin-top: 7px;
+      color: var(--dc-amber);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.63rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .dc-author-affiliation {
+      margin: 17px 0 0;
+      color: rgba(240, 238, 232, 0.54);
+      font-size: 0.76rem;
+      line-height: 1.55;
+    }
+
+    .dc-contribution-note {
+      max-width: 1100px;
+      margin-top: 34px;
+      padding: 23px 26px;
+      border-left: 4px solid var(--dc-amber);
+      background: rgba(216, 154, 43, 0.06);
+      color: rgba(240, 238, 232, 0.8);
+      line-height: 1.75;
+    }
+
+    .dc-contribution-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 19px;
+    }
+
+    .dc-contribution-tag {
+      padding: 8px 10px;
+      border: 1px solid var(--dc-dark-border);
+      border-radius: 999px;
+      color: rgba(240, 238, 232, 0.68);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.63rem;
+    }
+
+    /* IMAGES */
+
+    .dc-image-shell {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--dc-radius);
+      background: #040d09;
+      box-shadow: var(--dc-shadow);
+    }
+
+    .dc-image-shell img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      cursor: zoom-in;
+      transition:
+        transform var(--dc-transition),
+        opacity var(--dc-transition);
+    }
+
+    .dc-image-shell:hover img {
+      transform: scale(1.014);
+    }
+
+    .dc-image-shell.dc-is-missing img {
+      display: none;
+    }
+
+    .dc-img-fallback {
+      display: none;
+      min-height: 250px;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: rgba(240, 238, 232, 0.42);
+      text-align: center;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.05em;
+    }
+
+    .dc-image-shell.dc-is-missing .dc-img-fallback {
+      display: flex;
+    }
+
+    .dc-caption {
+      margin: 14px 2px 0;
+      color: var(--dc-muted);
+      font-size: 0.78rem;
+      line-height: 1.6;
+    }
+
+    /* STUDY AREA */
+
+    .dc-study-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 28px;
+      margin-top: 42px;
+    }
+
+    .dc-study-map .dc-image-shell {
+      aspect-ratio: 4 / 3;
+    }
+
+    .dc-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--dc-light-border);
+      border-radius: var(--dc-radius);
+      background: var(--dc-light-border);
+    }
+
+    .dc-stat {
+      min-height: 128px;
+      padding: 19px;
+      background: var(--dc-parchment);
+    }
+
+    .dc-stat-number {
+      display: block;
+      color: var(--dc-amber);
+      font-family: "Fraunces", serif;
+      font-size: clamp(1.75rem, 5vw, 3rem);
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .dc-stat-label {
+      display: block;
+      margin-top: 10px;
+      color: var(--dc-muted);
+      font-size: 0.72rem;
+      line-height: 1.45;
+    }
+
+    /* VARIABLE EXPLORER */
+
+    .dc-variable-panel {
+      margin-top: 54px;
+    }
+
+    .dc-subtitle {
+      margin: 0 0 20px;
+      font-family: "Fraunces", serif;
+      font-size: clamp(1.7rem, 4vw, 2.85rem);
+      letter-spacing: -0.035em;
+    }
+
+    .dc-variable-groups {
+      display: grid;
+      gap: 24px;
+    }
+
+    .dc-variable-group h4 {
+      margin: 0 0 11px;
+      color: var(--dc-earth);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.66rem;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .dc-variable-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .dc-variable-btn {
+      min-height: 50px;
+      padding: 11px;
+      border: 1px solid var(--dc-light-border);
+      border-radius: 10px;
+      background: transparent;
+      color: var(--dc-ink);
+      cursor: pointer;
+      text-align: left;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.66rem;
+      line-height: 1.4;
+      transition:
+        background var(--dc-transition),
+        color var(--dc-transition),
+        border-color var(--dc-transition),
+        transform var(--dc-transition);
+    }
+
+    .dc-variable-btn:hover,
+    .dc-variable-btn:focus-visible,
+    .dc-variable-btn[aria-pressed="true"] {
+      border-color: var(--dc-amber);
+      background: var(--dc-night);
+      color: var(--dc-offwhite);
+      transform: translateY(-2px);
+    }
+
+    .dc-variable-description {
+      min-height: 78px;
+      margin-top: 18px;
+      padding: 18px 20px;
+      border-left: 3px solid var(--dc-amber);
+      background: rgba(216, 154, 43, 0.09);
+      color: var(--dc-ink);
+      font-size: 0.9rem;
+      line-height: 1.65;
+    }
+
+    /* PIPELINE */
+
+    .dc-pipeline {
+      position: relative;
+      max-width: 1040px;
+      margin: 50px auto 0;
+      padding-left: 37px;
+    }
+
+    .dc-pipeline::before {
+      position: absolute;
+      top: 10px;
+      bottom: 10px;
+      left: 9px;
+      width: 1px;
+      content: "";
+      background:
+        linear-gradient(
+          var(--dc-amber),
+          var(--dc-monsoon),
+          rgba(63, 136, 168, 0.12)
+        );
+    }
+
+    .dc-pipeline-step {
+      position: relative;
+      margin-bottom: 22px;
+      padding: 24px;
+      border: 1px solid var(--dc-dark-border);
+      border-radius: var(--dc-radius);
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .dc-pipeline-step::before {
+      position: absolute;
+      top: 31px;
+      left: -34px;
+      width: 14px;
+      height: 14px;
+      border: 3px solid var(--dc-night);
+      border-radius: 50%;
+      content: "";
+      background: var(--dc-amber);
+      box-shadow: 0 0 0 1px var(--dc-amber);
+    }
+
+    .dc-pipeline-step:nth-child(even)::before {
+      background: var(--dc-monsoon);
+      box-shadow: 0 0 0 1px var(--dc-monsoon);
+    }
+
+    .dc-step-number {
+      color: var(--dc-amber);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.67rem;
+      font-weight: 800;
+    }
+
+    .dc-pipeline-step h3 {
+      margin: 8px 0 10px;
+      font-family: "Fraunces", serif;
+      font-size: 1.52rem;
+    }
+
+    .dc-pipeline-step p {
+      margin: 0;
+      color: rgba(240, 238, 232, 0.68);
+      font-size: 0.9rem;
+      line-height: 1.72;
+    }
+
+    .dc-method-figure {
+      margin-top: 44px;
+    }
+
+    .dc-method-figure .dc-image-shell {
+      aspect-ratio: 16 / 8.5;
+    }
+
+    /* MODEL LAB */
+
+    .dc-model-overview {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 42px;
+    }
+
+    .dc-model-card {
+      padding: 27px;
+      border: 1px solid var(--dc-light-border);
+      border-radius: var(--dc-radius);
+      background: rgba(255, 255, 255, 0.47);
+    }
+
+    .dc-model-card h3 {
+      margin: 0 0 12px;
+      font-family: "Fraunces", serif;
+      font-size: 1.7rem;
+    }
+
+    .dc-model-card p {
+      margin: 0;
+      color: var(--dc-muted);
+      line-height: 1.68;
+    }
+
+    .dc-model-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 18px;
+    }
+
+    .dc-model-tag {
+      padding: 7px 9px;
+      border: 1px solid var(--dc-light-border);
+      border-radius: 8px;
+      color: var(--dc-earth);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.63rem;
+    }
+
+    .dc-tabs {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 35px;
+      padding: 5px;
+      border: 1px solid var(--dc-light-border);
+      border-radius: 999px;
+      background: rgba(16, 43, 32, 0.035);
+    }
+
+    .dc-tab {
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--dc-muted);
+      cursor: pointer;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.67rem;
+      transition:
+        background var(--dc-transition),
+        color var(--dc-transition);
+    }
+
+    .dc-tab[aria-pressed="true"] {
+      background: var(--dc-night);
+      color: var(--dc-amber-soft);
+    }
+
+    .dc-crop-lab {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 22px;
+      margin-top: 28px;
+    }
+
+    .dc-profile-panel {
+      padding: 26px;
+      border-radius: var(--dc-radius);
+      background: var(--dc-night);
+      color: var(--dc-offwhite);
+    }
+
+    .dc-profile-kicker {
+      color: var(--dc-amber);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .dc-profile-title {
+      margin: 10px 0 7px;
+      font-family: "Fraunces", serif;
+      font-size: clamp(2rem, 5vw, 3.7rem);
+      line-height: 1;
+    }
+
+    .dc-profile-status {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 7px 10px;
+      border: 1px solid rgba(216, 154, 43, 0.45);
+      border-radius: 999px;
+      color: var(--dc-amber-soft);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.63rem;
+    }
+
+    .dc-profile-summary {
+      margin: 20px 0 0;
+      color: rgba(240, 238, 232, 0.72);
+      line-height: 1.7;
+    }
+
+    .dc-driver-block {
+      margin-top: 25px;
+      padding-top: 21px;
+      border-top: 1px solid var(--dc-dark-border);
+    }
+
+    .dc-driver-label {
+      display: block;
+      color: rgba(240, 238, 232, 0.42);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.61rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .dc-driver-value {
+      display: block;
+      margin-top: 7px;
+      color: var(--dc-amber-soft);
+      font-family: "Fraunces", serif;
+      font-size: 1.72rem;
+      line-height: 1.15;
+    }
+
+    .dc-score-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      margin-top: 17px;
+    }
+
+    .dc-score-track {
+      height: 11px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(240, 238, 232, 0.1);
+    }
+
+    .dc-score-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background:
+        linear-gradient(
+          90deg,
+          var(--dc-monsoon),
+          var(--dc-amber)
+        );
+      transition: width 1000ms cubic-bezier(.2, .8, .2, 1);
+    }
+
+    .dc-score-number {
+      color: var(--dc-amber-soft);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.78rem;
+    }
+
+    .dc-score-note {
+      margin: 9px 0 0;
+      color: rgba(240, 238, 232, 0.42);
+      font-size: 0.68rem;
+      line-height: 1.5;
+    }
+
+    .dc-lab-images {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+
+    .dc-lab-image h3 {
+      margin: 0 0 11px;
+      font-family: "Fraunces", serif;
+      font-size: 1.45rem;
+    }
+
+    .dc-lab-image .dc-image-shell {
+      aspect-ratio: 4 / 3;
+    }
+
+    /* CROP ATLAS */
+
+    .dc-atlas-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      margin-top: 28px;
+    }
+
+    .dc-atlas-image .dc-image-shell {
+      aspect-ratio: 4 / 4.6;
+    }
+
+    .dc-atlas-copy {
+      padding: 27px;
+      border-left: 4px solid var(--dc-amber);
+      border-radius: 0 var(--dc-radius) var(--dc-radius) 0;
+      background: var(--dc-night);
+      color: var(--dc-offwhite);
+    }
+
+    .dc-atlas-copy h3 {
+      margin: 0;
+      font-family: "Fraunces", serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+    }
+
+    .dc-atlas-meta {
+      display: block;
+      margin-top: 9px;
+      color: var(--dc-amber);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.65rem;
+      line-height: 1.6;
+    }
+
+    .dc-atlas-copy p {
+      margin: 22px 0 0;
+      color: rgba(240, 238, 232, 0.7);
+      line-height: 1.72;
+    }
+
+    .dc-class-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px;
+      margin-top: 24px;
+    }
+
+    .dc-class-chip {
+      padding: 8px 9px;
+      border: 1px solid var(--dc-dark-border);
+      border-radius: 9px;
+      color: rgba(240, 238, 232, 0.61);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.6rem;
+      text-align: center;
+    }
+
+    /* ENVIRONMENT GALLERY */
+
+    .dc-gallery {
+      display: grid;
+      grid-auto-columns: minmax(285px, 85vw);
+      grid-auto-flow: column;
+      gap: 16px;
+      overflow-x: auto;
+      margin-top: 42px;
+      padding-bottom: 16px;
+      scroll-snap-type: x mandatory;
+    }
+
+    .dc-gallery-card {
+      scroll-snap-align: start;
+    }
+
+    .dc-gallery-card h3 {
+      margin: 0 0 11px;
+      font-family: "Fraunces", serif;
+      font-size: 1.44rem;
+    }
+
+    .dc-gallery-card .dc-image-shell {
+      aspect-ratio: 1 / 1;
+    }
+
+    .dc-gallery-card p {
+      margin: 13px 0 0;
+      color: rgba(240, 238, 232, 0.57);
+      font-size: 0.78rem;
+      line-height: 1.55;
+    }
+
+    /* FINDINGS */
+
+    .dc-findings {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 42px;
+    }
+
+    .dc-finding {
+      min-height: 100%;
+      padding: 27px;
+      border: 1px solid var(--dc-light-border);
+      border-radius: var(--dc-radius);
+      background: rgba(255, 255, 255, 0.45);
+    }
+
+    .dc-finding-num {
+      display: block;
+      color: var(--dc-amber);
+      font-family: "Fraunces", serif;
+      font-size: 3.6rem;
+      font-weight: 700;
+      line-height: 0.86;
+    }
+
+    .dc-finding h3 {
+      margin: 22px 0 11px;
+      font-family: "Fraunces", serif;
+      font-size: 1.47rem;
+      line-height: 1.15;
+    }
+
+    .dc-finding p {
+      margin: 0;
+      color: var(--dc-muted);
+      font-size: 0.88rem;
+      line-height: 1.68;
+    }
+
+    /* POLICY */
+
+    .dc-policy-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 42px;
+    }
+
+    .dc-policy-card {
+      padding: 26px;
+      border: 1px solid var(--dc-dark-border);
+      border-radius: var(--dc-radius);
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .dc-policy-number {
+      color: var(--dc-monsoon-soft);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.65rem;
+    }
+
+    .dc-policy-card h3 {
+      margin: 10px 0 11px;
+      font-family: "Fraunces", serif;
+      font-size: 1.52rem;
+    }
+
+    .dc-policy-card p {
+      margin: 0;
+      color: rgba(240, 238, 232, 0.67);
+      line-height: 1.68;
+    }
+
+    /* STATUS AND CITATION */
+
+    .dc-status-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      margin-top: 41px;
+    }
+
+    .dc-status-card {
+      padding: 28px;
+      border-left: 5px solid var(--dc-amber);
+      border-radius: 0 var(--dc-radius-lg) var(--dc-radius-lg) 0;
+      background: var(--dc-night);
+      color: var(--dc-offwhite);
+      box-shadow: var(--dc-shadow);
+    }
+
+    .dc-status-card h3 {
+      margin: 0;
+      font-family: "Fraunces", serif;
+      font-size: 1.8rem;
+    }
+
+    .dc-status-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .dc-status-pill {
+      padding: 8px 11px;
+      border: 1px solid var(--dc-dark-border);
+      border-radius: 999px;
+      color: rgba(240, 238, 232, 0.67);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.63rem;
+    }
+
+    .dc-status-pill--active {
+      border-color: var(--dc-amber);
+      color: var(--dc-amber-soft);
+    }
+
+    .dc-status-card p {
+      margin: 20px 0 0;
+      color: rgba(240, 238, 232, 0.65);
+      line-height: 1.7;
+    }
+
+    .dc-citation-card {
+      padding: 28px;
+      border: 1px solid var(--dc-light-border);
+      border-radius: var(--dc-radius);
+      background: rgba(255, 255, 255, 0.44);
+    }
+
+    .dc-citation-card h3 {
+      margin: 0 0 17px;
+      font-family: "Fraunces", serif;
+      font-size: 1.7rem;
+    }
+
+    .dc-citation-text {
+      margin: 0;
+      font-family: "Fraunces", serif;
+      font-size: clamp(1.08rem, 2vw, 1.4rem);
+      line-height: 1.55;
+    }
+
+    .dc-citation-note {
+      margin: 19px 0 0;
+      color: var(--dc-muted);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.66rem;
+      line-height: 1.6;
+    }
+
+    .dc-contact-btn {
+      display: inline-flex;
+      margin-top: 23px;
+      padding: 12px 17px;
+      border-radius: 999px;
+      background: var(--dc-amber);
+      color: var(--dc-night);
+      text-decoration: none;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.69rem;
+      font-weight: 900;
+      transition:
+        transform var(--dc-transition),
+        background var(--dc-transition);
+    }
+
+    .dc-contact-btn:hover {
+      transform: translateY(-2px);
+      background: var(--dc-amber-soft);
+    }
+
+    /* STACK */
+
+    .dc-stack-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 39px;
+    }
+
+    .dc-stack-card {
+      padding: 24px;
+      border: 1px solid var(--dc-dark-border);
+      border-radius: var(--dc-radius);
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .dc-stack-card h3 {
+      margin: 0 0 16px;
+      color: var(--dc-amber-soft);
+      font-family: "Fraunces", serif;
+      font-size: 1.36rem;
+    }
+
+    .dc-stack-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .dc-stack-tag {
+      padding: 8px 10px;
+      border: 1px solid var(--dc-dark-border);
+      border-radius: 9px;
+      color: rgba(240, 238, 232, 0.66);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.62rem;
+      line-height: 1.4;
+    }
+
+    /* FOOTER NAV */
+
+    .dc-footer-nav {
+      padding: 27px 0 72px;
+      background: var(--dc-night);
+    }
+
+    .dc-footer-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .dc-footer-card {
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 23px;
+      border: 1px solid var(--dc-dark-border);
+      border-radius: var(--dc-radius);
+      background: rgba(255, 255, 255, 0.025);
+      color: var(--dc-offwhite);
+      text-decoration: none;
+      transition:
+        transform var(--dc-transition),
+        border-color var(--dc-transition),
+        background var(--dc-transition);
+    }
+
+    .dc-footer-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--dc-amber);
+      background: rgba(216, 154, 43, 0.06);
+    }
+
+    .dc-footer-kicker {
+      color: rgba(240, 238, 232, 0.4);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.64rem;
+      text-transform: uppercase;
+    }
+
+    .dc-footer-title {
+      font-family: "Fraunces", serif;
+      font-size: 1.8rem;
+    }
+
+    /* LIGHTBOX */
+
+    .dc-lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(2, 9, 6, 0.95);
+      backdrop-filter: blur(12px);
+    }
+
+    .dc-lightbox.dc-open {
+      display: grid;
+    }
+
+    .dc-lightbox-inner {
+      width: min(1200px, 100%);
+      max-height: 94vh;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      gap: 12px;
+    }
+
+    .dc-lightbox img {
+      width: 100%;
+      max-height: 82vh;
+      object-fit: contain;
+      border-radius: 12px;
+      background: var(--dc-night);
+    }
+
+    .dc-lightbox-caption {
+      color: rgba(240, 238, 232, 0.7);
+      font-size: 0.78rem;
+      line-height: 1.55;
+    }
+
+    .dc-lightbox-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 43px;
+      height: 43px;
+      border: 1px solid rgba(240, 238, 232, 0.23);
+      border-radius: 50%;
+      background: rgba(7, 19, 15, 0.78);
+      color: var(--dc-offwhite);
+      cursor: pointer;
+      font-size: 1.5rem;
+    }
+
+    /* BACK TO TOP */
+
+    .dc-back-top {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 5000;
+      width: 47px;
+      height: 47px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(216, 154, 43, 0.45);
+      border-radius: 50%;
+      background: var(--dc-amber);
+      color: var(--dc-night);
+      cursor: pointer;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+      box-shadow: 0 13px 35px rgba(0, 0, 0, 0.24);
+      transition:
+        opacity var(--dc-transition),
+        visibility var(--dc-transition),
+        transform var(--dc-transition);
+    }
+
+    .dc-back-top.dc-show {
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+    }
+
+    @media (min-width: 640px) {
+      .dc-container,
+      .dc-hero-inner,
+      .dc-hero-bottom-inner {
+        width: min(calc(100% - 56px), var(--dc-max));
+      }
+
+      .dc-section {
+        padding: 110px 0;
+      }
+
+      .dc-hero-bottom-inner {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .dc-card-grid,
+      .dc-model-overview,
+      .dc-findings,
+      .dc-policy-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .dc-variable-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .dc-lab-images {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .dc-stack-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .dc-footer-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .dc-section {
+        padding: 135px 0;
+      }
+
+      .dc-identity-grid {
+        grid-template-columns:
+          minmax(170px, 0.85fr)
+          minmax(230px, 1.2fr)
+          minmax(170px, 0.8fr)
+          minmax(150px, 0.7fr)
+          minmax(150px, 0.7fr)
+          minmax(210px, 1fr)
+          minmax(220px, 1fr);
+      }
+
+      .dc-fact {
+        padding: 20px 14px;
+        border-right: 1px solid var(--dc-dark-border);
+        border-bottom: 0;
+      }
+
+      .dc-fact:last-child {
+        border-right: 0;
+      }
+
+      .dc-card-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .dc-study-layout {
+        grid-template-columns: minmax(0, 3fr) minmax(340px, 2fr);
+        align-items: start;
+      }
+
+      .dc-model-overview {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .dc-crop-lab {
+        grid-template-columns: minmax(320px, 0.65fr) minmax(0, 1.35fr);
+        align-items: start;
+      }
+
+      .dc-atlas-layout {
+        grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
+        align-items: start;
+      }
+
+      .dc-gallery {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-auto-flow: initial;
+        grid-auto-columns: initial;
+        overflow: visible;
+      }
+
+      .dc-findings {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .dc-policy-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .dc-status-layout {
+        grid-template-columns: minmax(320px, 0.75fr) minmax(0, 1.25fr);
+        align-items: start;
+      }
+
+      .dc-stack-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+
+      .dc-reveal {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* Publication-ready visual and responsive refinements */
+    .site-header {
+      background: rgba(250, 245, 233, .96);
+    }
+
+    .site-header .brand {
+      color: var(--navy);
+    }
+
+    .dc-hero {
+      overflow: hidden;
+    }
+
+    .dc-hero-title {
+      color: var(--dc-offwhite);
+      text-shadow: 0 3px 28px rgba(0, 0, 0, .5);
+      overflow-wrap: anywhere;
+    }
+
+    .dc-hero-missing {
+      display: none !important;
+    }
+
+    .dc-study-map .dc-image-shell,
+    .dc-lab-image .dc-image-shell,
+    .dc-full-figure .dc-image-shell {
+      background: var(--dc-parchment);
+    }
+
+    .dc-study-map .dc-image-shell img,
+    .dc-lab-image .dc-image-shell img,
+    .dc-full-figure .dc-image-shell img {
+      object-fit: contain;
+    }
+
+    .dc-variable-mosaic {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      padding: 8px;
+      border-radius: var(--dc-radius);
+      background: rgba(240, 238, 232, .06);
+    }
+
+    .dc-variable-mosaic img {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      border-radius: 10px;
+      background: var(--dc-parchment);
+      object-fit: contain;
+      cursor: zoom-in;
+    }
+
+    @media (max-width: 1320px) and (min-width: 861px) {
+      .nav-links {
+        gap: 16px;
+        font-size: .84rem;
+      }
+
+      .nav-cta .btn-ghost {
+        display: none;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .nav {
+        padding-inline: 16px;
+      }
+
+      .brand {
+        min-width: 0;
+        font-size: 1rem;
+        white-space: nowrap;
+      }
+
+      .nav-cta {
+        gap: 4px;
+      }
+
+      .nav-cta .btn {
+        display: none;
+      }
+
+      .menu-toggle {
+        display: flex;
+        flex: 0 0 auto;
+      }
+
+      .dc-hero {
+        min-height: max(760px, 100svh);
+        align-items: center;
+      }
+
+      .dc-status-badge {
+        top: 100px;
+        left: 16px;
+        right: 16px;
+        justify-content: center;
+        border-radius: 14px;
+        text-align: center;
+        line-height: 1.45;
+        white-space: normal;
+      }
+
+      .dc-hero-inner {
+        padding: 185px 0 140px;
+      }
+
+      .dc-hero-title {
+        font-size: clamp(2.65rem, 12vw, 3.15rem);
+        line-height: 1;
+        letter-spacing: -.045em;
+      }
+
+      .dc-hero-subhead {
+        margin-top: 22px;
+        font-size: 1rem;
+        line-height: 1.62;
+      }
+
+      .dc-chip-row {
+        margin-top: 24px;
+      }
+
+      .dc-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        scrollbar-width: thin;
+      }
+
+      .dc-tab {
+        flex: 0 0 auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="site-header">
+  <nav class="nav">
+    <a href="../index.html" class="brand">
+      <svg class="pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0Z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+      Tanzim&nbsp;Al&nbsp;Noor
+    </a>
+    <ul class="nav-links">
+      <li><a href="../index.html#about">About</a></li>
+      <li><a href="../index.html#skills">Skills</a></li>
+      <li><a href="../index.html#experience">Experience</a></li>
+      <li><a href="../index.html#projects">Projects</a></li>
+      <li><a href="../index.html#research">Research</a></li>
+      <li><a href="../index.html#education">Education</a></li>
+      <li><a href="../index.html#contact">Contact</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="../Tanzim_Al_Noor_CV.pdf" class="btn btn-ghost btn-sm" download>Download CV</a>
+      <a href="../index.html#contact" class="btn btn-primary btn-sm">Get in Touch</a>
+      <button class="menu-toggle" aria-label="Toggle menu" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<main class="dc-main">
+
+  <!-- HERO -->
+
+  <section class="dc-hero" id="top" aria-labelledby="dc-hero-title">
+    <span class="dc-hero-missing">
+      drought-tolerance-hero.jpg · image unavailable
+    </span>
+
+    <div class="dc-status-badge">
+      SSRN working paper · Posted October 2024
+    </div>
+
+    <div class="dc-hero-inner">
+      <p class="dc-hero-eyebrow">
+        SSRN Working Paper · Geospatial Machine Learning ·
+        Climate Resilience and Food Security
+      </p>
+
+      <h1 class="dc-hero-title" id="dc-hero-title">
+        When the rain fails, which crops endure?
+      </h1>
+
+      <p class="dc-hero-subhead">
+        A national geospatial machine-learning study investigating how sixteen
+        climatic and geographic drought factors shape the suitability and
+        resilience of Aman rice, Aush rice, Boro rice, jute and wheat across
+        Bangladesh.
+      </p>
+
+      <div class="dc-chip-row" aria-label="Research highlights">
+        <span class="dc-chip">5 major crops</span>
+        <span class="dc-chip">16 drought variables</span>
+        <span class="dc-chip">Random Forest</span>
+        <span class="dc-chip">SHAP explainability</span>
+        <span class="dc-chip">Upazila-scale GIS</span>
+      </div>
+    </div>
+
+    <div class="dc-hero-bottom">
+      <div class="dc-hero-bottom-inner">
+        <span>
+          Climate crisis · Food security · Drought tolerance · Bangladesh
+        </span>
+        <span class="dc-scroll-label">Scroll to investigate ↓</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- IDENTITY STRIP -->
+
+  <section class="dc-identity" aria-label="Manuscript information">
+    <div class="dc-identity-grid">
+      <div class="dc-fact">
+        <span class="dc-fact-label">Status</span>
+        <span class="dc-fact-value">SSRN working paper · October 2024</span>
+      </div>
+
+      <div class="dc-fact">
+        <span class="dc-fact-label">Manuscript record</span>
+        <span class="dc-fact-value">Originally submitted to Journal of Environmental Management</span>
+      </div>
+
+      <div class="dc-fact">
+        <span class="dc-fact-label">Article type</span>
+        <span class="dc-fact-value">Research Article</span>
+      </div>
+
+      <div class="dc-fact">
+        <span class="dc-fact-label">Study area</span>
+        <span class="dc-fact-value">Bangladesh</span>
+      </div>
+
+      <div class="dc-fact">
+        <span class="dc-fact-label">Crops</span>
+        <span class="dc-fact-value">Aman · Aush · Boro · Jute · Wheat</span>
+      </div>
+
+      <div class="dc-fact">
+        <span class="dc-fact-label">Core method</span>
+        <span class="dc-fact-value">Random Forest · GridSearchCV · SHAP</span>
+      </div>
+
+      <div class="dc-fact">
+        <span class="dc-fact-label">My role</span>
+        <span class="dc-fact-value">Co-author · GIS, analysis and visualisation</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+
+  <section class="dc-section dc-section--light" id="problem">
+    <div class="dc-container">
+      <div class="dc-reveal">
+        <p class="dc-label">01 · The Climate Problem</p>
+
+        <h2 class="dc-heading dc-heading--medium">
+          Drought is no longer a seasonal inconvenience. It is a food-security variable.
+        </h2>
+      </div>
+
+      <div class="dc-card-grid">
+        <article class="dc-dark-card dc-reveal">
+          <h3>A climate-sensitive food system</h3>
+          <p>
+            Bangladesh’s major crops depend on seasonal rainfall, soil moisture,
+            surface energy and irrigation. Increasing drought severity threatens
+            both the area that can be cultivated and the productivity of land
+            already under agriculture.
+          </p>
+        </article>
+
+        <article class="dc-dark-card dc-dark-card--blue dc-reveal">
+          <h3>Sixteen interacting pressures</h3>
+          <p>
+            Drought cannot be understood through rainfall alone. Water deficit,
+            evapotranspiration, soil moisture, radiation, vapour pressure,
+            terrain, drainage and soil conditions interact non-linearly across
+            the landscape.
+          </p>
+        </article>
+
+        <article class="dc-dark-card dc-dark-card--green dc-reveal">
+          <h3>The explainability challenge</h3>
+          <p>
+            Predicting crop suitability is only part of the task. Agricultural
+            planning also requires a defensible explanation of which variables
+            drive each crop’s response and how those influences change between
+            suitability classes.
+          </p>
+        </article>
+      </div>
+
+      <div class="dc-question-callout dc-reveal">
+        Can five major crops be evaluated spatially — and their drought
+        tolerance explained — using a single interpretable machine-learning
+        framework?
+      </div>
+    </div>
+  </section>
+
+  <!-- AUTHORSHIP -->
+
+  <section class="dc-section dc-section--dark" id="authorship">
+    <div class="dc-container">
+      <div class="dc-reveal">
+        <p class="dc-label">02 · Research Team</p>
+
+        <h2 class="dc-heading dc-heading--medium">
+          Nine researchers across planning, computing and disaster management.
+        </h2>
+      </div>
+
+      <div class="dc-author-strip" aria-label="Manuscript authors">
+        <article class="dc-author-card dc-reveal">
+          <h3 class="dc-author-name">Rhyme Rubayet Rudra</h3>
+          <p class="dc-author-affiliation">
+            Department of Urban and Regional Planning · KUET
+          </p>
+        </article>
+
+        <article class="dc-author-card dc-reveal">
+          <h3 class="dc-author-name">Samin Yeasar</h3>
+          <p class="dc-author-affiliation">
+            Department of Computer Science and Engineering · KUET
+          </p>
+        </article>
+
+        <article class="dc-author-card dc-author-card--mine dc-reveal">
+          <h3 class="dc-author-name">Tanzim Al Noor</h3>
+          <span class="dc-author-mark">Co-author · GIS, analysis and visualisation</span>
+          <p class="dc-author-affiliation">
+            Department of Urban and Regional Planning · KUET
+          </p>
+        </article>
+
+        <article class="dc-author-card dc-reveal">
+          <h3 class="dc-author-name">Nushrat Nureen</h3>
+          <p class="dc-author-affiliation">
+            Department of Urban and Regional Planning · Institute of Disaster
+            Management · KUET
+          </p>
+        </article>
+
+        <article class="dc-author-card dc-reveal">
+          <h3 class="dc-author-name">Shanta Kumar Das</h3>
+          <p class="dc-author-affiliation">
+            Department of Computer Science and Engineering · KUET
+          </p>
+        </article>
+
+        <article class="dc-author-card dc-reveal">
+          <h3 class="dc-author-name">Shakib Mohammad Sany</h3>
+          <p class="dc-author-affiliation">
+            Department of Urban and Regional Planning · KUET
+          </p>
+        </article>
+
+        <article class="dc-author-card dc-reveal">
+          <h3 class="dc-author-name">Shakil Ahmed</h3>
+          <p class="dc-author-affiliation">
+            Department of Urban and Regional Planning · KUET
+          </p>
+        </article>
+
+        <article class="dc-author-card dc-reveal">
+          <h3 class="dc-author-name">Md. Mushfiqur Rahman</h3>
+          <p class="dc-author-affiliation">
+            Department of Urban and Regional Planning · KUET
+          </p>
+        </article>
+
+        <article class="dc-author-card dc-reveal">
+          <h3 class="dc-author-name">Showmitra Kumar Sarkar</h3>
+          <span class="dc-author-mark">Corresponding author</span>
+          <p class="dc-author-affiliation">
+            Department of Urban and Regional Planning · KUET
+          </p>
+        </article>
+      </div>
+
+      <aside class="dc-contribution-note dc-reveal">
+        As a co-author, I contributed to the geospatial research workflow,
+        including data preparation, spatial analysis, interpretation, map and
+        figure production, result visualisation and manuscript development.
+
+        <div class="dc-contribution-tags" aria-label="Tanzim Al Noor contributions">
+          <span class="dc-contribution-tag">Data acquisition</span>
+          <span class="dc-contribution-tag">GIS processing</span>
+          <span class="dc-contribution-tag">Spatial analysis</span>
+          <span class="dc-contribution-tag">Interpretation</span>
+          <span class="dc-contribution-tag">Visualisation</span>
+          <span class="dc-contribution-tag">Manuscript writing</span>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- STUDY AREA AND VARIABLES -->
+
+  <section class="dc-section dc-section--light" id="data">
+    <div class="dc-container">
+      <div class="dc-reveal">
+        <p class="dc-label">03 · Study Area &amp; Data Architecture</p>
+
+        <h2 class="dc-heading dc-heading--medium">
+          147,570 km² interpreted through sixteen environmental signals.
+        </h2>
+      </div>
+
+      <div class="dc-study-layout">
+        <figure class="dc-study-map dc-reveal">
+          <div class="dc-image-shell">
+            <img
+              src="../images/projects/drought/pdsi-drought-map.jpg"
+              alt="Palmer Drought Severity Index map of Bangladesh"
+              loading="lazy"
+              data-lightbox
+              data-caption="Palmer Drought Severity Index study-area map of Bangladesh."
+              role="button"
+              tabindex="0"
+            >
+            <span class="dc-img-fallback">
+              pdsi-drought-map.jpg · image unavailable
+            </span>
+          </div>
+
+          <figcaption class="dc-caption">
+            Bangladesh extends approximately from 20°34′ to 26°38′N and
+            88°01′ to 92°41′E. The analysis relates crop suitability to
+            hydroclimatic and geographic conditions at upazila scale.
+          </figcaption>
+        </figure>
+
+        <div class="dc-stats dc-reveal">
+          <div class="dc-stat">
+            <span
+              class="dc-stat-number"
+              data-counter
+              data-target="147570"
+              data-suffix=" km²"
+            >0</span>
+            <span class="dc-stat-label">National study area</span>
+          </div>
+
+          <div class="dc-stat">
+            <span
+              class="dc-stat-number"
+              data-counter
+              data-target="16"
+            >0</span>
+            <span class="dc-stat-label">Climatic and geographic predictors</span>
+          </div>
+
+          <div class="dc-stat">
+            <span
+              class="dc-stat-number"
+              data-counter
+              data-target="5"
+            >0</span>
+            <span class="dc-stat-label">Major crops evaluated</span>
+          </div>
+
+          <div class="dc-stat">
+            <span
+              class="dc-stat-number"
+              data-counter
+              data-target="5"
+            >0</span>
+            <span class="dc-stat-label">Suitability classes per crop</span>
+          </div>
+
+          <div class="dc-stat">
+            <span
+              class="dc-stat-number"
+              data-counter
+              data-target="200"
+            >0</span>
+            <span class="dc-stat-label">Trees in the tuned Random Forest</span>
+          </div>
+
+          <div class="dc-stat">
+            <span
+              class="dc-stat-number"
+              data-counter
+              data-target="3"
+            >0</span>
+            <span class="dc-stat-label">Disciplines represented in the team</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dc-variable-panel dc-reveal">
+        <h3 class="dc-subtitle">Interactive 16-variable explorer</h3>
+
+        <div class="dc-variable-groups">
+          <div class="dc-variable-group">
+            <h4>Hydroclimate &amp; atmospheric conditions · 11</h4>
+
+            <div class="dc-variable-grid">
+              <button
+                class="dc-variable-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="Actual evapotranspiration represents the water transferred from land and vegetation to the atmosphere and reflects crops’ realised water use."
+              >
+                Actual Evapotranspiration
+              </button>
+
+              <button
+                class="dc-variable-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="Climate water deficit measures unmet atmospheric water demand and is a central indicator of crop water stress."
+              >
+                Climate Water Deficit
+              </button>
+
+              <button
+                class="dc-variable-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="The Palmer Drought Severity Index represents longer-term moisture supply and demand, ranging from dry to wet conditions."
+              >
+                PDSI
+              </button>
+
+              <button
+                class="dc-variable-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="Reference evapotranspiration estimates atmospheric evaporative demand from a standard reference surface."
+              >
+                Reference Evapotranspiration
+              </button>
+
+              <button
+                class="dc-variable-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="Precipitation accumulation captures the amount of rainfall available to support crop growth over the selected period."
+              >
+                Precipitation Accumulation
+              </button>
+
+              <button
+                class="dc-variable-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="Runoff represents water leaving the land surface rather than remaining available for infiltration or crop use."
+              >
+                Runoff
+              </button>
+
+              <button
+                class="dc-variable-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="Soil moisture measures water stored in the root-zone environment and directly affects plant growth and drought stress."
+              >
+                Soil Moisture
+              </button>
+
+              <button
+                class="dc-variable-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="Downward surface shortwave radiation controls surface energy, photosynthesis, temperature and crop water demand."
+              >
+                Shortwave Radiation
+              </button>
+
+              <button
+                class="dc-variable-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="Vapour pressure reflects atmospheric moisture and influences transpiration and plant water uptake."
+              >
+                Vapour Pressure
+              </button>
+
+              <button
+                class="dc-variable-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="Vapour pressure deficit expresses atmospheric dryness and the evaporative demand placed on crop leaves."
+              >
+                Vapour Pressure Deficit
+              </button>
+
+              <button
+                class="dc-variable-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="Wind speed affects transpiration, gas exchange, temperature regulation and mechanical stress on crops."
+              >
+                Wind Speed
+              </button>
+            </div>
+          </div>
+
+          <div class="dc-variable-group">
+            <h4>Soil, terrain &amp; drainage · 5</h4>
+
+            <div class="dc-variable-grid">
+              <button
+                class="dc-variable-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="Soil type governs water retention, drainage, nutrient availability and the rooting environment available to each crop."
+              >
+                Soil Type
+              </button>
+
+              <button
+                class="dc-variable-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="The Digital Elevation Model represents terrain height and the climatic and hydrological differences associated with elevation."
+              >
+                DEM
+              </button>
+
+              <button
+                class="dc-variable-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="Slope influences drainage, erosion, water retention and the practicality of agricultural cultivation."
+              >
+                Slope
+              </button>
+
+              <button
+                class="dc-variable-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="Aspect represents slope orientation and its influence on solar exposure, surface temperature and moisture."
+              >
+                Aspect
+              </button>
+
+              <button
+                class="dc-variable-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="Drainage density indicates how rapidly water is conveyed through the landscape and whether areas retain or lose moisture."
+              >
+                Drainage Density
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="dc-variable-description"
+          id="dc-variable-description"
+          aria-live="polite"
+        >
+          Select a variable to inspect its function in the drought-tolerance framework.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- METHODOLOGY -->
+
+  <section class="dc-section dc-section--dark" id="methodology">
+    <div class="dc-container">
+      <div class="dc-reveal">
+        <p class="dc-label">04 · Analytical Framework</p>
+
+        <h2 class="dc-heading dc-heading--medium">
+          From satellite-derived drought layers to interpretable crop decisions.
+        </h2>
+      </div>
+
+      <div class="dc-pipeline">
+        <article class="dc-pipeline-step dc-reveal">
+          <span class="dc-step-number">STEP 01</span>
+          <h3>Compile crop suitability data</h3>
+          <p>
+            Suitability classifications for Aman rice, Aush rice, Boro rice,
+            wheat and jute were assembled for use as the model outputs.
+          </p>
+        </article>
+
+        <article class="dc-pipeline-step dc-reveal">
+          <span class="dc-step-number">STEP 02</span>
+          <h3>Acquire environmental layers in Google Earth Engine</h3>
+          <p>
+            Climatic datasets were filtered by national boundary, time period
+            and image band using the Google Earth Engine JavaScript API.
+          </p>
+        </article>
+
+        <article class="dc-pipeline-step dc-reveal">
+          <span class="dc-step-number">STEP 03</span>
+          <h3>Map and harmonise raster data</h3>
+          <p>
+            Exported TIF layers were processed in ArcMap alongside soil,
+            elevation, slope, aspect and drainage information to create a
+            consistent geospatial database.
+          </p>
+        </article>
+
+        <article class="dc-pipeline-step dc-reveal">
+          <span class="dc-step-number">STEP 04</span>
+          <h3>Extract values at upazila scale</h3>
+          <p>
+            Values from the sixteen environmental layers were extracted for
+            each upazila and combined with the crop-suitability classes in a
+            structured analytical table.
+          </p>
+        </article>
+
+        <article class="dc-pipeline-step dc-reveal">
+          <span class="dc-step-number">STEP 05</span>
+          <h3>Train and tune the Random Forest</h3>
+          <p>
+            The classifier was tuned with GridSearchCV. The manuscript reports
+            200 estimators, maximum depth 20, minimum samples per leaf 1 and
+            minimum samples per split 2.
+          </p>
+        </article>
+
+        <article class="dc-pipeline-step dc-reveal">
+          <span class="dc-step-number">STEP 06</span>
+          <h3>Explain predictions with SHAP</h3>
+          <p>
+            SHAP TreeExplainer was used to quantify how each environmental
+            factor influenced the five suitability outcomes: very suitable,
+            suitable, moderately suitable, marginally suitable and not suitable.
+          </p>
+        </article>
+      </div>
+
+      <figure class="dc-method-figure dc-reveal">
+        <div class="dc-image-shell">
+          <img
+            src="../images/projects/drought/methodology-framework.jpg"
+            alt="Methodological framework for the drought-tolerance study"
+            loading="lazy"
+            data-lightbox
+            data-caption="Methodological framework connecting climate data, geographic data, crop suitability, Random Forest classification and SHAP interpretation."
+            role="button"
+            tabindex="0"
+          >
+          <span class="dc-img-fallback">
+            methodology-framework.jpg · image unavailable
+          </span>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- EXPLAINABILITY -->
+
+  <section class="dc-section dc-section--light" id="explainability">
+    <div class="dc-container">
+      <div class="dc-reveal">
+        <p class="dc-label">05 · Explainable Machine Learning</p>
+
+        <h2 class="dc-heading dc-heading--medium">
+          Prediction identifies the pattern. SHAP explains the pressure behind it.
+        </h2>
+
+        <p class="dc-intro">
+          Random Forest captures non-linear environmental interactions without
+          assuming a simple relationship between drought and crop suitability.
+          SHAP then translates those predictions into crop-specific explanations
+          that can be interpreted by planners, agronomists and policymakers.
+        </p>
+
+        <aside class="dc-contribution-note" style="color:var(--dc-ink); border-left-color:var(--dc-amber);">
+          <strong>Interpretation note:</strong> drought tolerance is inferred from
+          modelled suitability and environmental response patterns. It was not
+          measured through controlled physiological crop-stress experiments.
+        </aside>
+      </div>
+
+      <div class="dc-model-overview">
+        <article class="dc-model-card dc-reveal">
+          <h3>Random Forest classifier</h3>
+          <p>
+            An ensemble of decision trees classifies crop suitability while
+            reducing dependence on any single tree and accommodating complex
+            relationships between climatic and geographic predictors.
+          </p>
+
+          <div class="dc-model-tags">
+            <span class="dc-model-tag">n_estimators = 200</span>
+            <span class="dc-model-tag">max_depth = 20</span>
+            <span class="dc-model-tag">min_samples_leaf = 1</span>
+            <span class="dc-model-tag">min_samples_split = 2</span>
+          </div>
+        </article>
+
+        <article class="dc-model-card dc-reveal">
+          <h3>SHAP TreeExplainer</h3>
+          <p>
+            Shapley values quantify each feature’s contribution to a prediction.
+            Summary, dependence and class-level interpretations reveal whether
+            an environmental variable pushes a location toward or away from a
+            suitability class.
+          </p>
+
+          <div class="dc-model-tags">
+            <span class="dc-model-tag">Global importance</span>
+            <span class="dc-model-tag">Local attribution</span>
+            <span class="dc-model-tag">Class interpretation</span>
+            <span class="dc-model-tag">Spatial explanation</span>
+          </div>
+        </article>
+      </div>
+
+      <div
+        class="dc-tabs dc-reveal"
+        aria-label="Select crop explanation"
+      >
+        <button
+          class="dc-tab"
+          type="button"
+          aria-pressed="true"
+          data-crop-profile="aman"
+        >
+          Aman rice
+        </button>
+
+        <button
+          class="dc-tab"
+          type="button"
+          aria-pressed="false"
+          data-crop-profile="aush"
+        >
+          Aush rice
+        </button>
+
+        <button
+          class="dc-tab"
+          type="button"
+          aria-pressed="false"
+          data-crop-profile="boro"
+        >
+          Boro rice
+        </button>
+
+        <button
+          class="dc-tab"
+          type="button"
+          aria-pressed="false"
+          data-crop-profile="jute"
+        >
+          Jute
+        </button>
+
+        <button
+          class="dc-tab"
+          type="button"
+          aria-pressed="false"
+          data-crop-profile="wheat"
+        >
+          Wheat
+        </button>
+      </div>
+
+      <div
+        class="dc-crop-lab"
+        id="dc-crop-lab"
+        aria-live="polite"
+      >
+        <article class="dc-profile-panel">
+          <span class="dc-profile-kicker">Crop drought profile</span>
+
+          <h3 class="dc-profile-title" id="dc-profile-title">
+            Aman rice
+          </h3>
+
+          <span class="dc-profile-status" id="dc-profile-status">
+            High climate-water-deficit sensitivity
+          </span>
+
+          <p class="dc-profile-summary" id="dc-profile-summary">
+            Climate water deficit is the strongest reported driver for Aman
+            rice. PDSI and slope also influence the suitability classes,
+            demonstrating the combined effect of water stress and terrain.
+          </p>
+
+          <div class="dc-driver-block">
+            <span class="dc-driver-label">Leading reported predictor</span>
+
+            <span class="dc-driver-value" id="dc-driver-value">
+              Climate water deficit
+            </span>
+
+            <div class="dc-score-row">
+              <div class="dc-score-track">
+                <div
+                  class="dc-score-fill"
+                  id="dc-score-fill"
+                  style="width: 54%;"
+                ></div>
+              </div>
+
+              <span class="dc-score-number" id="dc-score-number">
+                0.54
+              </span>
+            </div>
+
+            <p class="dc-score-note">
+              Reported feature-importance score. This is not a model-accuracy
+              score or a direct tolerance percentage.
+            </p>
+          </div>
+        </article>
+
+        <div class="dc-lab-images">
+          <figure class="dc-lab-image">
+            <h3>Feature importance</h3>
+
+            <div class="dc-image-shell">
+              <img
+                id="dc-feature-image"
+                src="../images/projects/drought/aman-feature-importance.png"
+                alt="Aman rice feature importance"
+                loading="lazy"
+                data-lightbox
+                data-caption="Aman rice feature importance across suitability classes."
+                role="button"
+                tabindex="0"
+              >
+              <span class="dc-img-fallback">
+                aman-feature-importance.png · image unavailable
+              </span>
+            </div>
+          </figure>
+
+          <figure class="dc-lab-image">
+            <h3>SHAP interpretation</h3>
+
+            <div class="dc-image-shell">
+              <img
+                id="dc-shap-image"
+                src="../images/projects/drought/aman-shap-summary.png"
+                alt="Aman rice SHAP interpretation"
+                loading="lazy"
+                data-lightbox
+                data-caption="Aman rice SHAP summary for the very suitable class."
+                role="button"
+                tabindex="0"
+              >
+              <span class="dc-img-fallback">
+                aman-shap-summary.png · image unavailable
+              </span>
+            </div>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CROP ATLAS -->
+
+  <section class="dc-section dc-section--forest" id="crop-atlas">
+    <div class="dc-container">
+      <div class="dc-reveal">
+        <p class="dc-label">06 · Crop Suitability Atlas</p>
+
+        <h2 class="dc-heading dc-heading--medium">
+          Five crops. Five suitability classes. One drought-sensitive landscape.
+        </h2>
+
+        <p class="dc-intro">
+          Each map classifies land as very suitable, suitable, moderately
+          suitable, marginally suitable or not suitable. Together, they show
+          how the same drought environment produces different agricultural
+          opportunities for different crops.
+        </p>
+      </div>
+
+      <div
+        class="dc-tabs dc-reveal"
+        aria-label="Select crop suitability map"
+        style="border-color: rgba(240,238,232,.17);"
+      >
+        <button
+          class="dc-tab"
+          type="button"
+          aria-pressed="true"
+          data-atlas-crop="aman"
+          style="color: inherit;"
+        >
+          Aman
+        </button>
+
+        <button
+          class="dc-tab"
+          type="button"
+          aria-pressed="false"
+          data-atlas-crop="aush"
+          style="color: inherit;"
+        >
+          Aush
+        </button>
+
+        <button
+          class="dc-tab"
+          type="button"
+          aria-pressed="false"
+          data-atlas-crop="boro"
+          style="color: inherit;"
+        >
+          Boro
+        </button>
+
+        <button
+          class="dc-tab"
+          type="button"
+          aria-pressed="false"
+          data-atlas-crop="jute"
+          style="color: inherit;"
+        >
+          Jute
+        </button>
+
+        <button
+          class="dc-tab"
+          type="button"
+          aria-pressed="false"
+          data-atlas-crop="wheat"
+          style="color: inherit;"
+        >
+          Wheat
+        </button>
+      </div>
+
+      <div class="dc-atlas-layout" aria-live="polite">
+        <figure class="dc-atlas-image dc-reveal">
+          <div class="dc-image-shell">
+            <img
+              id="dc-atlas-image"
+              src="../images/projects/drought/aman-suitability-map.jpg"
+              alt="Aman rice suitability map"
+              loading="lazy"
+              data-lightbox
+              data-caption="National Aman rice suitability map."
+              role="button"
+              tabindex="0"
+            >
+            <span class="dc-img-fallback">
+              aman-suitability-map.jpg · image unavailable
+            </span>
+          </div>
+        </figure>
+
+        <article class="dc-atlas-copy dc-reveal">
+          <h3 id="dc-atlas-title">Aman rice</h3>
+
+          <span class="dc-atlas-meta" id="dc-atlas-meta">
+            Leading factor · Climate water deficit · 0.54
+          </span>
+
+          <p id="dc-atlas-description">
+            The submitted manuscript identifies very suitable Aman areas around
+            Faridpur, Kushtia and Magura, alongside suitable zones in parts of
+            the south, north and east-central region. Marginal conditions are
+            reported in parts of the southwest, while several eastern and urban
+            districts show lower suitability.
+          </p>
+
+          <div class="dc-class-list" aria-label="Suitability classes">
+            <span class="dc-class-chip">Very suitable</span>
+            <span class="dc-class-chip">Suitable</span>
+            <span class="dc-class-chip">Moderately suitable</span>
+            <span class="dc-class-chip">Marginally suitable</span>
+            <span class="dc-class-chip">Not suitable</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ENVIRONMENTAL MAPS -->
+
+  <section class="dc-section dc-section--dark" id="environmental-layers">
+    <div class="dc-container">
+      <div class="dc-reveal">
+        <p class="dc-label">07 · Drought Geography</p>
+
+        <h2 class="dc-heading dc-heading--medium">
+          The environmental layers reveal four different Bangladeshes.
+        </h2>
+
+        <p class="dc-intro">
+          Dry northwest conditions, humid coastal zones, wet eastern terrain
+          and the elevated Chittagong Hill Tracts produce distinct combinations
+          of water stress, atmospheric demand and topographic constraint.
+        </p>
+      </div>
+
+      <div class="dc-gallery">
+        <article class="dc-gallery-card dc-reveal">
+          <h3>Water demand &amp; drought severity</h3>
+
+          <div class="dc-variable-mosaic">
+            <img src="../images/projects/drought/variable-aet.jpg" alt="Actual evapotranspiration map" loading="lazy" data-lightbox data-caption="Actual evapotranspiration." role="button" tabindex="0">
+            <img src="../images/projects/drought/variable-cwd.jpg" alt="Climate water deficit map" loading="lazy" data-lightbox data-caption="Climate water deficit." role="button" tabindex="0">
+            <img src="../images/projects/drought/variable-pdsi.jpg" alt="Palmer Drought Severity Index map" loading="lazy" data-lightbox data-caption="Palmer Drought Severity Index." role="button" tabindex="0">
+            <img src="../images/projects/drought/variable-eto.jpg" alt="Reference evapotranspiration map" loading="lazy" data-lightbox data-caption="Reference evapotranspiration." role="button" tabindex="0">
+          </div>
+
+          <p>
+            AET, climate water deficit, PDSI and reference evapotranspiration
+            describe water use, unmet demand and drought intensity.
+          </p>
+        </article>
+
+        <article class="dc-gallery-card dc-reveal">
+          <h3>Rainfall, runoff &amp; atmospheric dryness</h3>
+
+          <div class="dc-variable-mosaic">
+            <img src="../images/projects/drought/variable-precipitation.jpg" alt="Precipitation accumulation map" loading="lazy" data-lightbox data-caption="Precipitation accumulation." role="button" tabindex="0">
+            <img src="../images/projects/drought/variable-runoff.jpg" alt="Runoff map" loading="lazy" data-lightbox data-caption="Runoff." role="button" tabindex="0">
+            <img src="../images/projects/drought/variable-vapour-pressure.jpg" alt="Vapour pressure map" loading="lazy" data-lightbox data-caption="Vapour pressure." role="button" tabindex="0">
+            <img src="../images/projects/drought/variable-vpd.jpg" alt="Vapour pressure deficit map" loading="lazy" data-lightbox data-caption="Vapour pressure deficit." role="button" tabindex="0">
+          </div>
+
+          <p>
+            Rainfall and runoff show water supply and loss, while vapour
+            pressure metrics describe atmospheric moisture and evaporative demand.
+          </p>
+        </article>
+
+        <article class="dc-gallery-card dc-reveal">
+          <h3>Root-zone and surface-energy conditions</h3>
+
+          <div class="dc-variable-mosaic">
+            <img src="../images/projects/drought/variable-soil-moisture.jpg" alt="Soil moisture map" loading="lazy" data-lightbox data-caption="Soil moisture." role="button" tabindex="0">
+            <img src="../images/projects/drought/variable-solar-radiation.jpg" alt="Downward shortwave radiation map" loading="lazy" data-lightbox data-caption="Downward shortwave radiation." role="button" tabindex="0">
+            <img src="../images/projects/drought/variable-wind-speed.jpg" alt="Wind speed map" loading="lazy" data-lightbox data-caption="Wind speed." role="button" tabindex="0">
+            <img src="../images/projects/drought/variable-soil-type.jpg" alt="Soil type map" loading="lazy" data-lightbox data-caption="Soil type." role="button" tabindex="0">
+          </div>
+
+          <p>
+            Soil moisture and soil type describe the rooting environment;
+            radiation and wind shape surface energy and crop water loss.
+          </p>
+        </article>
+
+        <article class="dc-gallery-card dc-reveal">
+          <h3>Terrain &amp; drainage constraints</h3>
+
+          <div class="dc-variable-mosaic">
+            <img src="../images/projects/drought/variable-dem.jpg" alt="Digital elevation model" loading="lazy" data-lightbox data-caption="Digital elevation model." role="button" tabindex="0">
+            <img src="../images/projects/drought/variable-slope.jpg" alt="Slope map" loading="lazy" data-lightbox data-caption="Slope." role="button" tabindex="0">
+            <img src="../images/projects/drought/variable-aspect.jpg" alt="Aspect map" loading="lazy" data-lightbox data-caption="Aspect." role="button" tabindex="0">
+            <img src="../images/projects/drought/variable-drainage-density.jpg" alt="Drainage density map" loading="lazy" data-lightbox data-caption="Drainage density." role="button" tabindex="0">
+          </div>
+
+          <p>
+            Elevation, slope, aspect and drainage density explain how terrain
+            redistributes water, radiation and agricultural accessibility.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINDINGS -->
+
+  <section class="dc-section dc-section--light" id="findings">
+    <div class="dc-container">
+      <div class="dc-reveal">
+        <p class="dc-label">08 · Principal Findings</p>
+
+        <h2 class="dc-heading dc-heading--medium">
+          The most resilient crop is not the least water-dependent one.
+        </h2>
+      </div>
+
+      <div class="dc-findings">
+        <article class="dc-finding dc-reveal">
+          <span class="dc-finding-num">01</span>
+          <h3>Wheat shows the strongest drought tolerance</h3>
+          <p>
+            SHAP interpretation identifies wheat as the most drought-tolerant
+            crop in the study, with elevation and surface-radiation dependence
+            contributing to its response.
+          </p>
+        </article>
+
+        <article class="dc-finding dc-reveal">
+          <span class="dc-finding-num">02</span>
+          <h3>Climate water deficit dominates wheat</h3>
+          <p>
+            Climate water deficit records a reported feature-importance score
+            of 0.56 for wheat, the strongest highlighted crop–factor
+            relationship in the manuscript.
+          </p>
+        </article>
+
+        <article class="dc-finding dc-reveal">
+          <span class="dc-finding-num">03</span>
+          <h3>Aman rice is highly deficit-sensitive</h3>
+          <p>
+            Climate water deficit is the leading reported factor for Aman rice
+            with a feature-importance score of 0.54. PDSI and slope also shape
+            its suitability outcomes.
+          </p>
+        </article>
+
+        <article class="dc-finding dc-reveal">
+          <span class="dc-finding-num">04</span>
+          <h3>Soil moisture governs Aush rice</h3>
+          <p>
+            Soil moisture reaches a reported importance score of 0.57 for Aush
+            rice. SHAP also associates its moderate tolerance with water
+            deficit, PDSI and slope.
+          </p>
+        </article>
+
+        <article class="dc-finding dc-reveal">
+          <span class="dc-finding-num">05</span>
+          <h3>Jute depends strongly on root-zone water</h3>
+          <p>
+            Soil moisture is the leading highlighted factor for jute with a
+            score of 0.56. The manuscript describes jute as comparatively less
+            drought-tolerant than several other crops.
+          </p>
+        </article>
+
+        <article class="dc-finding dc-reveal">
+          <span class="dc-finding-num">06</span>
+          <h3>Boro rice responds to atmospheric moisture stress</h3>
+          <p>
+            Vapour-pressure conditions are central to Boro rice, with vapour
+            pressure deficit highlighted at 0.57. Its overall drought response
+            is characterised as moderate.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- POLICY -->
+
+  <section class="dc-section dc-section--forest" id="policy">
+    <div class="dc-container">
+      <div class="dc-reveal">
+        <p class="dc-label">09 · Planning Relevance</p>
+
+        <h2 class="dc-heading dc-heading--medium">
+          A crop map becomes useful when it changes a land-use decision.
+        </h2>
+      </div>
+
+      <div class="dc-policy-grid">
+        <article class="dc-policy-card dc-reveal">
+          <span class="dc-policy-number">PLANNING 01</span>
+          <h3>Match crops to drought conditions</h3>
+          <p>
+            Suitability maps can support crop-selection strategies that respond
+            to local water deficit, soil moisture, atmospheric demand and
+            terrain rather than applying one national recommendation.
+          </p>
+        </article>
+
+        <article class="dc-policy-card dc-reveal">
+          <span class="dc-policy-number">PLANNING 02</span>
+          <h3>Target water-management investment</h3>
+          <p>
+            Areas where climate water deficit, vapour-pressure deficit or soil
+            moisture dominate can be prioritised for irrigation, water
+            retention and drought-management interventions.
+          </p>
+        </article>
+
+        <article class="dc-policy-card dc-reveal">
+          <span class="dc-policy-number">PLANNING 03</span>
+          <h3>Protect food security under climate pressure</h3>
+          <p>
+            An explainable national framework helps policymakers distinguish
+            crops and locations that require adaptation from those that retain
+            stronger resilience under dry conditions.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- MANUSCRIPT STATUS -->
+
+  <section class="dc-section dc-section--light" id="manuscript">
+    <div class="dc-container">
+      <div class="dc-reveal">
+        <p class="dc-label">10 · Manuscript Record</p>
+
+        <h2 class="dc-heading dc-heading--medium">
+          Available publicly as an SSRN working paper.
+        </h2>
+      </div>
+
+      <div class="dc-status-layout">
+        <article class="dc-status-card dc-reveal">
+          <h3>Current research status</h3>
+
+          <div class="dc-status-line">
+            <span class="dc-status-pill dc-status-pill--active">
+              SSRN preprint
+            </span>
+
+            <span class="dc-status-pill dc-status-pill--active">
+              Posted 2 October 2024
+            </span>
+
+            <span class="dc-status-pill">
+              Research Article
+            </span>
+          </div>
+
+          <p>
+            This page presents a publicly available working paper. It does not
+            imply editorial acceptance, peer-review completion or final journal
+            publication. The manuscript was originally submitted to the Journal
+            of Environmental Management, and citation details may change.
+          </p>
+
+          <a class="dc-contact-btn" href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4974356" target="_blank" rel="noopener noreferrer">
+            Read the SSRN preprint →
+          </a>
+        </article>
+
+        <article class="dc-citation-card dc-reveal">
+          <h3>Suggested portfolio citation</h3>
+
+          <p class="dc-citation-text">
+            Rudra, R. R., Yeasar, S., Al Noor, T., Nureen, N., Das, S. K.,
+            Sany, S. M., Ahmed, S., Rahman, M. M., &amp; Sarkar, S. K.
+            <em>
+              Climate Crisis and Food Security in Bangladesh: Utilizing
+              Machine Learning in Geospatial Environment to Investigate
+              Drought Tolerance of Major Crops.
+            </em>
+            SSRN working paper, posted 2 October 2024.
+          </p>
+
+          <p class="dc-citation-note">
+            Original submission · Journal of Environmental Management ·
+            Section: Climate Change and Environmental Resilience
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOOLS -->
+
+  <section class="dc-section dc-section--dark" id="stack">
+    <div class="dc-container">
+      <div class="dc-reveal">
+        <p class="dc-label">11 · Tools &amp; Research Stack</p>
+
+        <h2 class="dc-heading dc-heading--medium">
+          Satellite data, spatial analysis and explainable machine learning.
+        </h2>
+      </div>
+
+      <div class="dc-stack-grid">
+        <article class="dc-stack-card dc-reveal">
+          <h3>Remote Sensing</h3>
+
+          <div class="dc-stack-tags">
+            <span class="dc-stack-tag">Google Earth Engine</span>
+            <span class="dc-stack-tag">JavaScript API</span>
+            <span class="dc-stack-tag">Satellite raster layers</span>
+            <span class="dc-stack-tag">Temporal filtering</span>
+            <span class="dc-stack-tag">TIF export</span>
+          </div>
+        </article>
+
+        <article class="dc-stack-card dc-reveal">
+          <h3>GIS Processing</h3>
+
+          <div class="dc-stack-tags">
+            <span class="dc-stack-tag">ArcMap</span>
+            <span class="dc-stack-tag">Upazila extraction</span>
+            <span class="dc-stack-tag">Raster processing</span>
+            <span class="dc-stack-tag">Thematic mapping</span>
+            <span class="dc-stack-tag">Spatial database</span>
+          </div>
+        </article>
+
+        <article class="dc-stack-card dc-reveal">
+          <h3>Machine Learning</h3>
+
+          <div class="dc-stack-tags">
+            <span class="dc-stack-tag">Python</span>
+            <span class="dc-stack-tag">Pandas</span>
+            <span class="dc-stack-tag">Random Forest</span>
+            <span class="dc-stack-tag">GridSearchCV</span>
+            <span class="dc-stack-tag">Google Colab</span>
+          </div>
+        </article>
+
+        <article class="dc-stack-card dc-reveal">
+          <h3>Explainability</h3>
+
+          <div class="dc-stack-tags">
+            <span class="dc-stack-tag">SHAP</span>
+            <span class="dc-stack-tag">TreeExplainer</span>
+            <span class="dc-stack-tag">Summary plots</span>
+            <span class="dc-stack-tag">Dependence plots</span>
+            <span class="dc-stack-tag">Feature attribution</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- FOOTER NAVIGATION -->
+
+<nav class="dc-footer-nav" aria-label="Project navigation">
+  <div class="dc-container">
+    <div class="dc-footer-grid">
+      <a class="dc-footer-card" href="../index.html#projects">
+        <span class="dc-footer-kicker">← Return</span>
+        <span class="dc-footer-title">Portfolio projects</span>
+      </a>
+
+      <a class="dc-footer-card" href="../index.html#contact">
+        <span class="dc-footer-kicker">Research collaboration →</span>
+        <span class="dc-footer-title">Discuss the methodology</span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- LIGHTBOX -->
+
+<div
+  class="dc-lightbox"
+  id="dc-lightbox"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Expanded research figure"
+  aria-hidden="true"
+>
+  <button
+    class="dc-lightbox-close"
+    id="dc-lightbox-close"
+    type="button"
+    aria-label="Close expanded image"
+  >
+    ×
+  </button>
+
+  <div class="dc-lightbox-inner">
+    <img id="dc-lightbox-image" src="" alt="">
+
+    <div
+      class="dc-lightbox-caption"
+      id="dc-lightbox-caption"
+      aria-live="polite"
+    ></div>
+  </div>
+</div>
+
+<button
+  class="dc-back-top"
+  id="dc-back-top"
+  type="button"
+  aria-label="Back to top"
+>
+  ↑
+</button>
+
+<script>
+  (() => {
+    "use strict";
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    /* MOBILE NAV — GUARDED AGAINST SHARED SCRIPT DOUBLE-BINDING */
+
+    const siteHeader = document.querySelector(".site-header");
+    const menuToggle = document.querySelector(".menu-toggle");
+    const navLinks = document.querySelector(".nav-links");
+
+    if (
+      siteHeader &&
+      menuToggle &&
+      navLinks &&
+      siteHeader.dataset.navInit !== "true"
+    ) {
+      siteHeader.dataset.navInit = "true";
+      menuToggle.setAttribute("aria-expanded", "false");
+
+      menuToggle.addEventListener("click", () => {
+        const isOpen = siteHeader.classList.toggle("nav-open");
+        menuToggle.setAttribute("aria-expanded", String(isOpen));
+      });
+
+      navLinks.addEventListener("click", event => {
+        if (!event.target.closest("a")) return;
+
+        siteHeader.classList.remove("nav-open");
+        menuToggle.setAttribute("aria-expanded", "false");
+      });
+    }
+
+    /* HERO IMAGE FALLBACK */
+
+    const hero = document.querySelector(".dc-hero");
+    const heroLoader = new Image();
+
+    heroLoader.onerror = () => {
+      hero?.classList.add("dc-image-missing");
+    };
+
+    heroLoader.src =
+      "../images/projects/drought/drought-tolerance-hero.jpg";
+
+    /* IMAGE FALLBACK */
+
+    function bindImageFallback(image) {
+      if (!image || image.dataset.dcFallbackBound === "true") return;
+
+      image.dataset.dcFallbackBound = "true";
+
+      const showFallback = () => {
+        image.closest(".dc-image-shell")?.classList.add("dc-is-missing");
+      };
+
+      image.addEventListener("error", showFallback);
+
+      if (image.complete && image.naturalWidth === 0) {
+        showFallback();
+      }
+    }
+
+    document
+      .querySelectorAll(".dc-image-shell img")
+      .forEach(bindImageFallback);
+
+    /* REVEAL ANIMATIONS */
+
+    const revealItems = document.querySelectorAll(".dc-reveal");
+
+    if (
+      prefersReducedMotion ||
+      !("IntersectionObserver" in window)
+    ) {
+      revealItems.forEach(item => item.classList.add("dc-visible"));
+    } else {
+      const revealObserver = new IntersectionObserver(
+        entries => {
+          entries.forEach((entry, index) => {
+            if (!entry.isIntersecting) return;
+
+            window.setTimeout(() => {
+              entry.target.classList.add("dc-visible");
+            }, Math.min(index * 45, 220));
+
+            revealObserver.unobserve(entry.target);
+          });
+        },
+        {
+          threshold: 0.12,
+          rootMargin: "0px 0px -6% 0px"
+        }
+      );
+
+      revealItems.forEach(item => revealObserver.observe(item));
+    }
+
+    /* COUNTERS */
+
+    const counterElements = document.querySelectorAll("[data-counter]");
+
+    function easeOutCubic(value) {
+      return 1 - Math.pow(1 - value, 3);
+    }
+
+    function animateCounter(element) {
+      if (element.dataset.counted === "true") return;
+
+      element.dataset.counted = "true";
+
+      const target = Number(element.dataset.target || 0);
+      const suffix = element.dataset.suffix || "";
+      const duration = 1500;
+      const start = performance.now();
+
+      const render = value => {
+        element.textContent =
+          Math.round(value).toLocaleString("en-US") + suffix;
+      };
+
+      if (prefersReducedMotion) {
+        render(target);
+        return;
+      }
+
+      const frame = now => {
+        const progress = Math.min((now - start) / duration, 1);
+        render(target * easeOutCubic(progress));
+
+        if (progress < 1) {
+          requestAnimationFrame(frame);
+        }
+      };
+
+      requestAnimationFrame(frame);
+    }
+
+    if ("IntersectionObserver" in window) {
+      const counterObserver = new IntersectionObserver(
+        entries => {
+          entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+
+            animateCounter(entry.target);
+            counterObserver.unobserve(entry.target);
+          });
+        },
+        { threshold: 0.5 }
+      );
+
+      counterElements.forEach(element => {
+        counterObserver.observe(element);
+      });
+    } else {
+      counterElements.forEach(animateCounter);
+    }
+
+    /* VARIABLE EXPLORER */
+
+    const variableButtons =
+      document.querySelectorAll(".dc-variable-btn");
+
+    const variableDescription =
+      document.getElementById("dc-variable-description");
+
+    variableButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        variableButtons.forEach(item => {
+          item.setAttribute("aria-pressed", "false");
+        });
+
+        button.setAttribute("aria-pressed", "true");
+
+        if (variableDescription) {
+          variableDescription.textContent =
+            button.dataset.description || "";
+        }
+      });
+    });
+
+    /* CROP DATA */
+
+    const crops = {
+      aman: {
+        title: "Aman rice",
+        status: "High climate-water-deficit sensitivity",
+        driver: "Climate water deficit",
+        score: 0.54,
+        summary:
+          "Climate water deficit is the strongest reported driver for Aman rice. PDSI and slope also influence the suitability classes, demonstrating the combined effect of water stress and terrain.",
+        featureImage: "aman-feature-importance.png",
+        shapImage: "aman-shap-summary.png",
+        mapImage: "aman-suitability-map.jpg",
+        atlas:
+          "The submitted manuscript identifies very suitable Aman areas around Faridpur, Kushtia and Magura, alongside suitable zones in parts of the south, north and east-central region. Marginal conditions are reported in parts of the southwest, while several eastern and urban districts show lower suitability."
+      },
+
+      aush: {
+        title: "Aush rice",
+        status: "Moderate drought tolerance",
+        driver: "Soil moisture",
+        score: 0.57,
+        summary:
+          "Soil moisture is the leading reported predictor for Aush rice. SHAP interpretation also highlights climate water deficit, PDSI and slope as factors that shape water stress and terrain response.",
+        featureImage: "aush-feature-importance.png",
+        shapImage: "aush-shap-summary.png",
+        mapImage: "aush-suitability-map.jpg",
+        atlas:
+          "The Aush map presents the manuscript’s five-class suitability output. Its spatial pattern should be read alongside soil-moisture availability, climate water deficit, PDSI and slope."
+      },
+
+      boro: {
+        title: "Boro rice",
+        status: "Moderate drought tolerance",
+        driver: "Vapour pressure deficit",
+        score: 0.57,
+        summary:
+          "Boro rice is characterised by moderate drought tolerance. Vapour-pressure conditions are central to its response, reflecting the crop’s dependence on irrigation and atmospheric water demand.",
+        featureImage: "boro-feature-importance.png",
+        shapImage: "boro-shap-summary.png",
+        mapImage: "boro-suitability-map.jpg",
+        atlas:
+          "The Boro suitability map visualises where dry-season rice cultivation aligns with the combined effects of vapour-pressure conditions, water availability and geographic constraints."
+      },
+
+      jute: {
+        title: "Jute",
+        status: "Comparatively lower drought tolerance",
+        driver: "Soil moisture",
+        score: 0.56,
+        summary:
+          "Soil moisture is the leading highlighted factor for jute. The crop is described as comparatively less drought-tolerant, making root-zone water availability central to its suitability.",
+        featureImage: "jute-feature-importance.png",
+        shapImage: "jute-shap-summary.png",
+        mapImage: "jute-suitability-map.jpg",
+        atlas:
+          "The jute suitability map should be interpreted primarily through soil-moisture availability and the crop’s comparatively lower tolerance of drought-related stress."
+      },
+
+      wheat: {
+        title: "Wheat",
+        status: "Highest reported drought tolerance",
+        driver: "Climate water deficit",
+        score: 0.56,
+        summary:
+          "Wheat shows the highest reported drought tolerance in the study. Climate water deficit is its leading highlighted predictor, while elevation and shortwave-radiation dependence contribute to its SHAP response.",
+        featureImage: "wheat-feature-importance.png",
+        shapImage: "wheat-shap-summary.png",
+        mapImage: "wheat-suitability-map.jpg",
+        atlas:
+          "The wheat suitability map reveals where climate water deficit, elevation and surface-radiation conditions combine to support the strongest drought-tolerance profile among the five crops."
+      }
+    };
+
+    /* LIGHTBOX */
+
+    const lightbox = document.getElementById("dc-lightbox");
+    const lightboxImage =
+      document.getElementById("dc-lightbox-image");
+    const lightboxCaption =
+      document.getElementById("dc-lightbox-caption");
+    const lightboxClose =
+      document.getElementById("dc-lightbox-close");
+
+    let lastLightboxTrigger = null;
+
+    function openLightbox(target) {
+      if (
+        !lightbox ||
+        !lightboxImage ||
+        !target ||
+        target.closest(".dc-image-shell")?.classList.contains(
+          "dc-is-missing"
+        )
+      ) {
+        return;
+      }
+
+      lastLightboxTrigger = target;
+
+      lightboxImage.src = target.currentSrc || target.src;
+      lightboxImage.alt = target.alt || "";
+      lightboxCaption.textContent =
+        target.dataset.caption || target.alt || "";
+
+      lightbox.classList.add("dc-open");
+      lightbox.setAttribute("aria-hidden", "false");
+      document.body.classList.add("dc-lightbox-open");
+
+      requestAnimationFrame(() => {
+        lightboxClose?.focus();
+      });
+    }
+
+    function closeLightbox() {
+      if (!lightbox) return;
+
+      lightbox.classList.remove("dc-open");
+      lightbox.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("dc-lightbox-open");
+
+      if (lightboxImage) {
+        lightboxImage.src = "";
+      }
+
+      lastLightboxTrigger?.focus();
+      lastLightboxTrigger = null;
+    }
+
+    function bindLightboxTarget(target) {
+      if (
+        !target ||
+        target.dataset.dcLightboxBound === "true"
+      ) {
+        return;
+      }
+
+      target.dataset.dcLightboxBound = "true";
+
+      target.addEventListener("click", () => {
+        openLightbox(target);
+      });
+
+      target.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openLightbox(target);
+        }
+      });
+    }
+
+    document
+      .querySelectorAll("[data-lightbox]")
+      .forEach(bindLightboxTarget);
+
+    lightboxClose?.addEventListener("click", closeLightbox);
+
+    lightbox?.addEventListener("click", event => {
+      if (event.target === lightbox) {
+        closeLightbox();
+      }
+    });
+
+    document.addEventListener("keydown", event => {
+      if (
+        event.key === "Escape" &&
+        lightbox?.classList.contains("dc-open")
+      ) {
+        closeLightbox();
+      }
+    });
+
+    /* CROP PROFILE SWITCHER */
+
+    const profileTabs =
+      document.querySelectorAll("[data-crop-profile]");
+
+    const profileTitle =
+      document.getElementById("dc-profile-title");
+
+    const profileStatus =
+      document.getElementById("dc-profile-status");
+
+    const profileSummary =
+      document.getElementById("dc-profile-summary");
+
+    const driverValue =
+      document.getElementById("dc-driver-value");
+
+    const scoreFill =
+      document.getElementById("dc-score-fill");
+
+    const scoreNumber =
+      document.getElementById("dc-score-number");
+
+    const featureImage =
+      document.getElementById("dc-feature-image");
+
+    const shapImage =
+      document.getElementById("dc-shap-image");
+
+    function updateImage(image, filename, alt, caption) {
+      if (!image) return;
+
+      const shell = image.closest(".dc-image-shell");
+      const fallback = shell?.querySelector(".dc-img-fallback");
+
+      shell?.classList.remove("dc-is-missing");
+
+      image.src = `../images/projects/drought/${filename}`;
+      image.alt = alt;
+      image.dataset.caption = caption;
+
+      if (fallback) {
+        fallback.textContent = `${filename} · image unavailable`;
+      }
+
+      bindImageFallback(image);
+      bindLightboxTarget(image);
+    }
+
+    function selectCropProfile(key) {
+      const crop = crops[key];
+
+      if (!crop) return;
+
+      profileTabs.forEach(tab => {
+        tab.setAttribute(
+          "aria-pressed",
+          String(tab.dataset.cropProfile === key)
+        );
+      });
+
+      if (profileTitle) {
+        profileTitle.textContent = crop.title;
+      }
+
+      if (profileStatus) {
+        profileStatus.textContent = crop.status;
+      }
+
+      if (profileSummary) {
+        profileSummary.textContent = crop.summary;
+      }
+
+      if (driverValue) {
+        driverValue.textContent = crop.driver;
+      }
+
+      if (scoreNumber) {
+        scoreNumber.textContent = crop.score.toFixed(2);
+      }
+
+      if (scoreFill) {
+        scoreFill.style.width = "0%";
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            scoreFill.style.width =
+              `${Math.round(crop.score * 100)}%`;
+          });
+        });
+      }
+
+      updateImage(
+        featureImage,
+        crop.featureImage,
+        `${crop.title} feature importance`,
+        `${crop.title} feature importance across suitability classes.`
+      );
+
+      updateImage(
+        shapImage,
+        crop.shapImage,
+        `${crop.title} SHAP interpretation`,
+        `${crop.title} SHAP summary for the very suitable class.`
+      );
+    }
+
+    profileTabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        selectCropProfile(tab.dataset.cropProfile);
+      });
+    });
+
+    /* ATLAS SWITCHER */
+
+    const atlasTabs =
+      document.querySelectorAll("[data-atlas-crop]");
+
+    const atlasImage =
+      document.getElementById("dc-atlas-image");
+
+    const atlasTitle =
+      document.getElementById("dc-atlas-title");
+
+    const atlasMeta =
+      document.getElementById("dc-atlas-meta");
+
+    const atlasDescription =
+      document.getElementById("dc-atlas-description");
+
+    function selectAtlasCrop(key) {
+      const crop = crops[key];
+
+      if (!crop) return;
+
+      atlasTabs.forEach(tab => {
+        tab.setAttribute(
+          "aria-pressed",
+          String(tab.dataset.atlasCrop === key)
+        );
+      });
+
+      if (atlasTitle) {
+        atlasTitle.textContent = crop.title;
+      }
+
+      if (atlasMeta) {
+        atlasMeta.textContent =
+          `Leading factor · ${crop.driver} · ${crop.score.toFixed(2)}`;
+      }
+
+      if (atlasDescription) {
+        atlasDescription.textContent = crop.atlas;
+      }
+
+      updateImage(
+        atlasImage,
+        crop.mapImage,
+        `${crop.title} suitability map`,
+        `National ${crop.title} suitability map.`
+      );
+    }
+
+    atlasTabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        selectAtlasCrop(tab.dataset.atlasCrop);
+      });
+    });
+
+    /* BACK TO TOP */
+
+    const backTop = document.getElementById("dc-back-top");
+
+    function updateBackTop() {
+      backTop?.classList.toggle(
+        "dc-show",
+        window.scrollY > 300
+      );
+    }
+
+    window.addEventListener(
+      "scroll",
+      updateBackTop,
+      { passive: true }
+    );
+
+    updateBackTop();
+
+    backTop?.addEventListener("click", () => {
+      window.scrollTo({
+        top: 0,
+        behavior: prefersReducedMotion ? "auto" : "smooth"
+      });
+    });
+  })();
+</script>
+
+<!-- IMAGE MANIFEST
+drought-tolerance-hero.jpg
+pdsi-drought-map.jpg
+methodology-framework.jpg
+variables-aet-cwd-pdsi-eto.jpg
+variables-precip-runoff-vap-vpd.jpg
+variables-soil-srad-wind-soiltype.jpg
+variables-dem-slope-aspect-drainage.jpg
+aman-suitability-map.jpg
+aush-suitability-map.jpg
+boro-suitability-map.jpg
+jute-suitability-map.jpg
+wheat-suitability-map.jpg
+aman-feature-importance.jpg
+aush-feature-importance.jpg
+boro-feature-importance.jpg
+jute-feature-importance.jpg
+wheat-feature-importance.jpg
+aman-shap-summary.jpg
+aush-shap-summary.jpg
+boro-shap-summary.jpg
+jute-shap-summary.jpg
+wheat-shap-summary.jpg
+-->
+
+</body>
+</html>
