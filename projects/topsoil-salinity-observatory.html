@@ -1,0 +1,3153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    162 Soil Samples, One Coastal Salinity Observatory | Tanzim Al Noor
+  </title>
+
+  <meta
+    name="description"
+    content="A co-authored Scientific Data project documenting a 162-site topsoil salinity observatory across Khulna, Satkhira and Jessore in coastal southwest Bangladesh."
+  >
+
+  <meta
+    name="keywords"
+    content="soil salinity, coastal Bangladesh, Scientific Data, GIS, field survey, electrical conductivity, topsoil observatory, Tanzim Al Noor"
+  >
+
+  <meta name="author" content="Tanzim Al Noor">
+
+  <meta property="og:type" content="article">
+  <meta
+    property="og:title"
+    content="162 Soil Samples. One Living Map of Coastal Salinity."
+  >
+  <meta
+    property="og:description"
+    content="A field-to-laboratory soil salinity dataset covering 162 sites across coastal southwest Bangladesh."
+  >
+  <meta
+    property="og:image"
+    content="../images/projects/topsoil-observatory/topsoil-observatory-hero.jpg"
+  >
+
+  <link rel="stylesheet" href="../styles.css">
+
+  <style>
+    :root {
+      --to-night: #071714;
+      --to-deep: #0d2b25;
+      --to-mangrove: #19483b;
+      --to-water: #318aa0;
+      --to-water-soft: #87c5d0;
+      --to-salt: #f5f1e8;
+      --to-salt-bright: #fffdf8;
+      --to-sand: #e5d5bb;
+      --to-field: #b8a16f;
+      --to-green: #38a78f;
+      --to-green-soft: #8dd8c8;
+      --to-yellow: #e3ce55;
+      --to-orange: #df9340;
+      --to-red: #d84f3d;
+      --to-ink: #17231f;
+      --to-muted: #66736d;
+      --to-dark-border: rgba(245, 241, 232, 0.14);
+      --to-light-border: rgba(13, 43, 37, 0.15);
+      --to-shadow: 0 28px 84px rgba(3, 18, 14, 0.22);
+      --to-radius-sm: 12px;
+      --to-radius: 22px;
+      --to-radius-lg: 34px;
+      --to-max: 1440px;
+      --to-transition: 280ms cubic-bezier(.2, .8, .2, 1);
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background: var(--to-night);
+    }
+
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      background: var(--to-night);
+      color: var(--to-salt);
+      font-family: "Inter", Arial, sans-serif;
+    }
+
+    body.to-lightbox-open {
+      overflow: hidden;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      color: inherit;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .to-main {
+      overflow: hidden;
+    }
+
+    .to-container {
+      width: min(calc(100% - 32px), var(--to-max));
+      margin-inline: auto;
+    }
+
+    .to-section {
+      position: relative;
+      padding: 90px 0;
+    }
+
+    .to-section--dark {
+      background:
+        radial-gradient(
+          circle at 87% 5%,
+          rgba(49, 138, 160, 0.09),
+          transparent 29%
+        ),
+        var(--to-night);
+      color: var(--to-salt);
+    }
+
+    .to-section--deep {
+      background:
+        radial-gradient(
+          circle at 8% 12%,
+          rgba(56, 167, 143, 0.1),
+          transparent 28%
+        ),
+        var(--to-deep);
+      color: var(--to-salt);
+    }
+
+    .to-section--light {
+      background:
+        linear-gradient(
+          rgba(255, 253, 248, 0.978),
+          rgba(255, 253, 248, 0.978)
+        ),
+        repeating-linear-gradient(
+          0deg,
+          rgba(184, 161, 111, 0.045) 0,
+          rgba(184, 161, 111, 0.045) 1px,
+          transparent 1px,
+          transparent 6px
+        );
+      color: var(--to-ink);
+    }
+
+    .to-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 18px;
+      color: var(--to-water);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .to-label::before {
+      width: 30px;
+      height: 1px;
+      content: "";
+      background: currentColor;
+    }
+
+    .to-heading {
+      max-width: 1120px;
+      margin: 0;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(2.45rem, 7vw, 5.8rem);
+      font-weight: 650;
+      line-height: 0.98;
+      letter-spacing: -0.05em;
+      text-wrap: balance;
+    }
+
+    .to-heading--medium {
+      font-size: clamp(2.25rem, 6vw, 4.85rem);
+    }
+
+    .to-intro {
+      max-width: 900px;
+      margin: 24px 0 0;
+      font-size: clamp(1rem, 2vw, 1.18rem);
+      line-height: 1.76;
+      opacity: 0.8;
+    }
+
+    .to-mono {
+      font-family: "JetBrains Mono", monospace;
+    }
+
+    .to-reveal {
+      opacity: 0;
+      transform: translateY(25px);
+      transition:
+        opacity 700ms cubic-bezier(.2, .8, .2, 1),
+        transform 700ms cubic-bezier(.2, .8, .2, 1);
+    }
+
+    .to-reveal.to-visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* HERO */
+
+    .to-hero {
+      position: relative;
+      min-height: 100svh;
+      display: flex;
+      align-items: flex-end;
+      isolation: isolate;
+      background:
+        linear-gradient(
+          90deg,
+          rgba(7, 23, 20, 0.97) 0%,
+          rgba(7, 23, 20, 0.88) 47%,
+          rgba(7, 23, 20, 0.56) 100%
+        ),
+        url("../images/projects/topsoil-observatory/topsoil-observatory-hero.jpg")
+        center / cover no-repeat;
+    }
+
+    .to-hero::before {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      content: "";
+      background:
+        radial-gradient(
+          circle at 78% 20%,
+          rgba(49, 138, 160, 0.2),
+          transparent 31%
+        ),
+        linear-gradient(
+          to top,
+          rgba(7, 23, 20, 0.96),
+          transparent 48%
+        );
+      pointer-events: none;
+    }
+
+    .to-hero.to-image-missing {
+      background:
+        radial-gradient(
+          circle at 72% 18%,
+          rgba(49, 138, 160, 0.15),
+          transparent 31%
+        ),
+        linear-gradient(
+          120deg,
+          var(--to-night),
+          var(--to-mangrove)
+        );
+    }
+
+    .to-hero-missing {
+      position: absolute;
+      top: 120px;
+      right: 22px;
+      display: none;
+      color: rgba(245, 241, 232, 0.4);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.68rem;
+    }
+
+    .to-hero.to-image-missing .to-hero-missing {
+      display: block;
+    }
+
+    .to-status-badge {
+      position: absolute;
+      top: 104px;
+      right: max(16px, calc((100vw - var(--to-max)) / 2));
+      z-index: 3;
+      padding: 10px 15px;
+      border: 1px solid rgba(56, 167, 143, 0.55);
+      border-radius: 999px;
+      background: var(--to-green);
+      color: var(--to-night);
+      box-shadow: var(--to-shadow);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.68rem;
+      font-weight: 900;
+    }
+
+    .to-hero-inner {
+      width: min(calc(100% - 32px), var(--to-max));
+      margin-inline: auto;
+      padding: 155px 0 124px;
+    }
+
+    .to-hero-eyebrow {
+      max-width: 980px;
+      margin: 0 0 20px;
+      color: var(--to-green-soft);
+      font-family: "JetBrains Mono", monospace;
+      font-size: clamp(0.7rem, 1.5vw, 0.88rem);
+      line-height: 1.65;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .to-hero-title {
+      max-width: 1190px;
+      margin: 0;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(3.35rem, 10vw, 8rem);
+      font-weight: 700;
+      line-height: 0.88;
+      letter-spacing: -0.065em;
+      text-wrap: balance;
+    }
+
+    .to-hero-subhead {
+      max-width: 960px;
+      margin: 29px 0 0;
+      color: rgba(245, 241, 232, 0.8);
+      font-size: clamp(1rem, 2vw, 1.27rem);
+      line-height: 1.72;
+    }
+
+    .to-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 31px;
+    }
+
+    .to-chip {
+      padding: 9px 12px;
+      border: 1px solid rgba(56, 167, 143, 0.63);
+      border-radius: 999px;
+      background: rgba(7, 23, 20, 0.44);
+      color: var(--to-green-soft);
+      backdrop-filter: blur(7px);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.69rem;
+    }
+
+    .to-hero-bottom {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      border-top: 1px solid rgba(245, 241, 232, 0.14);
+      background: rgba(7, 23, 20, 0.72);
+      backdrop-filter: blur(12px);
+    }
+
+    .to-hero-bottom-inner {
+      width: min(calc(100% - 32px), var(--to-max));
+      min-height: 72px;
+      margin-inline: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 7px;
+      padding: 13px 0;
+      color: rgba(245, 241, 232, 0.58);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.65rem;
+      line-height: 1.6;
+    }
+
+    .to-scroll-label {
+      color: var(--to-green-soft);
+    }
+
+    /* EVIDENCE STRIP */
+
+    .to-evidence {
+      border-top: 1px solid var(--to-dark-border);
+      border-bottom: 1px solid var(--to-dark-border);
+      background: var(--to-deep);
+    }
+
+    .to-evidence-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+
+    .to-fact {
+      min-width: 0;
+      padding: 22px 16px;
+      border-bottom: 1px solid var(--to-dark-border);
+    }
+
+    .to-fact:last-child {
+      border-bottom: 0;
+    }
+
+    .to-fact-label {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--to-green);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.61rem;
+      font-weight: 800;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+
+    .to-fact-value {
+      color: rgba(245, 241, 232, 0.8);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.68rem;
+      line-height: 1.55;
+    }
+
+    /* GENERIC CARDS */
+
+    .to-card-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 42px;
+    }
+
+    .to-dark-card {
+      min-height: 100%;
+      padding: 27px;
+      border-left: 4px solid var(--to-water);
+      border-radius: 0 var(--to-radius) var(--to-radius) 0;
+      background: var(--to-night);
+      color: var(--to-salt);
+      box-shadow: 0 18px 46px rgba(7, 23, 20, 0.13);
+    }
+
+    .to-dark-card--green {
+      border-left-color: var(--to-green);
+    }
+
+    .to-dark-card--sand {
+      border-left-color: var(--to-field);
+    }
+
+    .to-dark-card h3 {
+      margin: 0 0 14px;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 1.62rem;
+      line-height: 1.12;
+    }
+
+    .to-dark-card p {
+      margin: 0;
+      color: rgba(245, 241, 232, 0.7);
+      font-size: 0.92rem;
+      line-height: 1.72;
+    }
+
+    .to-pullquote {
+      max-width: 1120px;
+      margin: 56px 0 0;
+      padding: 30px 0 0 27px;
+      border-left: 2px solid var(--to-water);
+      color: var(--to-mangrove);
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(1.7rem, 4vw, 3.15rem);
+      font-style: italic;
+      line-height: 1.18;
+      letter-spacing: -0.025em;
+    }
+
+    /* CONTRIBUTION */
+
+    .to-contribution-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 22px;
+      margin-top: 42px;
+    }
+
+    .to-contribution-main {
+      padding: 29px;
+      border-left: 5px solid var(--to-green);
+      border-radius: 0 var(--to-radius-lg) var(--to-radius-lg) 0;
+      background:
+        linear-gradient(
+          135deg,
+          rgba(56, 167, 143, 0.1),
+          rgba(255, 255, 255, 0.025)
+        );
+    }
+
+    .to-contribution-main h3 {
+      margin: 0;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      line-height: 1;
+    }
+
+    .to-contribution-main p {
+      margin: 22px 0 0;
+      color: rgba(245, 241, 232, 0.73);
+      line-height: 1.76;
+    }
+
+    .to-contribution-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 25px;
+    }
+
+    .to-contribution-item {
+      padding: 13px;
+      border: 1px solid var(--to-dark-border);
+      border-radius: 11px;
+      color: rgba(245, 241, 232, 0.7);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.65rem;
+      line-height: 1.45;
+    }
+
+    .to-role-note {
+      padding: 27px;
+      border: 1px solid var(--to-dark-border);
+      border-radius: var(--to-radius);
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .to-role-note h3 {
+      margin: 0 0 13px;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 1.6rem;
+    }
+
+    .to-role-note p {
+      margin: 0;
+      color: rgba(245, 241, 232, 0.66);
+      line-height: 1.7;
+    }
+
+    /* IMAGES */
+
+    .to-image-shell {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--to-radius);
+      background: #03100d;
+      box-shadow: var(--to-shadow);
+    }
+
+    .to-image-shell img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      cursor: zoom-in;
+      transition:
+        transform var(--to-transition),
+        opacity var(--to-transition);
+    }
+
+    .to-image-shell:hover img {
+      transform: scale(1.014);
+    }
+
+    .to-image-shell.to-is-missing img {
+      display: none;
+    }
+
+    .to-img-fallback {
+      display: none;
+      min-height: 250px;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: rgba(245, 241, 232, 0.42);
+      text-align: center;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.04em;
+    }
+
+    .to-image-shell.to-is-missing .to-img-fallback {
+      display: flex;
+    }
+
+    .to-caption {
+      margin: 14px 2px 0;
+      color: var(--to-muted);
+      font-size: 0.78rem;
+      line-height: 1.6;
+    }
+
+    /* STUDY AREA */
+
+    .to-study-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 28px;
+      margin-top: 42px;
+    }
+
+    .to-study-map .to-image-shell {
+      aspect-ratio: 4 / 3;
+    }
+
+    .to-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--to-light-border);
+      border-radius: var(--to-radius);
+      background: var(--to-light-border);
+    }
+
+    .to-stat {
+      min-height: 128px;
+      padding: 19px;
+      background: var(--to-salt-bright);
+    }
+
+    .to-stat-number {
+      display: block;
+      color: var(--to-water);
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(1.75rem, 5vw, 3rem);
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .to-stat-label {
+      display: block;
+      margin-top: 10px;
+      color: var(--to-muted);
+      font-size: 0.72rem;
+      line-height: 1.45;
+    }
+
+    .to-districts {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 13px;
+      margin-top: 30px;
+    }
+
+    .to-district {
+      padding: 20px;
+      border: 1px solid var(--to-light-border);
+      border-radius: var(--to-radius);
+      background: rgba(255, 255, 255, 0.46);
+    }
+
+    .to-district h3 {
+      margin: 0;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 1.45rem;
+    }
+
+    .to-district p {
+      margin: 11px 0 0;
+      color: var(--to-muted);
+      font-size: 0.86rem;
+      line-height: 1.65;
+    }
+
+    /* PROTOCOL */
+
+    .to-protocol-tabs {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 36px;
+      padding: 5px;
+      border: 1px solid var(--to-dark-border);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .to-protocol-tab {
+      padding: 10px 15px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: rgba(245, 241, 232, 0.58);
+      cursor: pointer;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.67rem;
+      transition:
+        color var(--to-transition),
+        background var(--to-transition);
+    }
+
+    .to-protocol-tab[aria-pressed="true"] {
+      background: var(--to-green);
+      color: var(--to-night);
+    }
+
+    .to-protocol-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      margin-top: 29px;
+    }
+
+    .to-protocol-copy {
+      padding: 28px;
+      border-left: 5px solid var(--to-green);
+      border-radius: 0 var(--to-radius-lg) var(--to-radius-lg) 0;
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .to-protocol-copy h3 {
+      margin: 0;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      line-height: 1;
+    }
+
+    .to-protocol-copy p {
+      margin: 20px 0 0;
+      color: rgba(245, 241, 232, 0.69);
+      line-height: 1.72;
+    }
+
+    .to-protocol-steps {
+      display: grid;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .to-protocol-step {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding-top: 12px;
+      border-top: 1px solid var(--to-dark-border);
+    }
+
+    .to-protocol-step:first-child {
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .to-step-number {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(56, 167, 143, 0.13);
+      color: var(--to-green-soft);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.63rem;
+      font-weight: 800;
+    }
+
+    .to-step-text {
+      color: rgba(245, 241, 232, 0.72);
+      font-size: 0.88rem;
+      line-height: 1.65;
+    }
+
+    .to-protocol-figure .to-image-shell {
+      aspect-ratio: 4 / 3;
+    }
+
+    /* SALINITY ATLAS */
+
+    .to-atlas-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 26px;
+      margin-top: 42px;
+    }
+
+    .to-atlas-map .to-image-shell {
+      aspect-ratio: 4 / 4.6;
+    }
+
+    .to-atlas-panel {
+      padding: 28px;
+      border-left: 5px solid var(--to-red);
+      border-radius: 0 var(--to-radius-lg) var(--to-radius-lg) 0;
+      background: var(--to-night);
+      color: var(--to-salt);
+    }
+
+    .to-atlas-panel h3 {
+      margin: 0;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(2rem, 5vw, 3.45rem);
+      line-height: 1;
+    }
+
+    .to-atlas-panel p {
+      margin: 20px 0 0;
+      color: rgba(245, 241, 232, 0.68);
+      line-height: 1.72;
+    }
+
+    .to-ec-classes {
+      display: grid;
+      gap: 8px;
+      margin-top: 25px;
+    }
+
+    .to-ec-btn {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 16px 1fr auto;
+      gap: 11px;
+      align-items: center;
+      padding: 12px 14px;
+      border: 1px solid var(--to-dark-border);
+      border-radius: 11px;
+      background: transparent;
+      cursor: pointer;
+      text-align: left;
+      transition:
+        transform var(--to-transition),
+        border-color var(--to-transition),
+        background var(--to-transition);
+    }
+
+    .to-ec-btn:hover,
+    .to-ec-btn:focus-visible,
+    .to-ec-btn[aria-pressed="true"] {
+      transform: translateY(-2px);
+      border-color: var(--to-green);
+      background: rgba(255, 255, 255, 0.045);
+    }
+
+    .to-ec-dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+    }
+
+    .to-ec-range {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.68rem;
+    }
+
+    .to-ec-class {
+      color: rgba(245, 241, 232, 0.42);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.61rem;
+    }
+
+    .to-ec-description {
+      min-height: 86px;
+      margin-top: 19px;
+      padding: 18px 20px;
+      border-left: 3px solid var(--to-green);
+      background: rgba(56, 167, 143, 0.08);
+      color: rgba(245, 241, 232, 0.72);
+      font-size: 0.88rem;
+      line-height: 1.67;
+    }
+
+    /* VALIDATION */
+
+    .to-validation-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 42px;
+    }
+
+    .to-validation-card {
+      padding: 26px;
+      border: 1px solid var(--to-light-border);
+      border-radius: var(--to-radius);
+      background: rgba(255, 255, 255, 0.48);
+    }
+
+    .to-validation-card h3 {
+      margin: 0 0 12px;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 1.52rem;
+    }
+
+    .to-validation-card p {
+      margin: 0;
+      color: var(--to-muted);
+      font-size: 0.88rem;
+      line-height: 1.68;
+    }
+
+    .to-validation-num {
+      display: block;
+      margin-bottom: 17px;
+      color: var(--to-water);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.65rem;
+      font-weight: 800;
+    }
+
+    .to-caution {
+      margin-top: 26px;
+      padding: 20px 22px;
+      border-left: 4px solid var(--to-orange);
+      background: rgba(223, 147, 64, 0.09);
+      color: var(--to-ink);
+      font-size: 0.88rem;
+      line-height: 1.68;
+    }
+
+    /* OBSERVATORY */
+
+    .to-observatory-flow {
+      position: relative;
+      max-width: 1080px;
+      margin: 50px auto 0;
+      padding-left: 38px;
+    }
+
+    .to-observatory-flow::before {
+      position: absolute;
+      top: 12px;
+      bottom: 12px;
+      left: 10px;
+      width: 1px;
+      content: "";
+      background:
+        linear-gradient(
+          var(--to-green),
+          var(--to-water),
+          var(--to-yellow),
+          var(--to-green)
+        );
+    }
+
+    .to-flow-step {
+      position: relative;
+      margin-bottom: 20px;
+      padding: 24px;
+      border: 1px solid var(--to-dark-border);
+      border-radius: var(--to-radius);
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .to-flow-step::before {
+      position: absolute;
+      top: 30px;
+      left: -35px;
+      width: 14px;
+      height: 14px;
+      border: 3px solid var(--to-deep);
+      border-radius: 50%;
+      content: "";
+      background: var(--to-green);
+      box-shadow: 0 0 0 1px var(--to-green);
+    }
+
+    .to-flow-step h3 {
+      margin: 0 0 10px;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 1.55rem;
+    }
+
+    .to-flow-step p {
+      margin: 0;
+      color: rgba(245, 241, 232, 0.67);
+      line-height: 1.7;
+    }
+
+    /* PUBLICATION RECORD */
+
+    .to-record-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 21px;
+      margin-top: 42px;
+    }
+
+    .to-record-card {
+      padding: 29px;
+      border-left: 5px solid var(--to-green);
+      border-radius: 0 var(--to-radius-lg) var(--to-radius-lg) 0;
+      background: var(--to-night);
+      color: var(--to-salt);
+      box-shadow: var(--to-shadow);
+    }
+
+    .to-record-card h3 {
+      margin: 0;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 1.85rem;
+    }
+
+    .to-status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .to-status-pill {
+      padding: 8px 11px;
+      border: 1px solid var(--to-dark-border);
+      border-radius: 999px;
+      color: rgba(245, 241, 232, 0.67);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.63rem;
+    }
+
+    .to-status-pill--active {
+      border-color: var(--to-green);
+      color: var(--to-green-soft);
+    }
+
+    .to-record-card p {
+      margin: 20px 0 0;
+      color: rgba(245, 241, 232, 0.66);
+      line-height: 1.7;
+    }
+
+    .to-record-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 23px;
+    }
+
+    .to-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 17px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      background: var(--to-green);
+      color: var(--to-night);
+      cursor: pointer;
+      text-decoration: none;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.68rem;
+      font-weight: 900;
+      transition:
+        transform var(--to-transition),
+        background var(--to-transition);
+    }
+
+    .to-action:hover {
+      transform: translateY(-2px);
+      background: var(--to-green-soft);
+    }
+
+    .to-action--ghost {
+      border-color: var(--to-dark-border);
+      background: transparent;
+      color: var(--to-salt);
+    }
+
+    .to-action--ghost:hover {
+      background: rgba(255, 255, 255, 0.055);
+    }
+
+    .to-citation-card {
+      padding: 29px;
+      border: 1px solid var(--to-light-border);
+      border-radius: var(--to-radius);
+      background: rgba(255, 255, 255, 0.48);
+    }
+
+    .to-citation-card h3 {
+      margin: 0 0 17px;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 1.7rem;
+    }
+
+    .to-full-title {
+      margin: 0;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(1.2rem, 3vw, 1.75rem);
+      line-height: 1.5;
+    }
+
+    .to-citation-text {
+      margin: 22px 0 0;
+      color: var(--to-muted);
+      font-size: 0.84rem;
+      line-height: 1.7;
+    }
+
+    .to-author-details {
+      margin-top: 22px;
+      border-top: 1px solid var(--to-light-border);
+      padding-top: 19px;
+    }
+
+    .to-author-details summary {
+      cursor: pointer;
+      color: var(--to-water);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.69rem;
+      font-weight: 800;
+    }
+
+    .to-author-list {
+      margin: 16px 0 0;
+      color: var(--to-muted);
+      font-size: 0.82rem;
+      line-height: 1.7;
+    }
+
+    /* STACK */
+
+    .to-stack-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 39px;
+    }
+
+    .to-stack-card {
+      padding: 24px;
+      border: 1px solid var(--to-dark-border);
+      border-radius: var(--to-radius);
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .to-stack-card h3 {
+      margin: 0 0 16px;
+      color: var(--to-green-soft);
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 1.36rem;
+    }
+
+    .to-stack-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .to-stack-tag {
+      padding: 8px 10px;
+      border: 1px solid var(--to-dark-border);
+      border-radius: 9px;
+      color: rgba(245, 241, 232, 0.66);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.62rem;
+      line-height: 1.4;
+    }
+
+    /* FOOTER */
+
+    .to-footer-nav {
+      padding: 27px 0 72px;
+      background: var(--to-night);
+    }
+
+    .to-footer-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .to-footer-card {
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 23px;
+      border: 1px solid var(--to-dark-border);
+      border-radius: var(--to-radius);
+      background: rgba(255, 255, 255, 0.025);
+      color: var(--to-salt);
+      text-decoration: none;
+      transition:
+        transform var(--to-transition),
+        border-color var(--to-transition),
+        background var(--to-transition);
+    }
+
+    .to-footer-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--to-green);
+      background: rgba(56, 167, 143, 0.06);
+    }
+
+    .to-footer-kicker {
+      color: rgba(245, 241, 232, 0.4);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.64rem;
+      text-transform: uppercase;
+    }
+
+    .to-footer-title {
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 1.8rem;
+    }
+
+    /* LIGHTBOX */
+
+    .to-lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(2, 10, 8, 0.95);
+      backdrop-filter: blur(12px);
+    }
+
+    .to-lightbox.to-open {
+      display: grid;
+    }
+
+    .to-lightbox-inner {
+      width: min(1200px, 100%);
+      max-height: 94vh;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      gap: 12px;
+    }
+
+    .to-lightbox img {
+      width: 100%;
+      max-height: 82vh;
+      object-fit: contain;
+      border-radius: 12px;
+      background: var(--to-night);
+    }
+
+    .to-lightbox-caption {
+      color: rgba(245, 241, 232, 0.7);
+      font-size: 0.78rem;
+      line-height: 1.55;
+    }
+
+    .to-lightbox-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 43px;
+      height: 43px;
+      border: 1px solid rgba(245, 241, 232, 0.23);
+      border-radius: 50%;
+      background: rgba(7, 23, 20, 0.8);
+      color: var(--to-salt);
+      cursor: pointer;
+      font-size: 1.5rem;
+    }
+
+    .to-back-top {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 5000;
+      width: 47px;
+      height: 47px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(56, 167, 143, 0.45);
+      border-radius: 50%;
+      background: var(--to-green);
+      color: var(--to-night);
+      cursor: pointer;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+      box-shadow: 0 13px 35px rgba(0, 0, 0, 0.24);
+      transition:
+        opacity var(--to-transition),
+        visibility var(--to-transition),
+        transform var(--to-transition);
+    }
+
+    .to-back-top.to-show {
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+    }
+
+    @media (min-width: 640px) {
+      .to-container,
+      .to-hero-inner,
+      .to-hero-bottom-inner {
+        width: min(calc(100% - 56px), var(--to-max));
+      }
+
+      .to-section {
+        padding: 110px 0;
+      }
+
+      .to-hero-bottom-inner {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .to-card-grid,
+      .to-validation-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .to-contribution-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .to-districts {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .to-stack-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .to-footer-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .to-section {
+        padding: 135px 0;
+      }
+
+      .to-evidence-grid {
+        grid-template-columns:
+          minmax(155px, 0.75fr)
+          minmax(175px, 0.86fr)
+          minmax(150px, 0.7fr)
+          minmax(145px, 0.68fr)
+          minmax(160px, 0.76fr)
+          minmax(190px, 0.92fr)
+          minmax(215px, 1.05fr);
+      }
+
+      .to-fact {
+        padding: 20px 14px;
+        border-right: 1px solid var(--to-dark-border);
+        border-bottom: 0;
+      }
+
+      .to-fact:last-child {
+        border-right: 0;
+      }
+
+      .to-card-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .to-contribution-layout {
+        grid-template-columns:
+          minmax(0, 1.35fr)
+          minmax(320px, 0.65fr);
+        align-items: start;
+      }
+
+      .to-study-layout {
+        grid-template-columns:
+          minmax(0, 3fr)
+          minmax(350px, 2fr);
+        align-items: start;
+      }
+
+      .to-protocol-layout {
+        grid-template-columns:
+          minmax(340px, 0.75fr)
+          minmax(0, 1.25fr);
+        align-items: start;
+      }
+
+      .to-atlas-layout {
+        grid-template-columns:
+          minmax(0, 1.15fr)
+          minmax(350px, 0.85fr);
+        align-items: start;
+      }
+
+      .to-validation-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .to-record-layout {
+        grid-template-columns:
+          minmax(330px, 0.7fr)
+          minmax(0, 1.3fr);
+        align-items: start;
+      }
+
+      .to-stack-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+
+      .to-reveal {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* Final portfolio integration and responsive refinements */
+    .site-header {
+      background: rgba(255, 253, 247, 0.96);
+      color: var(--to-ink);
+      backdrop-filter: blur(16px);
+    }
+
+    .to-hero-title {
+      color: var(--to-salt-bright);
+      text-shadow: 0 3px 28px rgba(0, 0, 0, 0.62);
+      max-width: 1080px;
+    }
+
+    .to-image-shell img {
+      object-fit: contain;
+      background: var(--to-salt-bright);
+    }
+
+    @media (max-width: 1319px) {
+      .site-header .nav-links,
+      .site-header .nav-cta .btn-ghost {
+        display: none;
+      }
+
+      .site-header .menu-toggle {
+        display: inline-flex;
+      }
+
+      .site-header.nav-open .nav-links {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        padding: 1.25rem 1.5rem 1.5rem;
+        gap: 1rem;
+        background: var(--to-salt-bright);
+        border-bottom: 1px solid rgba(13, 43, 37, 0.16);
+        box-shadow: 0 18px 40px rgba(3, 17, 14, 0.14);
+        z-index: 20;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .site-header .nav-cta .btn {
+        display: none !important;
+      }
+
+      .to-hero {
+        min-height: 820px;
+        padding-top: 7.5rem;
+      }
+
+      .to-hero-title {
+        font-size: clamp(2.55rem, 13vw, 4.2rem);
+        line-height: 0.98;
+      }
+
+      .to-status-badge {
+        max-width: 100%;
+        white-space: normal;
+      }
+
+      .to-protocol-tabs,
+      .to-ec-controls {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="site-header">
+  <nav class="nav">
+    <a href="../index.html" class="brand">
+      <svg
+        class="pin"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0Z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+
+      Tanzim&nbsp;Al&nbsp;Noor
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="../index.html#about">About</a></li>
+      <li><a href="../index.html#skills">Skills</a></li>
+      <li><a href="../index.html#experience">Experience</a></li>
+      <li><a href="../index.html#projects">Projects</a></li>
+      <li><a href="../index.html#research">Research</a></li>
+      <li><a href="../index.html#education">Education</a></li>
+      <li><a href="../index.html#contact">Contact</a></li>
+    </ul>
+
+    <div class="nav-cta">
+      <a
+        href="../Tanzim_Al_Noor_CV.pdf"
+        class="btn btn-ghost btn-sm"
+        download
+      >
+        Download CV
+      </a>
+
+      <a
+        href="../index.html#contact"
+        class="btn btn-primary btn-sm"
+      >
+        Get in Touch
+      </a>
+
+      <button
+        class="menu-toggle"
+        type="button"
+        aria-label="Toggle menu"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <path d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<main class="to-main">
+
+  <!-- HERO -->
+
+  <section
+    class="to-hero"
+    id="top"
+    aria-labelledby="to-hero-title"
+  >
+    <span class="to-hero-missing">
+      topsoil-observatory-hero.jpg · image unavailable
+    </span>
+
+    <div class="to-status-badge">
+      Published · Scientific Data
+    </div>
+
+    <div class="to-hero-inner">
+      <p class="to-hero-eyebrow">
+        Field Observatory · GIS · Laboratory EC Analysis · Open Research Data
+      </p>
+
+      <h1 class="to-hero-title" id="to-hero-title">
+        162 soil samples. One living map of coastal salinity.
+      </h1>
+
+      <p class="to-hero-subhead">
+        A field-to-laboratory topsoil observatory spanning Khulna,
+        Satkhira and Jessore, designed to establish spatially dense,
+        geocoded evidence of salinity across the arable lands of
+        coastal southwest Bangladesh.
+      </p>
+
+      <div class="to-chip-row" aria-label="Project highlights">
+        <span class="to-chip">162 sample sites</span>
+        <span class="to-chip">3 districts</span>
+        <span class="to-chip">5 field teams</span>
+        <span class="to-chip">Top 30 cm</span>
+        <span class="to-chip">EC 0.05–9.09 mS/cm</span>
+        <span class="to-chip">Published 2025</span>
+      </div>
+    </div>
+
+    <div class="to-hero-bottom">
+      <div class="to-hero-bottom-inner">
+        <span>
+          Published Data Descriptor · Scientific Data 12, 1204
+        </span>
+
+        <span class="to-scroll-label">
+          Follow the evidence trail ↓
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- EVIDENCE STRIP -->
+
+  <section
+    class="to-evidence"
+    aria-label="Publication and dataset facts"
+  >
+    <div class="to-evidence-grid">
+      <div class="to-fact">
+        <span class="to-fact-label">Status</span>
+        <span class="to-fact-value">Published</span>
+      </div>
+
+      <div class="to-fact">
+        <span class="to-fact-label">Journal</span>
+        <span class="to-fact-value">Scientific Data</span>
+      </div>
+
+      <div class="to-fact">
+        <span class="to-fact-label">Article</span>
+        <span class="to-fact-value">12 · 1204</span>
+      </div>
+
+      <div class="to-fact">
+        <span class="to-fact-label">Published</span>
+        <span class="to-fact-value">12 July 2025</span>
+      </div>
+
+      <div class="to-fact">
+        <span class="to-fact-label">Samples</span>
+        <span class="to-fact-value">162 topsoil sites</span>
+      </div>
+
+      <div class="to-fact">
+        <span class="to-fact-label">Observed EC</span>
+        <span class="to-fact-value">0.05–9.09 mS/cm</span>
+      </div>
+
+      <div class="to-fact">
+        <span class="to-fact-label">My contribution</span>
+        <span class="to-fact-value">
+          Field data · GIS · spatial modelling · validation · analysis
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESEARCH NEED -->
+
+  <section class="to-section to-section--light" id="research-need">
+    <div class="to-container">
+      <div class="to-reveal">
+        <p class="to-label">01 · Why This Observatory Matters</p>
+
+        <h2 class="to-heading to-heading--medium">
+          Satellite signals need field truth.
+        </h2>
+      </div>
+
+      <div class="to-card-grid">
+        <article class="to-dark-card to-reveal">
+          <h3>A rapidly changing coastal landscape</h3>
+
+          <p>
+            Saltwater intrusion, storm surges, reduced freshwater flow,
+            groundwater extraction, shrimp aquaculture and polder-management
+            challenges are reshaping agricultural land across southwest
+            Bangladesh.
+          </p>
+        </article>
+
+        <article class="to-dark-card to-dark-card--green to-reveal">
+          <h3>A field-data gap</h3>
+
+          <p>
+            Existing coastal salinity datasets are often old, spatially sparse
+            or focused on rivers and lakes rather than geocoded topsoil
+            measurements across arable land.
+          </p>
+        </article>
+
+        <article class="to-dark-card to-dark-card--sand to-reveal">
+          <h3>A foundation for repeated observation</h3>
+
+          <p>
+            The dataset creates a documented baseline that can support
+            agricultural adaptation, soil-health monitoring, future remote
+            sensing and a persistent community-driven salinity observatory.
+          </p>
+        </article>
+      </div>
+
+      <blockquote class="to-pullquote to-reveal">
+        The project turns individual soil bags, coordinates and conductivity
+        readings into a regional evidence system.
+      </blockquote>
+    </div>
+  </section>
+
+  <!-- MY CONTRIBUTION -->
+
+  <section class="to-section to-section--dark" id="contribution">
+    <div class="to-container">
+      <div class="to-reveal">
+        <p class="to-label">02 · My Contribution</p>
+
+        <h2 class="to-heading to-heading--medium">
+          Field evidence strengthened through collaborative review.
+        </h2>
+      </div>
+
+      <div class="to-contribution-layout">
+        <article class="to-contribution-main to-reveal">
+          <h3>Published author contribution</h3>
+
+          <p>
+            The published contribution statement credits Tanzim Al Noor with
+            field data collection and writing through review and editing. The
+            wider mapping, laboratory, validation and dataset workflow shown
+            on this page represents the collaborative research team.
+          </p>
+
+          <div
+            class="to-contribution-grid"
+            aria-label="Tanzim Al Noor research contributions"
+          >
+            <span class="to-contribution-item">
+              Field data collection
+            </span>
+
+            <span class="to-contribution-item">
+              Writing – review and editing
+            </span>
+
+          </div>
+        </article>
+
+        <aside class="to-role-note to-reveal">
+          <h3>Attribution boundary</h3>
+
+          <p>
+            This Data Descriptor used no custom predictive code. Its GIS-based
+            visualization and broader technical workflow are project-level
+            outputs and are not presented as Tanzim's sole contribution.
+          </p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- STUDY AREA -->
+
+  <section class="to-section to-section--light" id="study-area">
+    <div class="to-container">
+      <div class="to-reveal">
+        <p class="to-label">03 · Regional Field Campaign</p>
+
+        <h2 class="to-heading to-heading--medium">
+          Three districts, five teams and nine days of coordinated sampling.
+        </h2>
+      </div>
+
+      <div class="to-study-layout">
+        <figure class="to-study-map to-reveal">
+          <div class="to-image-shell">
+            <img
+              src="../images/projects/topsoil-observatory/study-area-routes.jpg"
+              alt="Study area, soil sampling points and five field-team routes across southwest Bangladesh"
+              loading="lazy"
+              data-lightbox
+              data-caption="Study area in Bangladesh, sample locations and the five color-coded field-team routes across Khulna, Satkhira and Jessore."
+              role="button"
+              tabindex="0"
+            >
+
+            <span class="to-img-fallback">
+              study-area-routes.jpg · image unavailable
+            </span>
+          </div>
+
+          <figcaption class="to-caption">
+            The campaign covered Khulna, Satkhira and Jessore while excluding
+            the Sundarbans. Five tentative routes connected major union
+            centres and accessible agricultural sampling locations.
+          </figcaption>
+        </figure>
+
+        <div class="to-stats to-reveal">
+          <div class="to-stat">
+            <span
+              class="to-stat-number"
+              data-counter
+              data-target="162"
+            >
+              0
+            </span>
+
+            <span class="to-stat-label">
+              Geocoded topsoil sample sites
+            </span>
+          </div>
+
+          <div class="to-stat">
+            <span
+              class="to-stat-number"
+              data-counter
+              data-target="3"
+            >
+              0
+            </span>
+
+            <span class="to-stat-label">
+              Southwest coastal districts
+            </span>
+          </div>
+
+          <div class="to-stat">
+            <span
+              class="to-stat-number"
+              data-counter
+              data-target="5"
+            >
+              0
+            </span>
+
+            <span class="to-stat-label">
+              Coordinated field teams
+            </span>
+          </div>
+
+          <div class="to-stat">
+            <span
+              class="to-stat-number"
+              data-counter
+              data-target="9"
+              data-suffix=" days"
+            >
+              0
+            </span>
+
+            <span class="to-stat-label">
+              March 1–9, 2024
+            </span>
+          </div>
+
+          <div class="to-stat">
+            <span
+              class="to-stat-number"
+              data-counter
+              data-target="30"
+              data-suffix=" cm"
+            >
+              0
+            </span>
+
+            <span class="to-stat-label">
+              Maximum sampling depth
+            </span>
+          </div>
+
+          <div class="to-stat">
+            <span
+              class="to-stat-number"
+              data-counter
+              data-target="30"
+              data-suffix=" × 30 m"
+            >
+              0
+            </span>
+
+            <span class="to-stat-label">
+              Approximate site-composite area
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="to-districts">
+        <article class="to-district to-reveal">
+          <h3>Satkhira</h3>
+
+          <p>
+            The western coastal district includes intensively cultivated and
+            highly salinity-exposed areas linked to tidal systems and coastal
+            polders.
+          </p>
+        </article>
+
+        <article class="to-district to-reveal">
+          <h3>Khulna</h3>
+
+          <p>
+            Sampling extended through inland and coastal agricultural zones,
+            including areas connected by roads, rivers and polder interiors.
+          </p>
+        </article>
+
+        <article class="to-district to-reveal">
+          <h3>Jessore</h3>
+
+          <p>
+            The northern district contributes the inland portion of the
+            observatory and supports interpretation of the regional salinity
+            gradient.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- FIELD AND LAB PROTOCOL -->
+
+  <section class="to-section to-section--deep" id="protocol">
+    <div class="to-container">
+      <div class="to-reveal">
+        <p class="to-label">04 · Reproducible Protocol</p>
+
+        <h2 class="to-heading to-heading--medium">
+          Every sample carried a location, a procedure and an audit trail.
+        </h2>
+
+        <p class="to-intro">
+          The workflow connects route design, geocoded composite sampling,
+          controlled laboratory preparation and electrical-conductivity
+          measurement.
+        </p>
+      </div>
+
+      <div
+        class="to-protocol-tabs to-reveal"
+        aria-label="Select field or laboratory protocol"
+      >
+        <button
+          class="to-protocol-tab"
+          type="button"
+          aria-pressed="true"
+          data-protocol="field"
+        >
+          Field sampling
+        </button>
+
+        <button
+          class="to-protocol-tab"
+          type="button"
+          aria-pressed="false"
+          data-protocol="lab"
+        >
+          Laboratory EC
+        </button>
+      </div>
+
+      <div
+        class="to-protocol-layout"
+        id="to-protocol-layout"
+        aria-live="polite"
+      >
+        <article class="to-protocol-copy to-reveal">
+          <h3 id="to-protocol-title">
+            Building a geocoded composite sample
+          </h3>
+
+          <p id="to-protocol-summary">
+            Teams selected dry, open or fallow agricultural fields with clear
+            sky visibility, recorded coordinates and photographs, and combined
+            multiple subsamples into one representative site composite.
+          </p>
+
+          <div
+            class="to-protocol-steps"
+            id="to-protocol-steps"
+          ></div>
+        </article>
+
+        <figure class="to-protocol-figure to-reveal">
+          <div class="to-image-shell">
+            <img
+              id="to-protocol-image"
+              src="../images/projects/topsoil-observatory/field-sampling-protocol.jpg"
+              alt="Field soil sampling and geocoding protocol"
+              loading="lazy"
+              data-lightbox
+              data-caption="Field protocol: collecting soil, bagging and labelling the composite, and recording coordinates with Google My Maps."
+              role="button"
+              tabindex="0"
+            >
+
+            <span class="to-img-fallback">
+              field-sampling-protocol.jpg · image unavailable
+            </span>
+          </div>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- SALINITY MAP -->
+
+  <section class="to-section to-section--light" id="salinity-map">
+    <div class="to-container">
+      <div class="to-reveal">
+        <p class="to-label">05 · Spatial Salinity Evidence</p>
+
+        <h2 class="to-heading to-heading--medium">
+          Conductivity ranges from 0.05 to 9.09 mS/cm.
+        </h2>
+
+        <p class="to-intro">
+          The published bubble-density map uses both colour and symbol size
+          to show the observed electrical conductivity at each sampling
+          location.
+        </p>
+      </div>
+
+      <div class="to-atlas-layout">
+        <figure class="to-atlas-map to-reveal">
+          <div class="to-image-shell">
+            <img
+              src="../images/projects/topsoil-observatory/salinity-bubble-density-map.jpg"
+              alt="Bubble density map of topsoil electrical conductivity across southwest Bangladesh"
+              loading="lazy"
+              data-lightbox
+              data-caption="Distribution of topsoil salinity in the study area, coloured and sized by measured electrical conductivity in mS/cm."
+              role="button"
+              tabindex="0"
+            >
+
+            <span class="to-img-fallback">
+              salinity-bubble-density-map.jpg · image unavailable
+            </span>
+          </div>
+
+          <figcaption class="to-caption">
+            The five mapped ranges are empirical classes used to display the
+            field measurements. They are not presented here as universal
+            agronomic threshold categories.
+          </figcaption>
+        </figure>
+
+        <article class="to-atlas-panel to-reveal">
+          <h3>Explore the five EC ranges</h3>
+
+          <p>
+            Select a mapped range to inspect how it functions in the
+            published visualisation.
+          </p>
+
+          <div class="to-ec-classes">
+            <button
+              class="to-ec-btn"
+              type="button"
+              aria-pressed="true"
+              data-ec="class1"
+            >
+              <span
+                class="to-ec-dot"
+                style="background:#18a78d"
+              ></span>
+
+              <span class="to-ec-range">
+                0.05–0.72 mS/cm
+              </span>
+
+              <span class="to-ec-class">
+                Class 1
+              </span>
+            </button>
+
+            <button
+              class="to-ec-btn"
+              type="button"
+              aria-pressed="false"
+              data-ec="class2"
+            >
+              <span
+                class="to-ec-dot"
+                style="background:#83c916"
+              ></span>
+
+              <span class="to-ec-range">
+                0.73–1.71 mS/cm
+              </span>
+
+              <span class="to-ec-class">
+                Class 2
+              </span>
+            </button>
+
+            <button
+              class="to-ec-btn"
+              type="button"
+              aria-pressed="false"
+              data-ec="class3"
+            >
+              <span
+                class="to-ec-dot"
+                style="background:#f0df25"
+              ></span>
+
+              <span class="to-ec-range">
+                1.72–3.14 mS/cm
+              </span>
+
+              <span class="to-ec-class">
+                Class 3
+              </span>
+            </button>
+
+            <button
+              class="to-ec-btn"
+              type="button"
+              aria-pressed="false"
+              data-ec="class4"
+            >
+              <span
+                class="to-ec-dot"
+                style="background:#dc8d15"
+              ></span>
+
+              <span class="to-ec-range">
+                3.15–5.82 mS/cm
+              </span>
+
+              <span class="to-ec-class">
+                Class 4
+              </span>
+            </button>
+
+            <button
+              class="to-ec-btn"
+              type="button"
+              aria-pressed="false"
+              data-ec="class5"
+            >
+              <span
+                class="to-ec-dot"
+                style="background:#e21d17"
+              ></span>
+
+              <span class="to-ec-range">
+                5.83–9.09 mS/cm
+              </span>
+
+              <span class="to-ec-class">
+                Class 5
+              </span>
+            </button>
+          </div>
+
+          <div
+            class="to-ec-description"
+            id="to-ec-description"
+            aria-live="polite"
+          >
+            The lowest mapped conductivity range appears frequently across
+            northern and inland sample locations and is represented by the
+            smallest green symbols.
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- VALIDATION -->
+
+  <section class="to-section to-section--light" id="validation">
+    <div class="to-container">
+      <div class="to-reveal">
+        <p class="to-label">06 · Technical Validation</p>
+
+        <h2 class="to-heading to-heading--medium">
+          Validation through protocol control, documentation and comparison.
+        </h2>
+      </div>
+
+      <div class="to-validation-grid">
+        <article class="to-validation-card to-reveal">
+          <span class="to-validation-num">VALIDATION 01</span>
+
+          <h3>Standardised soil preparation</h3>
+
+          <p>
+            The laboratory followed the FAO soil electrical-conductivity
+            procedure using a 1:5 soil-to-deionised-water mixture, controlled
+            sieving, stirring and resting stages.
+          </p>
+        </article>
+
+        <article class="to-validation-card to-reveal">
+          <span class="to-validation-num">VALIDATION 02</span>
+
+          <h3>Instrument and photographic records</h3>
+
+          <p>
+            Conductivity readings were obtained with a HI-6321 advanced
+            benchtop meter and documented alongside sample numbers and
+            photographs of the setup and displayed measurement.
+          </p>
+        </article>
+
+        <article class="to-validation-card to-reveal">
+          <span class="to-validation-num">VALIDATION 03</span>
+
+          <h3>Comparison with prior studies</h3>
+
+          <p>
+            The spatial range and regional variability were compared with
+            earlier salinity studies from coastal southwest Bangladesh and
+            found to correspond closely in overall pattern.
+          </p>
+        </article>
+      </div>
+
+      <aside class="to-caution to-reveal">
+        <strong>Scope note:</strong> the article publishes and technically
+        validates a field dataset. It does not claim that the bubble map is a
+        predictive salinity surface for every unsampled location, and it
+        reports that no custom code was used.
+      </aside>
+    </div>
+  </section>
+
+  <!-- OBSERVATORY VISION -->
+
+  <section class="to-section to-section--deep" id="observatory">
+    <div class="to-container">
+      <div class="to-reveal">
+        <p class="to-label">07 · The Observatory Vision</p>
+
+        <h2 class="to-heading to-heading--medium">
+          A dataset designed to become a feedback loop.
+        </h2>
+
+        <p class="to-intro">
+          The publication positions the campaign as an initial step toward a
+          persistent, community-driven and co-active soil observatory.
+        </p>
+      </div>
+
+      <div class="to-observatory-flow">
+        <article class="to-flow-step to-reveal">
+          <h3>1. Measure</h3>
+
+          <p>
+            Collect geocoded topsoil observations under documented land-use
+            and field conditions.
+          </p>
+        </article>
+
+        <article class="to-flow-step to-reveal">
+          <h3>2. Calibrate</h3>
+
+          <p>
+            Use field electrical-conductivity measurements to train, evaluate
+            and refine future GIS and remote-sensing salinity models.
+          </p>
+        </article>
+
+        <article class="to-flow-step to-reveal">
+          <h3>3. Map uncertainty</h3>
+
+          <p>
+            Identify locations where predictions remain uncertain or where
+            coastal change may have made earlier observations less reliable.
+          </p>
+        </article>
+
+        <article class="to-flow-step to-reveal">
+          <h3>4. Target the next campaign</h3>
+
+          <p>
+            Direct subsequent measurements toward locations that are most
+            informative for agriculture, adaptation and model improvement.
+          </p>
+        </article>
+
+        <article class="to-flow-step to-reveal">
+          <h3>5. Repeat</h3>
+
+          <p>
+            Build a living coastal evidence base rather than a single static
+            salinity snapshot.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- PUBLICATION RECORD -->
+
+  <section class="to-section to-section--light" id="publication">
+    <div class="to-container">
+      <div class="to-reveal">
+        <p class="to-label">08 · Publication Record</p>
+
+        <h2 class="to-heading to-heading--medium">
+          Published in Scientific Data.
+        </h2>
+      </div>
+
+      <div class="to-record-layout">
+        <article class="to-record-card to-reveal">
+          <h3>Version of record</h3>
+
+          <div class="to-status-row">
+            <span class="to-status-pill to-status-pill--active">
+              Published
+            </span>
+
+            <span class="to-status-pill">
+              Data Descriptor
+            </span>
+
+            <span class="to-status-pill">
+              Open research dataset
+            </span>
+          </div>
+
+          <p>
+            Received 7 January 2025, accepted 24 June 2025 and published
+            12 July 2025 in <em>Scientific Data</em>, volume 12,
+            article 1204.
+          </p>
+
+          <div class="to-record-actions">
+            <a
+              class="to-action"
+              href="https://doi.org/10.1038/s41597-025-05447-1"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Read the paper ↗
+            </a>
+
+            <a
+              class="to-action to-action--ghost"
+              href="https://doi.org/10.5281/zenodo.14560019"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open the dataset ↗
+            </a>
+          </div>
+        </article>
+
+        <article class="to-citation-card to-reveal">
+          <h3>Exact published title</h3>
+
+          <p class="to-full-title">
+            <em>
+              A Topsoil Salinity Observatory for Arable Lands in Coastal
+              Southwest Bangladesh
+            </em>
+          </p>
+
+          <p
+            class="to-citation-text"
+            id="to-citation-text"
+          >
+            Sarkar, S. K., Haydar, M., Rudra, R. R., Mazumder, T.,
+            Nur, M. S., Islam, M. S., Sany, S. M., Al Noor, T.,
+            Ahmed, S., Ahmad, M., Sakib, A., &amp; Ravela, S. (2025).
+            A Topsoil Salinity Observatory for Arable Lands in Coastal
+            Southwest Bangladesh. Scientific Data, 12, 1204.
+            https://doi.org/10.1038/s41597-025-05447-1
+          </p>
+
+          <button
+            class="to-action"
+            id="to-copy-citation"
+            type="button"
+            style="margin-top:20px;"
+          >
+            Copy citation
+          </button>
+
+          <details class="to-author-details">
+            <summary>View full author and affiliation record</summary>
+
+            <p class="to-author-list">
+              Showmitra Kumar Sarkar; Mafrid Haydar; Rhyme Rubayet Rudra;
+              Tanmoy Mazumder; Md. Sadmin Nur; Md. Shahriar Islam;
+              Shakib Mohammad Sany; Tanzim Al Noor; Shakil Ahmed;
+              Myisha Ahmad; Annajmus Sakib; and Sai Ravela.
+              Affiliations include Khulna University of Engineering and
+              Technology, BRAC’s Climate Change Programme and the
+              Massachusetts Institute of Technology.
+            </p>
+          </details>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOOLS -->
+
+  <section class="to-section to-section--dark" id="stack">
+    <div class="to-container">
+      <div class="to-reveal">
+        <p class="to-label">09 · Research Stack</p>
+
+        <h2 class="to-heading to-heading--medium">
+          Field science, geospatial documentation and laboratory measurement.
+        </h2>
+      </div>
+
+      <div class="to-stack-grid">
+        <article class="to-stack-card to-reveal">
+          <h3>Field Collection</h3>
+
+          <div class="to-stack-tags">
+            <span class="to-stack-tag">Five survey teams</span>
+            <span class="to-stack-tag">Composite sampling</span>
+            <span class="to-stack-tag">Top 30 cm</span>
+            <span class="to-stack-tag">Dry open fields</span>
+            <span class="to-stack-tag">Sample photography</span>
+          </div>
+        </article>
+
+        <article class="to-stack-card to-reveal">
+          <h3>GIS &amp; Spatial Work</h3>
+
+          <div class="to-stack-tags">
+            <span class="to-stack-tag">Google My Maps</span>
+            <span class="to-stack-tag">Geocoded sites</span>
+            <span class="to-stack-tag">Route design</span>
+            <span class="to-stack-tag">Bubble-density mapping</span>
+            <span class="to-stack-tag">Remote-sensing integration</span>
+          </div>
+        </article>
+
+        <article class="to-stack-card to-reveal">
+          <h3>Laboratory EC</h3>
+
+          <div class="to-stack-tags">
+            <span class="to-stack-tag">FAO 1:5 SOP</span>
+            <span class="to-stack-tag">1.0 mm sieve</span>
+            <span class="to-stack-tag">Deionised water</span>
+            <span class="to-stack-tag">HI-6321 meter</span>
+            <span class="to-stack-tag">Reading photographs</span>
+          </div>
+        </article>
+
+        <article class="to-stack-card to-reveal">
+          <h3>Research Outputs</h3>
+
+          <div class="to-stack-tags">
+            <span class="to-stack-tag">Scientific Data</span>
+            <span class="to-stack-tag">Zenodo XLSX dataset</span>
+            <span class="to-stack-tag">Technical validation</span>
+            <span class="to-stack-tag">No custom code</span>
+            <span class="to-stack-tag">Open data record</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- PROJECT NAVIGATION -->
+
+<nav
+  class="to-footer-nav"
+  aria-label="Project navigation"
+>
+  <div class="to-container">
+    <div class="to-footer-grid">
+      <a
+        class="to-footer-card"
+        href="../index.html#projects"
+      >
+        <span class="to-footer-kicker">
+          ← Return
+        </span>
+
+        <span class="to-footer-title">
+          Portfolio projects
+        </span>
+      </a>
+
+      <a
+        class="to-footer-card"
+        href="../index.html#contact"
+      >
+        <span class="to-footer-kicker">
+          Research collaboration →
+        </span>
+
+        <span class="to-footer-title">
+          Discuss coastal data systems
+        </span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- LIGHTBOX -->
+
+<div
+  class="to-lightbox"
+  id="to-lightbox"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Expanded research figure"
+  aria-hidden="true"
+>
+  <button
+    class="to-lightbox-close"
+    id="to-lightbox-close"
+    type="button"
+    aria-label="Close expanded image"
+  >
+    ×
+  </button>
+
+  <div class="to-lightbox-inner">
+    <img
+      id="to-lightbox-image"
+      src=""
+      alt=""
+    >
+
+    <div
+      class="to-lightbox-caption"
+      id="to-lightbox-caption"
+      aria-live="polite"
+    ></div>
+  </div>
+</div>
+
+<button
+  class="to-back-top"
+  id="to-back-top"
+  type="button"
+  aria-label="Back to top"
+>
+  ↑
+</button>
+
+<script>
+  (() => {
+    "use strict";
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    /* MOBILE NAV */
+
+    const siteHeader = document.querySelector(".site-header");
+    const menuToggle = document.querySelector(".menu-toggle");
+    const navLinks = document.querySelector(".nav-links");
+
+    if (
+      siteHeader &&
+      menuToggle &&
+      navLinks &&
+      menuToggle.dataset.navInit !== "true"
+    ) {
+      menuToggle.dataset.navInit = "true";
+      menuToggle.setAttribute("aria-expanded", "false");
+
+      menuToggle.addEventListener("click", () => {
+        const isOpen = siteHeader.classList.toggle("nav-open");
+
+        menuToggle.setAttribute(
+          "aria-expanded",
+          String(isOpen)
+        );
+      });
+
+      navLinks.addEventListener("click", event => {
+        if (!event.target.closest("a")) return;
+
+        siteHeader.classList.remove("nav-open");
+        menuToggle.setAttribute("aria-expanded", "false");
+      });
+    }
+
+    /* HERO FALLBACK */
+
+    const hero = document.querySelector(".to-hero");
+    const heroLoader = new Image();
+
+    heroLoader.onerror = () => {
+      hero?.classList.add("to-image-missing");
+    };
+
+    heroLoader.src =
+      "../images/projects/topsoil-observatory/topsoil-observatory-hero.jpg";
+
+    /* IMAGE FALLBACK */
+
+    function bindImageFallback(image) {
+      if (
+        !image ||
+        image.dataset.toFallbackBound === "true"
+      ) {
+        return;
+      }
+
+      image.dataset.toFallbackBound = "true";
+
+      const shell = image.closest(".to-image-shell");
+
+      image.addEventListener("error", () => {
+        shell?.classList.add("to-is-missing");
+      });
+
+      image.addEventListener("load", () => {
+        shell?.classList.remove("to-is-missing");
+      });
+
+      if (
+        image.complete &&
+        image.naturalWidth === 0
+      ) {
+        shell?.classList.add("to-is-missing");
+      }
+    }
+
+    document
+      .querySelectorAll(".to-image-shell img")
+      .forEach(bindImageFallback);
+
+    /* REVEAL ANIMATION */
+
+    const revealItems =
+      document.querySelectorAll(".to-reveal");
+
+    if (
+      prefersReducedMotion ||
+      !("IntersectionObserver" in window)
+    ) {
+      revealItems.forEach(item => {
+        item.classList.add("to-visible");
+      });
+    } else {
+      const revealObserver = new IntersectionObserver(
+        entries => {
+          entries.forEach((entry, index) => {
+            if (!entry.isIntersecting) return;
+
+            window.setTimeout(() => {
+              entry.target.classList.add("to-visible");
+            }, Math.min(index * 45, 220));
+
+            revealObserver.unobserve(entry.target);
+          });
+        },
+        {
+          threshold: 0.12,
+          rootMargin: "0px 0px -6% 0px"
+        }
+      );
+
+      revealItems.forEach(item => {
+        revealObserver.observe(item);
+      });
+    }
+
+    /* COUNTERS */
+
+    const counters =
+      document.querySelectorAll("[data-counter]");
+
+    function easeOutCubic(value) {
+      return 1 - Math.pow(1 - value, 3);
+    }
+
+    function animateCounter(element) {
+      if (element.dataset.counted === "true") return;
+
+      element.dataset.counted = "true";
+
+      const target = Number(
+        element.dataset.target || 0
+      );
+
+      const suffix =
+        element.dataset.suffix || "";
+
+      const duration = 1450;
+      const start = performance.now();
+
+      const render = value => {
+        element.textContent =
+          Math.round(value).toLocaleString("en-US") +
+          suffix;
+      };
+
+      if (prefersReducedMotion) {
+        render(target);
+        return;
+      }
+
+      const frame = now => {
+        const progress = Math.min(
+          (now - start) / duration,
+          1
+        );
+
+        render(target * easeOutCubic(progress));
+
+        if (progress < 1) {
+          requestAnimationFrame(frame);
+        }
+      };
+
+      requestAnimationFrame(frame);
+    }
+
+    if ("IntersectionObserver" in window) {
+      const counterObserver =
+        new IntersectionObserver(
+          entries => {
+            entries.forEach(entry => {
+              if (!entry.isIntersecting) return;
+
+              animateCounter(entry.target);
+              counterObserver.unobserve(entry.target);
+            });
+          },
+          { threshold: 0.5 }
+        );
+
+      counters.forEach(counter => {
+        counterObserver.observe(counter);
+      });
+    } else {
+      counters.forEach(animateCounter);
+    }
+
+    /* PROTOCOL SWITCHER */
+
+    const protocols = {
+      field: {
+        title: "Building a geocoded composite sample",
+        summary:
+          "Teams selected dry, open or fallow agricultural fields with clear sky visibility, recorded coordinates and photographs, and combined multiple subsamples into one representative site composite.",
+        image: "field-sampling-protocol.jpg",
+        alt: "Field soil sampling and geocoding protocol",
+        caption:
+          "Field protocol: collecting soil, bagging and labelling the composite, and recording coordinates with Google My Maps.",
+        steps: [
+          "Identify an accessible open or fallow field with dry soil and minimal obstruction from trees or buildings.",
+          "Record the location using Google My Maps and capture geocoded photographs of the site.",
+          "Clear surface disturbances and collect soil from five to ten positions within an approximately 30 m × 30 m area.",
+          "Excavate to a depth of up to 30 cm and place the material in a labelled sample bag.",
+          "Mix the subsamples into a homogenised composite representing the selected location.",
+          "Document the site and procedure before moving to the next sampling point."
+        ]
+      },
+
+      lab: {
+        title: "Converting soil into an EC measurement",
+        summary:
+          "Samples were processed at the ESSG-WECG laboratory at KUET using the FAO standard operating procedure for soil electrical conductivity with a 1:5 soil-to-water ratio.",
+        image: "laboratory-protocol.jpg",
+        alt: "Laboratory soil electrical conductivity protocol",
+        caption:
+          "Laboratory protocol: drying, sieving, weighing, mixing, resting, measuring conductivity, recording data and cleaning equipment.",
+        steps: [
+          "Mix the soil packet thoroughly and place a portion on a clean foil plate.",
+          "Dry the sample in an oven for approximately five to ten minutes to reduce moisture.",
+          "Remove larger particles using a 1.0 mm sieve.",
+          "Combine the filtered soil with deionised water at a 1:5 ratio.",
+          "Stir the mixture for ten minutes and allow it to rest for thirty minutes.",
+          "Measure conductivity with the HI-6321 benchtop meter and record the sample number and EC value.",
+          "Photograph the instrument reading and clean the equipment and work surface."
+        ]
+      }
+    };
+
+    const protocolTabs =
+      document.querySelectorAll("[data-protocol]");
+
+    const protocolTitle =
+      document.getElementById("to-protocol-title");
+
+    const protocolSummary =
+      document.getElementById("to-protocol-summary");
+
+    const protocolSteps =
+      document.getElementById("to-protocol-steps");
+
+    const protocolImage =
+      document.getElementById("to-protocol-image");
+
+    function renderProtocol(key) {
+      const protocol = protocols[key];
+
+      if (!protocol) return;
+
+      protocolTabs.forEach(tab => {
+        tab.setAttribute(
+          "aria-pressed",
+          String(tab.dataset.protocol === key)
+        );
+      });
+
+      if (protocolTitle) {
+        protocolTitle.textContent = protocol.title;
+      }
+
+      if (protocolSummary) {
+        protocolSummary.textContent =
+          protocol.summary;
+      }
+
+      if (protocolSteps) {
+        protocolSteps.innerHTML =
+          protocol.steps.map((step, index) => `
+            <div class="to-protocol-step">
+              <span class="to-step-number">
+                ${String(index + 1).padStart(2, "0")}
+              </span>
+
+              <span class="to-step-text">
+                ${step}
+              </span>
+            </div>
+          `).join("");
+      }
+
+      if (protocolImage) {
+        const shell =
+          protocolImage.closest(".to-image-shell");
+
+        const fallback =
+          shell?.querySelector(".to-img-fallback");
+
+        shell?.classList.remove("to-is-missing");
+
+        protocolImage.src =
+          `../images/projects/topsoil-observatory/${protocol.image}`;
+
+        protocolImage.alt = protocol.alt;
+        protocolImage.dataset.caption =
+          protocol.caption;
+
+        if (fallback) {
+          fallback.textContent =
+            `${protocol.image} · image unavailable`;
+        }
+      }
+    }
+
+    protocolTabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        renderProtocol(tab.dataset.protocol);
+      });
+    });
+
+    renderProtocol("field");
+
+    /* EC CLASS EXPLORER */
+
+    const ecDescriptions = {
+      class1:
+        "The lowest mapped conductivity range appears frequently across northern and inland sample locations and is represented by the smallest green symbols.",
+
+      class2:
+        "This lower-middle range is represented in light green and appears across both inland and transitional parts of the study area.",
+
+      class3:
+        "The central mapped range uses yellow symbols and is visible across many of the middle and southern agricultural sampling locations.",
+
+      class4:
+        "Orange symbols indicate the second-highest observed conductivity range and appear in several coastal and polder-connected locations.",
+
+      class5:
+        "The highest measured range, 5.83–9.09 mS/cm, is displayed with the largest red symbols and occurs at a small number of highly saline sites."
+    };
+
+    const ecButtons =
+      document.querySelectorAll("[data-ec]");
+
+    const ecDescription =
+      document.getElementById("to-ec-description");
+
+    ecButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        ecButtons.forEach(item => {
+          item.setAttribute(
+            "aria-pressed",
+            "false"
+          );
+        });
+
+        button.setAttribute(
+          "aria-pressed",
+          "true"
+        );
+
+        if (ecDescription) {
+          ecDescription.textContent =
+            ecDescriptions[button.dataset.ec] || "";
+        }
+      });
+    });
+
+    /* COPY CITATION */
+
+    const copyButton =
+      document.getElementById("to-copy-citation");
+
+    const citationText =
+      document.getElementById("to-citation-text");
+
+    copyButton?.addEventListener("click", async () => {
+      const text =
+        citationText?.textContent
+          .replace(/\s+/g, " ")
+          .trim() || "";
+
+      if (!text) return;
+
+      try {
+        await navigator.clipboard.writeText(text);
+
+        copyButton.textContent = "Citation copied";
+
+        window.setTimeout(() => {
+          copyButton.textContent = "Copy citation";
+        }, 1800);
+      } catch (error) {
+        copyButton.textContent =
+          "Select citation manually";
+
+        window.setTimeout(() => {
+          copyButton.textContent = "Copy citation";
+        }, 2200);
+      }
+    });
+
+    /* LIGHTBOX */
+
+    const lightbox =
+      document.getElementById("to-lightbox");
+
+    const lightboxImage =
+      document.getElementById("to-lightbox-image");
+
+    const lightboxCaption =
+      document.getElementById("to-lightbox-caption");
+
+    const lightboxClose =
+      document.getElementById("to-lightbox-close");
+
+    let lastLightboxTrigger = null;
+
+    function openLightbox(target) {
+      if (
+        !lightbox ||
+        !lightboxImage ||
+        !target ||
+        target
+          .closest(".to-image-shell")
+          ?.classList.contains("to-is-missing")
+      ) {
+        return;
+      }
+
+      lastLightboxTrigger = target;
+
+      lightboxImage.src =
+        target.currentSrc || target.src;
+
+      lightboxImage.alt =
+        target.alt || "";
+
+      lightboxCaption.textContent =
+        target.dataset.caption ||
+        target.alt ||
+        "";
+
+      lightbox.classList.add("to-open");
+
+      lightbox.setAttribute(
+        "aria-hidden",
+        "false"
+      );
+
+      document.body.classList.add(
+        "to-lightbox-open"
+      );
+
+      requestAnimationFrame(() => {
+        lightboxClose?.focus();
+      });
+    }
+
+    function closeLightbox() {
+      if (!lightbox) return;
+
+      lightbox.classList.remove("to-open");
+
+      lightbox.setAttribute(
+        "aria-hidden",
+        "true"
+      );
+
+      document.body.classList.remove(
+        "to-lightbox-open"
+      );
+
+      if (lightboxImage) {
+        lightboxImage.src = "";
+      }
+
+      lastLightboxTrigger?.focus();
+      lastLightboxTrigger = null;
+    }
+
+    function bindLightboxTarget(target) {
+      if (
+        !target ||
+        target.dataset.toLightboxBound === "true"
+      ) {
+        return;
+      }
+
+      target.dataset.toLightboxBound = "true";
+
+      target.addEventListener("click", () => {
+        openLightbox(target);
+      });
+
+      target.addEventListener("keydown", event => {
+        if (
+          event.key === "Enter" ||
+          event.key === " "
+        ) {
+          event.preventDefault();
+          openLightbox(target);
+        }
+      });
+    }
+
+    document
+      .querySelectorAll("[data-lightbox]")
+      .forEach(bindLightboxTarget);
+
+    lightboxClose?.addEventListener(
+      "click",
+      closeLightbox
+    );
+
+    lightbox?.addEventListener("click", event => {
+      if (event.target === lightbox) {
+        closeLightbox();
+      }
+    });
+
+    document.addEventListener("keydown", event => {
+      if (
+        event.key === "Escape" &&
+        lightbox?.classList.contains("to-open")
+      ) {
+        closeLightbox();
+      }
+    });
+
+    /* BACK TO TOP */
+
+    const backTop =
+      document.getElementById("to-back-top");
+
+    function updateBackTop() {
+      backTop?.classList.toggle(
+        "to-show",
+        window.scrollY > 300
+      );
+    }
+
+    window.addEventListener(
+      "scroll",
+      updateBackTop,
+      { passive: true }
+    );
+
+    updateBackTop();
+
+    backTop?.addEventListener("click", () => {
+      window.scrollTo({
+        top: 0,
+        behavior:
+          prefersReducedMotion
+            ? "auto"
+            : "smooth"
+      });
+    });
+  })();
+</script>
+
+<!--
+IMAGE MANIFEST
+
+Place these files inside:
+../images/projects/topsoil-observatory/
+
+1. topsoil-observatory-hero.jpg
+   Suggested content:
+   Wide field photograph or designed composite showing dry agricultural
+   soil, sample bags and a coastal map texture.
+
+2. study-area-routes.jpg
+   Source:
+   Figure 1 — Bangladesh context, sample points and five field-team routes.
+
+3. sample-sites-overview.jpg
+   Source:
+   Figure 2 — geocoded sample-site overview with field photographs.
+   Optional for an additional gallery section.
+
+4. field-sampling-protocol.jpg
+   Source:
+   Figure 3 — collecting, bagging, geocoding and coordinate capture.
+
+5. laboratory-protocol.jpg
+   Source:
+   Figure 4 — drying, sieving, weighing, mixing, resting, EC measurement,
+   data recording and cleaning.
+
+6. salinity-bubble-density-map.jpg
+   Source:
+   Figure 5 — observed soil electrical-conductivity distribution.
+
+Recommended project filename:
+projects/topsoil-salinity-observatory.html
+-->
+
+</body>
+</html>
