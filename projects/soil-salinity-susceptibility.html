@@ -1,0 +1,4038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Mapping Soil Salinity in Coastal Bangladesh | Tanzim Al Noor</title>
+
+  <meta
+    name="description"
+    content="A portfolio case study using Sentinel-2 spectral indices and six machine-learning models to map soil salinity susceptibility across Satkhira, coastal Bangladesh."
+  >
+
+  <link rel="stylesheet" href="../styles.css">
+
+  <style>
+    :root {
+      --ss-night: #061815;
+      --ss-mangrove: #0d3029;
+      --ss-mangrove-2: #15483c;
+      --ss-tidal: #247f91;
+      --ss-tidal-soft: #72bec7;
+      --ss-saline: #51c6b4;
+      --ss-saline-soft: #a4e2d7;
+      --ss-coral: #e06a58;
+      --ss-coral-soft: #f19a87;
+      --ss-salt: #f1eee6;
+      --ss-salt-bright: #fffdf7;
+      --ss-sand: #e8dcc7;
+      --ss-earth: #80634c;
+      --ss-ink: #17251f;
+      --ss-muted: #69766f;
+      --ss-light-border: rgba(13, 48, 41, 0.16);
+      --ss-dark-border: rgba(241, 238, 230, 0.14);
+      --ss-shadow: 0 28px 80px rgba(3, 17, 14, 0.22);
+      --ss-radius-sm: 12px;
+      --ss-radius: 22px;
+      --ss-radius-lg: 34px;
+      --ss-max: 1440px;
+      --ss-transition: 280ms cubic-bezier(.2, .8, .2, 1);
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background: var(--ss-night);
+    }
+
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      background: var(--ss-night);
+      color: var(--ss-salt);
+      font-family: "Inter", sans-serif;
+    }
+
+    body.ss-lightbox-open {
+      overflow: hidden;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      color: inherit;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .ss-main {
+      overflow: hidden;
+    }
+
+    .ss-container {
+      width: min(calc(100% - 32px), var(--ss-max));
+      margin-inline: auto;
+    }
+
+    .ss-section {
+      position: relative;
+      padding: 88px 0;
+    }
+
+    .ss-section--dark {
+      background:
+        radial-gradient(
+          circle at 88% 5%,
+          rgba(81, 198, 180, 0.08),
+          transparent 27%
+        ),
+        var(--ss-night);
+      color: var(--ss-salt);
+    }
+
+    .ss-section--mangrove {
+      background:
+        radial-gradient(
+          circle at 7% 10%,
+          rgba(36, 127, 145, 0.12),
+          transparent 27%
+        ),
+        var(--ss-mangrove);
+      color: var(--ss-salt);
+    }
+
+    .ss-section--light {
+      background:
+        linear-gradient(
+          rgba(255, 253, 247, 0.975),
+          rgba(255, 253, 247, 0.975)
+        ),
+        repeating-linear-gradient(
+          45deg,
+          rgba(36, 127, 145, 0.035) 0,
+          rgba(36, 127, 145, 0.035) 1px,
+          transparent 1px,
+          transparent 7px
+        );
+      color: var(--ss-ink);
+    }
+
+    .ss-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 18px;
+      color: var(--ss-coral);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .ss-label::before {
+      width: 30px;
+      height: 1px;
+      content: "";
+      background: currentColor;
+    }
+
+    .ss-heading {
+      max-width: 1120px;
+      margin: 0;
+      font-family: "Fraunces", serif;
+      font-size: clamp(2.45rem, 7vw, 5.8rem);
+      font-weight: 650;
+      line-height: 0.98;
+      letter-spacing: -0.05em;
+      text-wrap: balance;
+    }
+
+    .ss-heading--medium {
+      font-size: clamp(2.25rem, 6vw, 4.85rem);
+    }
+
+    .ss-intro {
+      max-width: 900px;
+      margin: 24px 0 0;
+      font-size: clamp(1rem, 2vw, 1.18rem);
+      line-height: 1.75;
+      opacity: 0.8;
+    }
+
+    .ss-mono {
+      font-family: "JetBrains Mono", monospace;
+    }
+
+    .ss-reveal {
+      opacity: 0;
+      transform: translateY(25px);
+      transition:
+        opacity 700ms cubic-bezier(.2, .8, .2, 1),
+        transform 700ms cubic-bezier(.2, .8, .2, 1);
+    }
+
+    .ss-reveal.ss-visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* HERO */
+
+    .ss-hero {
+      position: relative;
+      min-height: 100svh;
+      display: flex;
+      align-items: flex-end;
+      isolation: isolate;
+      background:
+        linear-gradient(
+          90deg,
+          rgba(6, 24, 21, 0.97) 0%,
+          rgba(6, 24, 21, 0.89) 43%,
+          rgba(6, 24, 21, 0.57) 100%
+        ),
+        url("../images/projects/salinity/satkhira-salinity-hero.jpg")
+        center / cover no-repeat;
+    }
+
+    .ss-hero::before {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      content: "";
+      background:
+        radial-gradient(
+          circle at 78% 22%,
+          rgba(81, 198, 180, 0.18),
+          transparent 30%
+        ),
+        linear-gradient(
+          to top,
+          rgba(6, 24, 21, 0.96),
+          transparent 48%
+        );
+      pointer-events: none;
+    }
+
+    .ss-hero.ss-image-missing {
+      background:
+        radial-gradient(
+          circle at 74% 18%,
+          rgba(81, 198, 180, 0.15),
+          transparent 29%
+        ),
+        linear-gradient(120deg, var(--ss-night), var(--ss-mangrove-2));
+    }
+
+    .ss-hero-missing {
+      position: absolute;
+      top: 120px;
+      right: 22px;
+      display: none;
+      color: rgba(241, 238, 230, 0.4);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.68rem;
+    }
+
+    .ss-hero.ss-image-missing .ss-hero-missing {
+      display: block;
+    }
+
+    .ss-status-badge {
+      position: absolute;
+      top: 104px;
+      right: max(16px, calc((100vw - var(--ss-max)) / 2));
+      z-index: 3;
+      padding: 10px 15px;
+      border: 1px solid rgba(81, 198, 180, 0.58);
+      border-radius: 999px;
+      background: var(--ss-saline);
+      color: var(--ss-night);
+      box-shadow: var(--ss-shadow);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.68rem;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+    }
+
+    .ss-hero-inner {
+      width: min(calc(100% - 32px), var(--ss-max));
+      margin-inline: auto;
+      padding: 150px 0 120px;
+    }
+
+    .ss-hero-eyebrow {
+      max-width: 980px;
+      margin: 0 0 19px;
+      color: var(--ss-saline-soft);
+      font-family: "JetBrains Mono", monospace;
+      font-size: clamp(0.7rem, 1.5vw, 0.88rem);
+      line-height: 1.65;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .ss-hero-title {
+      max-width: 1190px;
+      margin: 0;
+      font-family: "Fraunces", serif;
+      font-size: clamp(3.35rem, 10vw, 8rem);
+      font-weight: 700;
+      line-height: 0.88;
+      letter-spacing: -0.065em;
+      text-wrap: balance;
+    }
+
+    .ss-hero-subhead {
+      max-width: 940px;
+      margin: 28px 0 0;
+      color: rgba(241, 238, 230, 0.8);
+      font-size: clamp(1rem, 2vw, 1.27rem);
+      line-height: 1.72;
+    }
+
+    .ss-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 31px;
+    }
+
+    .ss-chip {
+      padding: 9px 12px;
+      border: 1px solid rgba(81, 198, 180, 0.65);
+      border-radius: 999px;
+      background: rgba(6, 24, 21, 0.42);
+      color: var(--ss-saline-soft);
+      backdrop-filter: blur(7px);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.7rem;
+    }
+
+    .ss-hero-bottom {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      border-top: 1px solid rgba(241, 238, 230, 0.14);
+      background: rgba(6, 24, 21, 0.72);
+      backdrop-filter: blur(12px);
+    }
+
+    .ss-hero-bottom-inner {
+      width: min(calc(100% - 32px), var(--ss-max));
+      min-height: 72px;
+      margin-inline: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 7px;
+      padding: 13px 0;
+      color: rgba(241, 238, 230, 0.58);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.65rem;
+      line-height: 1.6;
+    }
+
+    .ss-scroll-label {
+      color: var(--ss-saline-soft);
+    }
+
+    /* IDENTITY */
+
+    .ss-identity {
+      border-top: 1px solid var(--ss-dark-border);
+      border-bottom: 1px solid var(--ss-dark-border);
+      background: var(--ss-mangrove);
+    }
+
+    .ss-identity-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+
+    .ss-fact {
+      min-width: 0;
+      padding: 22px 16px;
+      border-bottom: 1px solid var(--ss-dark-border);
+    }
+
+    .ss-fact:last-child {
+      border-bottom: 0;
+    }
+
+    .ss-fact-label {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--ss-saline);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.61rem;
+      font-weight: 800;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+
+    .ss-fact-value {
+      color: rgba(241, 238, 230, 0.8);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.68rem;
+      line-height: 1.55;
+    }
+
+    /* PROBLEM */
+
+    .ss-card-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 42px;
+    }
+
+    .ss-problem-card {
+      min-height: 100%;
+      padding: 27px;
+      border-left: 4px solid var(--ss-coral);
+      border-radius: 0 var(--ss-radius) var(--ss-radius) 0;
+      background: var(--ss-night);
+      color: var(--ss-salt);
+      box-shadow: 0 18px 46px rgba(6, 24, 21, 0.13);
+    }
+
+    .ss-problem-card--tidal {
+      border-left-color: var(--ss-tidal);
+    }
+
+    .ss-problem-card--saline {
+      border-left-color: var(--ss-saline);
+    }
+
+    .ss-problem-card h3 {
+      margin: 0 0 14px;
+      font-family: "Fraunces", serif;
+      font-size: 1.62rem;
+      line-height: 1.12;
+    }
+
+    .ss-problem-card p {
+      margin: 0;
+      color: rgba(241, 238, 230, 0.7);
+      font-size: 0.92rem;
+      line-height: 1.72;
+    }
+
+    .ss-pullquote {
+      max-width: 1110px;
+      margin: 56px 0 0;
+      padding: 30px 0 0 27px;
+      border-left: 2px solid var(--ss-coral);
+      color: var(--ss-earth);
+      font-family: "Fraunces", serif;
+      font-size: clamp(1.72rem, 4vw, 3.18rem);
+      font-style: italic;
+      line-height: 1.18;
+      letter-spacing: -0.025em;
+    }
+
+    /* CONTRIBUTION */
+
+    .ss-contribution-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 22px;
+      margin-top: 42px;
+    }
+
+    .ss-contribution-main {
+      padding: 29px;
+      border-left: 5px solid var(--ss-saline);
+      border-radius: 0 var(--ss-radius-lg) var(--ss-radius-lg) 0;
+      background:
+        linear-gradient(
+          135deg,
+          rgba(81, 198, 180, 0.1),
+          rgba(255, 255, 255, 0.025)
+        );
+    }
+
+    .ss-contribution-main h3 {
+      margin: 0;
+      font-family: "Fraunces", serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      line-height: 1;
+    }
+
+    .ss-contribution-main p {
+      margin: 22px 0 0;
+      color: rgba(241, 238, 230, 0.73);
+      line-height: 1.75;
+    }
+
+    .ss-contribution-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 25px;
+    }
+
+    .ss-contribution-item {
+      padding: 13px;
+      border: 1px solid var(--ss-dark-border);
+      border-radius: 11px;
+      color: rgba(241, 238, 230, 0.7);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.65rem;
+      line-height: 1.45;
+    }
+
+    .ss-collaboration-note {
+      padding: 27px;
+      border: 1px solid var(--ss-dark-border);
+      border-radius: var(--ss-radius);
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .ss-collaboration-note h3 {
+      margin: 0 0 13px;
+      font-family: "Fraunces", serif;
+      font-size: 1.6rem;
+    }
+
+    .ss-collaboration-note p {
+      margin: 0;
+      color: rgba(241, 238, 230, 0.66);
+      line-height: 1.7;
+    }
+
+    /* IMAGES */
+
+    .ss-image-shell {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--ss-radius);
+      background: #03100d;
+      box-shadow: var(--ss-shadow);
+    }
+
+    .ss-image-shell img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      cursor: zoom-in;
+      transition:
+        transform var(--ss-transition),
+        opacity var(--ss-transition);
+    }
+
+    .ss-image-shell:hover img {
+      transform: scale(1.014);
+    }
+
+    .ss-image-shell.ss-is-missing img {
+      display: none;
+    }
+
+    .ss-img-fallback {
+      display: none;
+      min-height: 250px;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: rgba(241, 238, 230, 0.42);
+      text-align: center;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.05em;
+    }
+
+    .ss-image-shell.ss-is-missing .ss-img-fallback {
+      display: flex;
+    }
+
+    .ss-caption {
+      margin: 14px 2px 0;
+      color: var(--ss-muted);
+      font-size: 0.78rem;
+      line-height: 1.6;
+    }
+
+    /* STUDY AREA */
+
+    .ss-study-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 28px;
+      margin-top: 42px;
+    }
+
+    .ss-study-map .ss-image-shell {
+      aspect-ratio: 4 / 3;
+    }
+
+    .ss-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--ss-light-border);
+      border-radius: var(--ss-radius);
+      background: var(--ss-light-border);
+    }
+
+    .ss-stat {
+      min-height: 128px;
+      padding: 19px;
+      background: var(--ss-salt-bright);
+    }
+
+    .ss-stat-number {
+      display: block;
+      color: var(--ss-coral);
+      font-family: "Fraunces", serif;
+      font-size: clamp(1.75rem, 5vw, 3rem);
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .ss-stat-label {
+      display: block;
+      margin-top: 10px;
+      color: var(--ss-muted);
+      font-size: 0.72rem;
+      line-height: 1.45;
+    }
+
+    .ss-sample-warning {
+      margin-top: 22px;
+      padding: 19px 21px;
+      border-left: 4px solid var(--ss-coral);
+      background: rgba(224, 106, 88, 0.08);
+      color: var(--ss-ink);
+      font-size: 0.88rem;
+      line-height: 1.67;
+    }
+
+    /* INDEX EXPLORER */
+
+    .ss-index-panel {
+      margin-top: 54px;
+    }
+
+    .ss-subtitle {
+      margin: 0 0 20px;
+      font-family: "Fraunces", serif;
+      font-size: clamp(1.7rem, 4vw, 2.85rem);
+      letter-spacing: -0.035em;
+    }
+
+    .ss-index-groups {
+      display: grid;
+      gap: 24px;
+    }
+
+    .ss-index-group h4 {
+      margin: 0 0 11px;
+      color: var(--ss-earth);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.66rem;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .ss-index-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .ss-index-btn {
+      min-height: 50px;
+      padding: 11px;
+      border: 1px solid var(--ss-light-border);
+      border-radius: 10px;
+      background: transparent;
+      color: var(--ss-ink);
+      cursor: pointer;
+      text-align: left;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.66rem;
+      line-height: 1.4;
+      transition:
+        background var(--ss-transition),
+        color var(--ss-transition),
+        border-color var(--ss-transition),
+        transform var(--ss-transition);
+    }
+
+    .ss-index-btn:hover,
+    .ss-index-btn:focus-visible,
+    .ss-index-btn[aria-pressed="true"] {
+      border-color: var(--ss-saline);
+      background: var(--ss-night);
+      color: var(--ss-salt);
+      transform: translateY(-2px);
+    }
+
+    .ss-index-description {
+      min-height: 82px;
+      margin-top: 18px;
+      padding: 18px 20px;
+      border-left: 3px solid var(--ss-saline);
+      background: rgba(81, 198, 180, 0.09);
+      color: var(--ss-ink);
+      font-size: 0.9rem;
+      line-height: 1.65;
+    }
+
+    .ss-index-gallery {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 17px;
+      margin-top: 36px;
+    }
+
+    .ss-index-gallery .ss-image-shell {
+      aspect-ratio: 16 / 9;
+    }
+
+    /* PIPELINE */
+
+    .ss-pipeline {
+      position: relative;
+      max-width: 1040px;
+      margin: 50px auto 0;
+      padding-left: 37px;
+    }
+
+    .ss-pipeline::before {
+      position: absolute;
+      top: 10px;
+      bottom: 10px;
+      left: 9px;
+      width: 1px;
+      content: "";
+      background:
+        linear-gradient(
+          var(--ss-saline),
+          var(--ss-tidal),
+          var(--ss-coral),
+          rgba(224, 106, 88, 0.12)
+        );
+    }
+
+    .ss-pipeline-step {
+      position: relative;
+      margin-bottom: 22px;
+      padding: 24px;
+      border: 1px solid var(--ss-dark-border);
+      border-radius: var(--ss-radius);
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .ss-pipeline-step::before {
+      position: absolute;
+      top: 31px;
+      left: -34px;
+      width: 14px;
+      height: 14px;
+      border: 3px solid var(--ss-night);
+      border-radius: 50%;
+      content: "";
+      background: var(--ss-saline);
+      box-shadow: 0 0 0 1px var(--ss-saline);
+    }
+
+    .ss-pipeline-step:nth-child(even)::before {
+      background: var(--ss-coral);
+      box-shadow: 0 0 0 1px var(--ss-coral);
+    }
+
+    .ss-step-number {
+      color: var(--ss-saline);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.67rem;
+      font-weight: 800;
+    }
+
+    .ss-pipeline-step h3 {
+      margin: 8px 0 10px;
+      font-family: "Fraunces", serif;
+      font-size: 1.52rem;
+    }
+
+    .ss-pipeline-step p {
+      margin: 0;
+      color: rgba(241, 238, 230, 0.68);
+      font-size: 0.9rem;
+      line-height: 1.72;
+    }
+
+    .ss-framework-figure {
+      margin-top: 44px;
+    }
+
+    .ss-framework-figure .ss-image-shell {
+      aspect-ratio: 16 / 8.4;
+    }
+
+    /* MODEL SHOOTOUT */
+
+    .ss-model-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      margin-top: 42px;
+    }
+
+    .ss-table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--ss-light-border);
+      border-radius: var(--ss-radius);
+    }
+
+    .ss-table {
+      width: 100%;
+      min-width: 760px;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    .ss-table th {
+      padding: 13px 15px;
+      background: var(--ss-night);
+      color: var(--ss-saline-soft);
+      text-align: left;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.64rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .ss-table td {
+      padding: 15px;
+      border-top: 1px solid var(--ss-light-border);
+    }
+
+    .ss-model-row {
+      cursor: pointer;
+      transition:
+        background var(--ss-transition),
+        color var(--ss-transition);
+    }
+
+    .ss-model-row:hover,
+    .ss-model-row.ss-selected {
+      background: rgba(81, 198, 180, 0.12);
+    }
+
+    .ss-model-row.ss-selected td:first-child {
+      color: var(--ss-coral);
+      font-weight: 800;
+    }
+
+    .ss-model-panel {
+      padding: 25px;
+      border-radius: var(--ss-radius);
+      background: var(--ss-night);
+      color: var(--ss-salt);
+    }
+
+    .ss-model-panel .ss-image-shell {
+      aspect-ratio: 4 / 3;
+      box-shadow: none;
+    }
+
+    .ss-model-name {
+      margin: 21px 0 0;
+      font-family: "Fraunces", serif;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1;
+    }
+
+    .ss-model-verdict {
+      display: inline-block;
+      margin-top: 11px;
+      padding: 7px 10px;
+      border: 1px solid rgba(81, 198, 180, 0.45);
+      border-radius: 999px;
+      color: var(--ss-saline-soft);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.63rem;
+    }
+
+    .ss-model-summary {
+      margin: 18px 0 0;
+      color: rgba(241, 238, 230, 0.68);
+      line-height: 1.68;
+    }
+
+    .ss-auc-callout {
+      margin-top: 22px;
+      padding-top: 20px;
+      border-top: 1px solid var(--ss-dark-border);
+    }
+
+    .ss-auc-label {
+      display: block;
+      color: rgba(241, 238, 230, 0.43);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.61rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .ss-auc-number {
+      display: block;
+      margin-top: 8px;
+      color: var(--ss-saline);
+      font-family: "Fraunces", serif;
+      font-size: 4rem;
+      font-weight: 700;
+      line-height: 0.9;
+    }
+
+    .ss-bars {
+      display: grid;
+      gap: 16px;
+      margin-top: 42px;
+    }
+
+    .ss-bar-row {
+      display: grid;
+      grid-template-columns: 135px 1fr 50px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .ss-bar-label,
+    .ss-bar-value {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.7rem;
+    }
+
+    .ss-bar-track {
+      height: 11px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(13, 48, 41, 0.1);
+    }
+
+    .ss-bar-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background:
+        linear-gradient(
+          90deg,
+          var(--ss-tidal),
+          var(--ss-saline)
+        );
+      transition: width 1200ms cubic-bezier(.2, .8, .2, 1);
+    }
+
+    .ss-bar-fill--best {
+      background:
+        linear-gradient(
+          90deg,
+          var(--ss-coral),
+          var(--ss-saline)
+        );
+    }
+
+    .ss-distribution {
+      margin-top: 32px;
+      padding: 23px;
+      border: 1px solid var(--ss-light-border);
+      border-radius: var(--ss-radius);
+      background: rgba(255, 255, 255, 0.46);
+    }
+
+    .ss-distribution h3 {
+      margin: 0 0 16px;
+      font-family: "Fraunces", serif;
+      font-size: 1.55rem;
+    }
+
+    .ss-stacked-bar {
+      display: flex;
+      height: 27px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #ddd;
+    }
+
+    .ss-stack-segment {
+      min-width: 1px;
+      transition: width 650ms cubic-bezier(.2, .8, .2, 1);
+    }
+
+    .ss-stack-segment--very-low {
+      background: #126a61;
+    }
+
+    .ss-stack-segment--low {
+      background: #4ea98f;
+    }
+
+    .ss-stack-segment--moderate {
+      background: #e0ca71;
+    }
+
+    .ss-stack-segment--high {
+      background: #e69258;
+    }
+
+    .ss-stack-segment--very-high {
+      background: var(--ss-coral);
+    }
+
+    .ss-legend {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 17px;
+    }
+
+    .ss-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--ss-muted);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.61rem;
+    }
+
+    .ss-legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+    }
+
+    .ss-data-warning {
+      margin-top: 20px;
+      padding: 18px 20px;
+      border-left: 4px solid var(--ss-coral);
+      background: rgba(224, 106, 88, 0.08);
+      color: var(--ss-ink);
+      font-size: 0.84rem;
+      line-height: 1.65;
+    }
+
+    /* FEATURE IMPORTANCE */
+
+    .ss-feature-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 25px;
+      margin-top: 42px;
+    }
+
+    .ss-feature-figure .ss-image-shell {
+      aspect-ratio: 16 / 10;
+    }
+
+    .ss-feature-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .ss-feature-card {
+      padding: 21px;
+      border-left: 4px solid var(--ss-saline);
+      border-radius: 0 var(--ss-radius) var(--ss-radius) 0;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .ss-feature-card:nth-child(2) {
+      border-left-color: var(--ss-tidal-soft);
+    }
+
+    .ss-feature-card:nth-child(3) {
+      border-left-color: var(--ss-coral);
+    }
+
+    .ss-feature-card h3 {
+      margin: 0 0 9px;
+      font-family: "Fraunces", serif;
+      font-size: 1.45rem;
+    }
+
+    .ss-feature-card p {
+      margin: 0;
+      color: rgba(241, 238, 230, 0.67);
+      line-height: 1.65;
+    }
+
+    /* GRADIENT AND UPAZILAS */
+
+    .ss-gradient-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      margin-top: 42px;
+    }
+
+    .ss-gradient-layout .ss-image-shell {
+      aspect-ratio: 4 / 3;
+    }
+
+    .ss-gradient-copy {
+      padding: 28px;
+      border-left: 5px solid var(--ss-coral);
+      border-radius: 0 var(--ss-radius-lg) var(--ss-radius-lg) 0;
+      background: var(--ss-night);
+      color: var(--ss-salt);
+    }
+
+    .ss-gradient-copy h3 {
+      margin: 0;
+      font-family: "Fraunces", serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      line-height: 1;
+    }
+
+    .ss-gradient-copy p {
+      margin: 21px 0 0;
+      color: rgba(241, 238, 230, 0.69);
+      line-height: 1.72;
+    }
+
+    .ss-gradient-axis {
+      margin-top: 27px;
+    }
+
+    .ss-gradient-line {
+      height: 12px;
+      border-radius: 999px;
+      background:
+        linear-gradient(
+          90deg,
+          var(--ss-coral),
+          #df9a60 35%,
+          #d9ca74 56%,
+          var(--ss-saline) 100%
+        );
+    }
+
+    .ss-gradient-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      color: rgba(241, 238, 230, 0.46);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.61rem;
+    }
+
+    .ss-table-tools {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 42px;
+    }
+
+    .ss-search {
+      width: 100%;
+      max-width: 440px;
+      padding: 13px 16px;
+      border: 1px solid var(--ss-dark-border);
+      border-radius: 999px;
+      outline: 0;
+      background: rgba(255, 255, 255, 0.035);
+      color: var(--ss-salt);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.74rem;
+    }
+
+    .ss-search::placeholder {
+      color: rgba(241, 238, 230, 0.35);
+    }
+
+    .ss-search:focus {
+      border-color: var(--ss-saline);
+    }
+
+    .ss-dark-table {
+      margin-top: 20px;
+      border-color: var(--ss-dark-border);
+    }
+
+    .ss-dark-table .ss-table th {
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .ss-dark-table .ss-table td {
+      border-color: var(--ss-dark-border);
+      color: rgba(241, 238, 230, 0.77);
+    }
+
+    .ss-upazila-row {
+      cursor: pointer;
+      transition: background var(--ss-transition);
+    }
+
+    .ss-upazila-row:hover,
+    .ss-upazila-row.ss-selected {
+      background: rgba(81, 198, 180, 0.1);
+    }
+
+    .ss-table-empty {
+      padding: 38px !important;
+      color: rgba(241, 238, 230, 0.5) !important;
+      text-align: center;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.7rem;
+    }
+
+    /* FINDINGS */
+
+    .ss-findings {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 42px;
+    }
+
+    .ss-finding {
+      min-height: 100%;
+      padding: 27px;
+      border: 1px solid var(--ss-light-border);
+      border-radius: var(--ss-radius);
+      background: rgba(255, 255, 255, 0.46);
+    }
+
+    .ss-finding-num {
+      display: block;
+      color: var(--ss-coral);
+      font-family: "Fraunces", serif;
+      font-size: 3.65rem;
+      font-weight: 700;
+      line-height: 0.86;
+    }
+
+    .ss-finding h3 {
+      margin: 22px 0 11px;
+      font-family: "Fraunces", serif;
+      font-size: 1.47rem;
+      line-height: 1.15;
+    }
+
+    .ss-finding p {
+      margin: 0;
+      color: var(--ss-muted);
+      font-size: 0.88rem;
+      line-height: 1.68;
+    }
+
+    /* LIMITATIONS */
+
+    .ss-two-col {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      margin-top: 42px;
+    }
+
+    .ss-list-panel {
+      padding: 27px;
+      border: 1px solid var(--ss-dark-border);
+      border-radius: var(--ss-radius);
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .ss-list-panel h3 {
+      margin: 0 0 18px;
+      font-family: "Fraunces", serif;
+      font-size: 1.75rem;
+    }
+
+    .ss-list-panel ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .ss-list-panel li {
+      position: relative;
+      margin: 14px 0;
+      padding-left: 20px;
+      color: rgba(241, 238, 230, 0.7);
+      line-height: 1.66;
+    }
+
+    .ss-list-panel li::before {
+      position: absolute;
+      left: 0;
+      content: "—";
+      font-weight: 800;
+    }
+
+    .ss-list-panel--limits li::before {
+      color: var(--ss-coral);
+    }
+
+    .ss-list-panel--future li::before {
+      color: var(--ss-saline);
+    }
+
+    /* APPLICATIONS */
+
+    .ss-policy-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 42px;
+    }
+
+    .ss-policy-card {
+      padding: 26px;
+      border: 1px solid var(--ss-light-border);
+      border-radius: var(--ss-radius);
+      background: rgba(255, 255, 255, 0.46);
+    }
+
+    .ss-policy-number {
+      color: var(--ss-tidal);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.65rem;
+      font-weight: 800;
+    }
+
+    .ss-policy-card h3 {
+      margin: 10px 0 11px;
+      font-family: "Fraunces", serif;
+      font-size: 1.5rem;
+    }
+
+    .ss-policy-card p {
+      margin: 0;
+      color: var(--ss-muted);
+      line-height: 1.68;
+    }
+
+    .ss-sdg-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 31px;
+    }
+
+    .ss-sdg {
+      padding: 10px 13px;
+      border: 1px solid var(--ss-light-border);
+      border-radius: 999px;
+      color: var(--ss-earth);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.66rem;
+    }
+
+    /* WORKING PAPER */
+
+    .ss-record-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 21px;
+      margin-top: 42px;
+    }
+
+    .ss-record-card {
+      padding: 29px;
+      border-left: 5px solid var(--ss-saline);
+      border-radius: 0 var(--ss-radius-lg) var(--ss-radius-lg) 0;
+      background: var(--ss-night);
+      color: var(--ss-salt);
+      box-shadow: var(--ss-shadow);
+    }
+
+    .ss-record-card h3 {
+      margin: 0;
+      font-family: "Fraunces", serif;
+      font-size: 1.85rem;
+    }
+
+    .ss-status-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .ss-status-pill {
+      padding: 8px 11px;
+      border: 1px solid var(--ss-dark-border);
+      border-radius: 999px;
+      color: rgba(241, 238, 230, 0.67);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.63rem;
+    }
+
+    .ss-status-pill--active {
+      border-color: var(--ss-saline);
+      color: var(--ss-saline-soft);
+    }
+
+    .ss-record-card p {
+      margin: 20px 0 0;
+      color: rgba(241, 238, 230, 0.66);
+      line-height: 1.7;
+    }
+
+    .ss-title-card {
+      padding: 29px;
+      border: 1px solid var(--ss-light-border);
+      border-radius: var(--ss-radius);
+      background: rgba(255, 255, 255, 0.46);
+    }
+
+    .ss-title-card h3 {
+      margin: 0 0 17px;
+      font-family: "Fraunces", serif;
+      font-size: 1.7rem;
+    }
+
+    .ss-full-title {
+      margin: 0;
+      font-family: "Fraunces", serif;
+      font-size: clamp(1.2rem, 3vw, 1.75rem);
+      line-height: 1.5;
+    }
+
+    .ss-keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 22px;
+    }
+
+    .ss-keyword {
+      padding: 8px 10px;
+      border: 1px solid var(--ss-light-border);
+      border-radius: 999px;
+      color: var(--ss-earth);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.62rem;
+    }
+
+    .ss-contact-btn {
+      display: inline-flex;
+      margin-top: 23px;
+      padding: 12px 17px;
+      border-radius: 999px;
+      background: var(--ss-saline);
+      color: var(--ss-night);
+      text-decoration: none;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.69rem;
+      font-weight: 900;
+      transition:
+        transform var(--ss-transition),
+        background var(--ss-transition);
+    }
+
+    .ss-contact-btn:hover {
+      transform: translateY(-2px);
+      background: var(--ss-saline-soft);
+    }
+
+    /* STACK */
+
+    .ss-stack-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 39px;
+    }
+
+    .ss-stack-card {
+      padding: 24px;
+      border: 1px solid var(--ss-dark-border);
+      border-radius: var(--ss-radius);
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .ss-stack-card h3 {
+      margin: 0 0 16px;
+      color: var(--ss-saline-soft);
+      font-family: "Fraunces", serif;
+      font-size: 1.36rem;
+    }
+
+    .ss-stack-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .ss-stack-tag {
+      padding: 8px 10px;
+      border: 1px solid var(--ss-dark-border);
+      border-radius: 9px;
+      color: rgba(241, 238, 230, 0.66);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.62rem;
+      line-height: 1.4;
+    }
+
+    /* FOOTER */
+
+    .ss-footer-nav {
+      padding: 27px 0 72px;
+      background: var(--ss-night);
+    }
+
+    .ss-footer-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .ss-footer-card {
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 23px;
+      border: 1px solid var(--ss-dark-border);
+      border-radius: var(--ss-radius);
+      background: rgba(255, 255, 255, 0.025);
+      color: var(--ss-salt);
+      text-decoration: none;
+      transition:
+        transform var(--ss-transition),
+        border-color var(--ss-transition),
+        background var(--ss-transition);
+    }
+
+    .ss-footer-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--ss-saline);
+      background: rgba(81, 198, 180, 0.06);
+    }
+
+    .ss-footer-kicker {
+      color: rgba(241, 238, 230, 0.4);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.64rem;
+      text-transform: uppercase;
+    }
+
+    .ss-footer-title {
+      font-family: "Fraunces", serif;
+      font-size: 1.8rem;
+    }
+
+    /* LIGHTBOX */
+
+    .ss-lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(2, 10, 8, 0.95);
+      backdrop-filter: blur(12px);
+    }
+
+    .ss-lightbox.ss-open {
+      display: grid;
+    }
+
+    .ss-lightbox-inner {
+      width: min(1200px, 100%);
+      max-height: 94vh;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      gap: 12px;
+    }
+
+    .ss-lightbox img {
+      width: 100%;
+      max-height: 82vh;
+      object-fit: contain;
+      border-radius: 12px;
+      background: var(--ss-night);
+    }
+
+    .ss-lightbox-caption {
+      color: rgba(241, 238, 230, 0.7);
+      font-size: 0.78rem;
+      line-height: 1.55;
+    }
+
+    .ss-lightbox-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 43px;
+      height: 43px;
+      border: 1px solid rgba(241, 238, 230, 0.23);
+      border-radius: 50%;
+      background: rgba(6, 24, 21, 0.78);
+      color: var(--ss-salt);
+      cursor: pointer;
+      font-size: 1.5rem;
+    }
+
+    /* BACK TO TOP */
+
+    .ss-back-top {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 5000;
+      width: 47px;
+      height: 47px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(81, 198, 180, 0.45);
+      border-radius: 50%;
+      background: var(--ss-saline);
+      color: var(--ss-night);
+      cursor: pointer;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+      box-shadow: 0 13px 35px rgba(0, 0, 0, 0.24);
+      transition:
+        opacity var(--ss-transition),
+        visibility var(--ss-transition),
+        transform var(--ss-transition);
+    }
+
+    .ss-back-top.ss-show {
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+    }
+
+    @media (min-width: 640px) {
+      .ss-container,
+      .ss-hero-inner,
+      .ss-hero-bottom-inner {
+        width: min(calc(100% - 56px), var(--ss-max));
+      }
+
+      .ss-section {
+        padding: 110px 0;
+      }
+
+      .ss-hero-bottom-inner {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .ss-card-grid,
+      .ss-findings,
+      .ss-policy-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .ss-contribution-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .ss-index-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .ss-index-gallery {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .ss-legend {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+
+      .ss-stack-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .ss-footer-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .ss-section {
+        padding: 135px 0;
+      }
+
+      .ss-identity-grid {
+        grid-template-columns:
+          minmax(155px, 0.8fr)
+          minmax(190px, 1fr)
+          minmax(150px, 0.75fr)
+          minmax(135px, 0.65fr)
+          minmax(150px, 0.75fr)
+          minmax(155px, 0.8fr)
+          minmax(210px, 1.05fr);
+      }
+
+      .ss-fact {
+        padding: 20px 14px;
+        border-right: 1px solid var(--ss-dark-border);
+        border-bottom: 0;
+      }
+
+      .ss-fact:last-child {
+        border-right: 0;
+      }
+
+      .ss-card-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .ss-contribution-layout {
+        grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+        align-items: start;
+      }
+
+      .ss-study-layout {
+        grid-template-columns: minmax(0, 3fr) minmax(340px, 2fr);
+        align-items: start;
+      }
+
+      .ss-model-layout {
+        grid-template-columns: minmax(0, 1.35fr) minmax(340px, 0.65fr);
+        align-items: start;
+      }
+
+      .ss-feature-layout {
+        grid-template-columns: minmax(0, 1.25fr) minmax(330px, 0.75fr);
+        align-items: start;
+      }
+
+      .ss-gradient-layout {
+        grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
+        align-items: start;
+      }
+
+      .ss-findings {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .ss-two-col {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .ss-policy-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .ss-record-layout {
+        grid-template-columns: minmax(320px, 0.7fr) minmax(0, 1.3fr);
+        align-items: start;
+      }
+
+      .ss-stack-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+
+      .ss-reveal {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* Final portfolio integration and responsive refinements */
+    .site-header {
+      background: rgba(255, 253, 247, 0.96);
+      color: var(--ss-ink);
+      backdrop-filter: blur(16px);
+    }
+
+    .ss-hero-title {
+      color: var(--ss-salt-bright);
+      text-shadow: 0 3px 28px rgba(0, 0, 0, 0.55);
+      max-width: 1050px;
+    }
+
+    .ss-image-shell img {
+      object-fit: contain;
+      background: var(--ss-salt-bright);
+    }
+
+    .ss-evidence-figure {
+      margin-top: 2rem;
+    }
+
+    @media (max-width: 1319px) {
+      .site-header .nav-links,
+      .site-header .nav-cta .btn-ghost {
+        display: none;
+      }
+
+      .site-header .menu-toggle {
+        display: inline-flex;
+      }
+
+      .site-header.nav-open .nav-links {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        padding: 1.25rem 1.5rem 1.5rem;
+        gap: 1rem;
+        background: var(--ss-salt-bright);
+        border-bottom: 1px solid var(--ss-light-border);
+        box-shadow: 0 18px 40px rgba(3, 17, 14, 0.14);
+        z-index: 20;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .site-header .nav-cta {
+        display: none !important;
+      }
+
+      .ss-hero {
+        min-height: 820px;
+        padding-top: 7.5rem;
+      }
+
+      .ss-hero-title {
+        font-size: clamp(2.55rem, 13vw, 4.2rem);
+        line-height: 0.98;
+      }
+
+      .ss-status-badge {
+        max-width: 100%;
+        white-space: normal;
+      }
+
+      .ss-index-grid,
+      .ss-model-table-wrap,
+      .ss-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="site-header">
+  <nav class="nav">
+    <a href="../index.html" class="brand">
+      <svg class="pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0Z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+      Tanzim&nbsp;Al&nbsp;Noor
+    </a>
+    <ul class="nav-links">
+      <li><a href="../index.html#about">About</a></li>
+      <li><a href="../index.html#skills">Skills</a></li>
+      <li><a href="../index.html#experience">Experience</a></li>
+      <li><a href="../index.html#projects">Projects</a></li>
+      <li><a href="../index.html#research">Research</a></li>
+      <li><a href="../index.html#education">Education</a></li>
+      <li><a href="../index.html#contact">Contact</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="../Tanzim_Al_Noor_CV.pdf" class="btn btn-ghost btn-sm" download>Download CV</a>
+      <a href="../index.html#contact" class="btn btn-primary btn-sm">Get in Touch</a>
+      <button class="menu-toggle" aria-label="Toggle menu" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<main class="ss-main">
+
+  <!-- HERO -->
+
+  <section class="ss-hero" id="top" aria-labelledby="ss-hero-title">
+    <span class="ss-hero-missing">
+      satkhira-salinity-hero.jpg · image unavailable
+    </span>
+
+    <div class="ss-status-badge">
+      Working Paper · Research in Progress
+    </div>
+
+    <div class="ss-hero-inner">
+      <p class="ss-hero-eyebrow">
+        Sentinel-2 MSI · Spectral Index Engineering · Six-Model Comparison · Coastal Bangladesh
+      </p>
+
+      <h1 class="ss-hero-title" id="ss-hero-title">
+        Mapping where coastal Bangladesh is turning saline.
+      </h1>
+
+      <p class="ss-hero-subhead">
+        A 10-metre-resolution susceptibility framework combining thirteen
+        Sentinel-2 spectral indicators, 241 field-derived salinity samples and
+        six machine-learning models to reveal the south-to-north salinity
+        gradient across Satkhira District.
+      </p>
+
+      <div class="ss-chip-row" aria-label="Research highlights">
+        <span class="ss-chip">Sentinel-2 · 10 m</span>
+        <span class="ss-chip">13 spectral indicators</span>
+        <span class="ss-chip">241 soil samples</span>
+        <span class="ss-chip">6 ML models</span>
+        <span class="ss-chip">GBM · AUC 0.83</span>
+        <span class="ss-chip">7 upazilas</span>
+      </div>
+    </div>
+
+    <div class="ss-hero-bottom">
+      <div class="ss-hero-bottom-inner">
+        <span>
+          Soil salinity · Coastal resilience · Agricultural land zoning · Satkhira
+        </span>
+        <span class="ss-scroll-label">Trace the salt gradient ↓</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- IDENTITY -->
+
+  <section class="ss-identity" aria-label="Working paper metadata">
+    <div class="ss-identity-grid">
+      <div class="ss-fact">
+        <span class="ss-fact-label">Status</span>
+        <span class="ss-fact-value">Working Paper</span>
+      </div>
+
+      <div class="ss-fact">
+        <span class="ss-fact-label">Study area</span>
+        <span class="ss-fact-value">Satkhira District · 3,817.29 km²</span>
+      </div>
+
+      <div class="ss-fact">
+        <span class="ss-fact-label">Imagery</span>
+        <span class="ss-fact-value">Sentinel-2 MSI · 2024</span>
+      </div>
+
+      <div class="ss-fact">
+        <span class="ss-fact-label">Resolution</span>
+        <span class="ss-fact-value">10 metres</span>
+      </div>
+
+      <div class="ss-fact">
+        <span class="ss-fact-label">Samples</span>
+        <span class="ss-fact-value">241 · 80/20 split</span>
+      </div>
+
+      <div class="ss-fact">
+        <span class="ss-fact-label">Best model</span>
+        <span class="ss-fact-value">Gradient Boosting · AUC 0.83</span>
+      </div>
+
+      <div class="ss-fact">
+        <span class="ss-fact-label">My role</span>
+        <span class="ss-fact-value">Full-lifecycle research contribution</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+
+  <section class="ss-section ss-section--light" id="problem">
+    <div class="ss-container">
+      <div class="ss-reveal">
+        <p class="ss-label">01 · The Coastal Salinity Problem</p>
+
+        <h2 class="ss-heading ss-heading--medium">
+          Salt moves inland quietly. Its agricultural consequences do not.
+        </h2>
+      </div>
+
+      <div class="ss-card-grid">
+        <article class="ss-problem-card ss-reveal">
+          <h3>A livelihood-scale environmental threat</h3>
+          <p>
+            Soil salinity degrades agricultural productivity, freshwater
+            availability, vegetation health and long-term livelihood security
+            across Bangladesh’s southwestern coastal zone.
+          </p>
+        </article>
+
+        <article class="ss-problem-card ss-problem-card--tidal ss-reveal">
+          <h3>A landscape shaped by tidal connectivity</h3>
+          <p>
+            Cyclones, tidal inundation, saline groundwater, embankment failure,
+            shrimp aquaculture and poor drainage combine to intensify salt
+            accumulation in low-lying coastal land.
+          </p>
+        </article>
+
+        <article class="ss-problem-card ss-problem-card--saline ss-reveal">
+          <h3>A monitoring problem suited to satellite ML</h3>
+          <p>
+            Sentinel-2 captures the spectral brightness of salt-affected soil,
+            moisture variation and vegetation stress. Machine learning converts
+            those signals into spatial susceptibility classes.
+          </p>
+        </article>
+      </div>
+
+      <blockquote class="ss-pullquote ss-reveal">
+        “The maps reveal a distinct coastal-to-inland transition: salinity
+        intensifies through the central and southern belt, while northern
+        Kalaroa remains comparatively protected.”
+      </blockquote>
+    </div>
+  </section>
+
+  <!-- CONTRIBUTION -->
+
+  <section class="ss-section ss-section--dark" id="contribution">
+    <div class="ss-container">
+      <div class="ss-reveal">
+        <p class="ss-label">02 · Project Scope</p>
+
+        <h2 class="ss-heading ss-heading--medium">
+          A complete remote-sensing and machine-learning workflow for coastal salinity screening.
+        </h2>
+      </div>
+
+      <div class="ss-contribution-layout">
+        <article class="ss-contribution-main ss-reveal">
+          <h3>Documented analytical workflow</h3>
+
+          <p>
+            The project spans Sentinel-2 acquisition and preprocessing,
+            spectral-index engineering, salinity sample preparation,
+            six-model implementation, ROC–AUC validation, susceptibility
+            classification, upazila-level interpretation, cartographic
+            visualisation and manuscript development.
+          </p>
+
+          <div class="ss-contribution-grid">
+            <span class="ss-contribution-item">Sentinel-2 acquisition</span>
+            <span class="ss-contribution-item">Geometric correction</span>
+            <span class="ss-contribution-item">Atmospheric correction</span>
+            <span class="ss-contribution-item">Radiometric correction</span>
+            <span class="ss-contribution-item">13-index engineering</span>
+            <span class="ss-contribution-item">Sample preparation</span>
+            <span class="ss-contribution-item">Six-model development</span>
+            <span class="ss-contribution-item">ROC–AUC validation</span>
+            <span class="ss-contribution-item">Susceptibility mapping</span>
+            <span class="ss-contribution-item">Spatial interpretation</span>
+            <span class="ss-contribution-item">Research communication</span>
+          </div>
+        </article>
+
+        <aside class="ss-collaboration-note ss-reveal">
+          <h3>Collaborative working paper</h3>
+
+          <p>
+            The study was developed collaboratively. The current manuscript
+            file does not include an author block, so this case study avoids
+            assigning sole authorship or an unverified author order.
+          </p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- STUDY AREA -->
+
+  <section class="ss-section ss-section--light" id="study-area">
+    <div class="ss-container">
+      <div class="ss-reveal">
+        <p class="ss-label">03 · Study Area &amp; Ground Data</p>
+
+        <h2 class="ss-heading ss-heading--medium">
+          Seven upazilas between the Bay of Bengal and the inland freshwater frontier.
+        </h2>
+      </div>
+
+      <div class="ss-study-layout">
+        <figure class="ss-study-map ss-reveal">
+          <div class="ss-image-shell">
+            <img
+              src="../images/projects/salinity/satkhira-study-area.jpg"
+              alt="Study area map of Satkhira District"
+              loading="lazy"
+              data-lightbox
+              data-caption="Satkhira District study area, seven upazilas and soil salinity sample locations."
+              role="button"
+              tabindex="0"
+            >
+            <span class="ss-img-fallback">
+              satkhira-study-area.jpg · image unavailable
+            </span>
+          </div>
+
+          <figcaption class="ss-caption">
+            Satkhira lies in southwestern Bangladesh between approximately
+            21°36′–22°54′N and 88°54′–89°20′E. Its seven upazilas are Assasuni,
+            Debhata, Kalaroa, Kaliganj, Satkhira Sadar, Shyamnagar and Tala.
+          </figcaption>
+        </figure>
+
+        <div class="ss-stats ss-reveal">
+          <div class="ss-stat">
+            <span
+              class="ss-stat-number"
+              data-counter
+              data-target="3817"
+              data-suffix=" km²"
+            >0</span>
+            <span class="ss-stat-label">Approximate district area</span>
+          </div>
+
+          <div class="ss-stat">
+            <span class="ss-stat-number" data-counter data-target="7">0</span>
+            <span class="ss-stat-label">Upazilas assessed</span>
+          </div>
+
+          <div class="ss-stat">
+            <span class="ss-stat-number" data-counter data-target="241">0</span>
+            <span class="ss-stat-label">Soil salinity samples</span>
+          </div>
+
+          <div class="ss-stat">
+            <span
+              class="ss-stat-number"
+              data-counter
+              data-target="80"
+              data-suffix=" / 20"
+            >0</span>
+            <span class="ss-stat-label">Training / testing split</span>
+          </div>
+
+          <div class="ss-stat">
+            <span
+              class="ss-stat-number"
+              data-counter
+              data-target="10"
+              data-suffix=" m"
+            >0</span>
+            <span class="ss-stat-label">Sentinel-2 spatial resolution</span>
+          </div>
+
+          <div class="ss-stat">
+            <span class="ss-stat-number" data-counter data-target="13">0</span>
+            <span class="ss-stat-label">Spectral indicators</span>
+          </div>
+        </div>
+      </div>
+
+      <aside class="ss-sample-warning ss-reveal">
+        <strong>Ground-data limitation:</strong> the 241 salinity observations
+        were collected during the 2016 dry season and are concentrated in
+        Kaliganj Upazila, while the Sentinel-2 composite represents 2024. The
+        working paper therefore maps susceptibility rather than claiming a
+        fully contemporaneous district-wide salinity census.
+      </aside>
+
+      <div class="ss-index-panel ss-reveal">
+        <h3 class="ss-subtitle">Interactive 13-index explorer</h3>
+
+        <div class="ss-index-groups">
+          <div class="ss-index-group">
+            <h4>Salinity &amp; reflectance indicators</h4>
+
+            <div class="ss-index-grid">
+              <button
+                class="ss-index-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="SI₁ responds to the contrast between near-infrared and red reflectance. In the study it is one of the most consistently influential predictors of saline surface conditions."
+              >
+                SI₁
+              </button>
+
+              <button
+                class="ss-index-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="SI₂ substitutes the green band into the normalized salinity contrast and helps detect spatially scattered saline conditions."
+              >
+                SI₂
+              </button>
+
+              <button
+                class="ss-index-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="SI₃ uses near-infrared and shortwave-infrared behaviour to capture moisture and salt-related surface variation."
+              >
+                SI₃
+              </button>
+
+              <button
+                class="ss-index-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="SI₁₁ combines NIR and SWIR information and is particularly useful for identifying transitional zones where salinity and soil moisture vary over short distances."
+              >
+                SI₁₁
+              </button>
+
+              <button
+                class="ss-index-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="The Blue band helps discriminate bright, salt-affected bare soil and contributes strongly to GBM, Random Forest and regression-based predictions."
+              >
+                Blue · B2
+              </button>
+
+              <button
+                class="ss-index-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="NIR reflectance helps distinguish healthy vegetation from moist or salt-encrusted exposed surfaces."
+              >
+                NIR · B8
+              </button>
+
+              <button
+                class="ss-index-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="The Ratio Index strengthens contrast between saline and non-saline surfaces by emphasizing abrupt spectral differences."
+              >
+                Ratio Index
+              </button>
+            </div>
+          </div>
+
+          <div class="ss-index-group">
+            <h4>Brightness, intensity &amp; vegetation response</h4>
+
+            <div class="ss-index-grid">
+              <button
+                class="ss-index-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="Brightness Index captures the high albedo of exposed, dry and salt-enriched soils."
+              >
+                Brightness Index · BI
+              </button>
+
+              <button
+                class="ss-index-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="INT₁ combines NIR and red reflectance intensity and responds to exposed soil and vegetation stress."
+              >
+                INT₁
+              </button>
+
+              <button
+                class="ss-index-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="INT₂ combines NIR and green reflectance intensity and supports discrimination of bright, sparsely vegetated surfaces."
+              >
+                INT₂
+              </button>
+
+              <button
+                class="ss-index-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="NDVI measures vegetation vigour. Lower values in the central and southern zones indicate sparse or stressed vegetation associated with saline conditions."
+              >
+                NDVI
+              </button>
+
+              <button
+                class="ss-index-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="EVI enhances vegetation detection while reducing atmospheric and soil-background distortion."
+              >
+                EVI
+              </button>
+
+              <button
+                class="ss-index-btn"
+                type="button"
+                aria-pressed="false"
+                data-description="SAVI adjusts vegetation response for exposed soil background, improving interpretation where vegetation is sparse and salinity stress is visible."
+              >
+                SAVI
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="ss-index-description"
+          id="ss-index-description"
+          aria-live="polite"
+        >
+          Select an indicator to inspect how it contributes to salinity detection.
+        </div>
+
+        <div class="ss-index-gallery">
+          <figure>
+            <div class="ss-image-shell">
+              <img
+                src="../images/projects/salinity/indices-bi-evi-b2-int1-int2-ndvi.jpg"
+                alt="Spatial distribution of BI, EVI, Blue, INT1, INT2 and NDVI"
+                loading="lazy"
+                data-lightbox
+                data-caption="Spatial distribution of Brightness Index, EVI, Blue band, INT₁, INT₂ and NDVI."
+                role="button"
+                tabindex="0"
+              >
+              <span class="ss-img-fallback">
+                indices-bi-evi-b2-int1-int2-ndvi.jpg · image unavailable
+              </span>
+            </div>
+          </figure>
+
+          <figure>
+            <div class="ss-image-shell">
+              <img
+                src="../images/projects/salinity/indices-nir-ratio-si1-si2-si3-si11-savi.jpg"
+                alt="Spatial distribution of NIR, Ratio, SI1, SI2, SI3, SI11 and SAVI"
+                loading="lazy"
+                data-lightbox
+                data-caption="Spatial distribution of NIR, Ratio Index, SI₁, SI₂, SI₃, SI₁₁ and SAVI."
+                role="button"
+                tabindex="0"
+              >
+              <span class="ss-img-fallback">
+                indices-nir-ratio-si1-si2-si3-si11-savi.jpg · image unavailable
+              </span>
+            </div>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- METHODOLOGY -->
+
+  <section class="ss-section ss-section--dark" id="methodology">
+    <div class="ss-container">
+      <div class="ss-reveal">
+        <p class="ss-label">04 · Analytical Framework</p>
+
+        <h2 class="ss-heading ss-heading--medium">
+          From corrected satellite reflectance to a five-class susceptibility surface.
+        </h2>
+      </div>
+
+      <div class="ss-pipeline">
+        <article class="ss-pipeline-step ss-reveal">
+          <span class="ss-step-number">STEP 01</span>
+          <h3>Sentinel-2 image assembly</h3>
+          <p>
+            Sentinel-2 imagery from 1 January to 31 December 2024 was assembled
+            at 10-metre spatial resolution for the Satkhira study boundary.
+          </p>
+        </article>
+
+        <article class="ss-pipeline-step ss-reveal">
+          <span class="ss-step-number">STEP 02</span>
+          <h3>Image preprocessing and correction</h3>
+          <p>
+            Geometric, atmospheric and radiometric corrections were applied to
+            reduce positional error, atmospheric interference and inconsistent
+            digital-number values.
+          </p>
+        </article>
+
+        <article class="ss-pipeline-step ss-reveal">
+          <span class="ss-step-number">STEP 03</span>
+          <h3>Thirteen-index engineering</h3>
+          <p>
+            Salinity, brightness, intensity and vegetation-response indices
+            were derived from visible, NIR and SWIR spectral behaviour.
+          </p>
+        </article>
+
+        <article class="ss-pipeline-step ss-reveal">
+          <span class="ss-step-number">STEP 04</span>
+          <h3>Ground-sample preparation</h3>
+          <p>
+            A total of 241 salinity observations were prepared and divided into
+            80% training and 20% testing datasets.
+          </p>
+        </article>
+
+        <article class="ss-pipeline-step ss-reveal">
+          <span class="ss-step-number">STEP 05</span>
+          <h3>Six-model comparison</h3>
+          <p>
+            ANN, Decision Tree, Gradient Boosting, Logistic Regression,
+            Random Forest and Support Vector Machine were trained to
+            distinguish saline from non-saline conditions.
+          </p>
+        </article>
+
+        <article class="ss-pipeline-step ss-reveal">
+          <span class="ss-step-number">STEP 06</span>
+          <h3>ROC–AUC validation and mapping</h3>
+          <p>
+            Models were compared through ROC–AUC. The selected model generated
+            very low, low, moderate, high and very high susceptibility classes.
+          </p>
+        </article>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- MODEL PERFORMANCE -->
+
+  <section class="ss-section ss-section--light" id="models">
+    <div class="ss-container">
+      <div class="ss-reveal">
+        <p class="ss-label">05 · Model Performance</p>
+
+        <h2 class="ss-heading ss-heading--medium">
+          Gradient Boosting separates saline from non-saline land most reliably.
+        </h2>
+      </div>
+
+      <div class="ss-model-layout">
+        <div class="ss-table-wrap ss-reveal">
+          <table class="ss-table" aria-label="Machine-learning ROC-AUC comparison">
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>ROC–AUC</th>
+                <th>Very High Area</th>
+                <th>High Area</th>
+                <th>Assessment</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr
+                class="ss-model-row"
+                data-model="ann"
+                tabindex="0"
+                aria-current="false"
+              >
+                <td>ANN</td>
+                <td class="ss-mono">0.68</td>
+                <td class="ss-mono">30.68%</td>
+                <td class="ss-mono">21.31%</td>
+                <td>Moderate discrimination</td>
+              </tr>
+
+              <tr
+                class="ss-model-row"
+                data-model="dt"
+                tabindex="0"
+                aria-current="false"
+              >
+                <td>Decision Tree</td>
+                <td class="ss-mono">0.65</td>
+                <td class="ss-mono">30.44%</td>
+                <td class="ss-mono">37.15%</td>
+                <td>Polarised and fragmented</td>
+              </tr>
+
+              <tr
+                class="ss-model-row ss-selected"
+                data-model="gbm"
+                tabindex="0"
+                aria-current="true"
+              >
+                <td>Gradient Boosting</td>
+                <td class="ss-mono">0.83</td>
+                <td class="ss-mono">30.58%</td>
+                <td class="ss-mono">28.67%</td>
+                <td>✦ Best-performing model</td>
+              </tr>
+
+              <tr
+                class="ss-model-row"
+                data-model="lrm"
+                tabindex="0"
+                aria-current="false"
+              >
+                <td>Logistic Regression · LRM</td>
+                <td class="ss-mono">0.62</td>
+                <td class="ss-mono">28.03%</td>
+                <td class="ss-mono">30.18%</td>
+                <td>Limited discrimination</td>
+              </tr>
+
+              <tr
+                class="ss-model-row"
+                data-model="rf"
+                tabindex="0"
+                aria-current="false"
+              >
+                <td>Random Forest</td>
+                <td class="ss-mono">0.50</td>
+                <td class="ss-mono">30.93%</td>
+                <td class="ss-mono">21.73%</td>
+                <td>Near-random in Results text*</td>
+              </tr>
+
+              <tr
+                class="ss-model-row"
+                data-model="svm"
+                tabindex="0"
+                aria-current="false"
+              >
+                <td>SVM</td>
+                <td class="ss-mono">0.74</td>
+                <td class="ss-mono">28.63%</td>
+                <td class="ss-mono">24.28%</td>
+                <td>Second-best ROC–AUC</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <article class="ss-model-panel ss-reveal" aria-live="polite">
+          <div class="ss-image-shell">
+            <img
+              id="ss-model-image"
+              src="../images/projects/salinity/salinity-gbm.jpg"
+              alt="Gradient Boosting soil salinity susceptibility map"
+              loading="lazy"
+              data-lightbox
+              data-caption="Gradient Boosting soil salinity susceptibility map."
+              role="button"
+              tabindex="0"
+            >
+            <span class="ss-img-fallback">
+              salinity-gbm.jpg · image unavailable
+            </span>
+          </div>
+
+          <h3 class="ss-model-name" id="ss-model-name">
+            Gradient Boosting
+          </h3>
+
+          <span class="ss-model-verdict" id="ss-model-verdict">
+            Best-performing model
+          </span>
+
+          <p class="ss-model-summary" id="ss-model-summary">
+            GBM produced compact, spatially coherent high-susceptibility
+            clusters through the central and southern district while achieving
+            the strongest discrimination between saline and non-saline samples.
+          </p>
+
+          <div class="ss-auc-callout">
+            <span class="ss-auc-label">Reported ROC–AUC</span>
+            <span class="ss-auc-number" id="ss-auc-number">0.83</span>
+          </div>
+        </article>
+      </div>
+
+      <div class="ss-bars ss-reveal" aria-label="ROC-AUC comparison">
+        <div class="ss-bar-row">
+          <span class="ss-bar-label">Gradient Boosting</span>
+          <div class="ss-bar-track">
+            <div class="ss-bar-fill ss-bar-fill--best" data-auc-bar="83"></div>
+          </div>
+          <span class="ss-bar-value">0.83</span>
+        </div>
+
+        <div class="ss-bar-row">
+          <span class="ss-bar-label">SVM</span>
+          <div class="ss-bar-track">
+            <div class="ss-bar-fill" data-auc-bar="74"></div>
+          </div>
+          <span class="ss-bar-value">0.74</span>
+        </div>
+
+        <div class="ss-bar-row">
+          <span class="ss-bar-label">ANN</span>
+          <div class="ss-bar-track">
+            <div class="ss-bar-fill" data-auc-bar="68"></div>
+          </div>
+          <span class="ss-bar-value">0.68</span>
+        </div>
+
+        <div class="ss-bar-row">
+          <span class="ss-bar-label">Decision Tree</span>
+          <div class="ss-bar-track">
+            <div class="ss-bar-fill" data-auc-bar="65"></div>
+          </div>
+          <span class="ss-bar-value">0.65</span>
+        </div>
+
+        <div class="ss-bar-row">
+          <span class="ss-bar-label">Logistic Regression</span>
+          <div class="ss-bar-track">
+            <div class="ss-bar-fill" data-auc-bar="62"></div>
+          </div>
+          <span class="ss-bar-value">0.62</span>
+        </div>
+
+        <div class="ss-bar-row">
+          <span class="ss-bar-label">Random Forest</span>
+          <div class="ss-bar-track">
+            <div class="ss-bar-fill" data-auc-bar="50"></div>
+          </div>
+          <span class="ss-bar-value">0.50</span>
+        </div>
+      </div>
+
+      <div class="ss-distribution ss-reveal">
+        <h3 id="ss-distribution-title">
+          Gradient Boosting susceptibility distribution
+        </h3>
+
+        <div
+          class="ss-stacked-bar"
+          id="ss-stacked-bar"
+          aria-label="Gradient Boosting susceptibility class distribution"
+        >
+          <span
+            class="ss-stack-segment ss-stack-segment--very-low"
+            data-segment="veryLow"
+            style="width:3.48%"
+          ></span>
+
+          <span
+            class="ss-stack-segment ss-stack-segment--low"
+            data-segment="low"
+            style="width:11.86%"
+          ></span>
+
+          <span
+            class="ss-stack-segment ss-stack-segment--moderate"
+            data-segment="moderate"
+            style="width:25.38%"
+          ></span>
+
+          <span
+            class="ss-stack-segment ss-stack-segment--high"
+            data-segment="high"
+            style="width:28.67%"
+          ></span>
+
+          <span
+            class="ss-stack-segment ss-stack-segment--very-high"
+            data-segment="veryHigh"
+            style="width:30.58%"
+          ></span>
+        </div>
+
+        <div class="ss-legend" id="ss-distribution-legend">
+          <span class="ss-legend-item">
+            <i class="ss-legend-dot" style="background:#126a61"></i>
+            Very Low · 3.48%
+          </span>
+
+          <span class="ss-legend-item">
+            <i class="ss-legend-dot" style="background:#4ea98f"></i>
+            Low · 11.86%
+          </span>
+
+          <span class="ss-legend-item">
+            <i class="ss-legend-dot" style="background:#e0ca71"></i>
+            Moderate · 25.38%
+          </span>
+
+          <span class="ss-legend-item">
+            <i class="ss-legend-dot" style="background:#e69258"></i>
+            High · 28.67%
+          </span>
+
+          <span class="ss-legend-item">
+            <i class="ss-legend-dot" style="background:#e06a58"></i>
+            Very High · 30.58%
+          </span>
+        </div>
+      </div>
+
+      <figure class="ss-framework-figure ss-evidence-figure ss-reveal">
+        <div class="ss-image-shell">
+          <img
+            src="../images/projects/salinity/roc-model-comparison.png"
+            alt="ROC curves comparing the six soil salinity susceptibility models"
+            loading="lazy"
+            data-lightbox
+            data-caption="ROC comparison in the current manuscript figure. It reports RF AUC = 0.73, which conflicts with the Results text."
+            role="button"
+            tabindex="0"
+          >
+        </div>
+      </figure>
+
+      <aside class="ss-data-warning ss-reveal">
+        <strong>Draft consistency note:</strong> the Results text reports
+        Random Forest AUC = 0.50, while the ROC figure and later Discussion
+        report RF = 0.73. This page retains the Results value in the comparison
+        table and leaves the discrepancy visible for revision. The draft also uses “LRM” and once
+        labels it “Logical Regression”; the methods describe Logistic Regression.
+      </aside>
+    </div>
+  </section>
+
+  <!-- FEATURE IMPORTANCE -->
+
+  <section class="ss-section ss-section--dark" id="feature-importance">
+    <div class="ss-container">
+      <div class="ss-reveal">
+        <p class="ss-label">06 · Spectral Feature Importance</p>
+
+        <h2 class="ss-heading ss-heading--medium">
+          Salt brightness leads. Vegetation stress confirms.
+        </h2>
+
+        <p class="ss-intro">
+          Across the six algorithms, salinity-specific indices, Blue-band
+          reflectance and brightness-related indicators carry most of the
+          predictive signal. Vegetation indices remain valuable, but primarily
+          as secondary evidence of biological stress.
+        </p>
+      </div>
+
+      <div class="ss-feature-layout">
+        <figure class="ss-feature-figure ss-reveal">
+          <div class="ss-image-shell">
+            <img
+              src="../images/projects/salinity/feature-importance-indices.png"
+              alt="Feature importance of the thirteen salinity indices across six models"
+              loading="lazy"
+              data-lightbox
+              data-caption="Relative importance of thirteen Sentinel-2-derived indicators across the six machine-learning models."
+              role="button"
+              tabindex="0"
+            >
+            <span class="ss-img-fallback">
+              feature-importance-indices.png · image unavailable
+            </span>
+          </div>
+        </figure>
+
+        <div class="ss-feature-list">
+          <article class="ss-feature-card ss-reveal">
+            <h3>SI₁ is the most consistent salinity signal</h3>
+            <p>
+              SI₁ repeatedly ranks among the strongest predictors, reflecting
+              its sensitivity to the spectral contrast of salt-affected exposed
+              surfaces.
+            </p>
+          </article>
+
+          <article class="ss-feature-card ss-reveal">
+            <h3>Blue, SI₁₁ and SI₃ reveal saline surfaces</h3>
+            <p>
+              Blue-band brightness and NIR–SWIR interactions help distinguish
+              salt crusts, moisture variability and transitional salinity zones.
+            </p>
+          </article>
+
+          <article class="ss-feature-card ss-reveal">
+            <h3>NDVI, EVI and SAVI record biological stress</h3>
+            <p>
+              Vegetation indices contribute less direct predictive weight but
+              clearly separate healthier northern vegetation from stressed
+              central and southern land.
+            </p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GRADIENT -->
+
+  <section class="ss-section ss-section--mangrove" id="gradient">
+    <div class="ss-container">
+      <div class="ss-reveal">
+        <p class="ss-label">07 · The Coastal Susceptibility Gradient</p>
+
+        <h2 class="ss-heading ss-heading--medium">
+          Salinity rises toward the coast—and follows hydrology inland.
+        </h2>
+      </div>
+
+      <div class="ss-gradient-layout">
+        <figure class="ss-reveal">
+          <div class="ss-image-shell">
+            <img
+              src="../images/projects/salinity/upazila-wise-gbm-map.jpg"
+              alt="Upazila-wise GBM soil salinity susceptibility map"
+              loading="lazy"
+              data-lightbox
+              data-caption="Upazila-wise soil salinity susceptibility according to the Gradient Boosting model."
+              role="button"
+              tabindex="0"
+            >
+            <span class="ss-img-fallback">
+              upazila-wise-gbm-map.jpg · image unavailable
+            </span>
+          </div>
+        </figure>
+
+        <article class="ss-gradient-copy ss-reveal">
+          <h3>South-to-north, but not as a simple straight line.</h3>
+
+          <p>
+            The strongest susceptibility clusters occur through Assasuni,
+            Shyamnagar, Debhata and parts of Tala. Coastal exposure, tidal
+            connectivity, saline groundwater, aquaculture and drainage
+            conditions allow salt stress to extend inland through connected
+            low-lying landscapes.
+          </p>
+
+          <p>
+            Kalaroa remains the district’s comparatively stable northern zone,
+            protected by its inland position, reduced tidal connectivity and
+            better freshwater conditions.
+          </p>
+
+          <div class="ss-gradient-axis" aria-label="South-to-north salinity gradient">
+            <div class="ss-gradient-line"></div>
+
+            <div class="ss-gradient-labels">
+              <span>Southern coast · higher</span>
+              <span>Northern inland · lower</span>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="ss-table-tools ss-reveal">
+        <label>
+          <span
+            class="ss-mono"
+            style="display:block;margin:0 0 8px;color:rgba(241,238,230,.48);font-size:.65rem;"
+          >
+            FILTER UPAZILA
+          </span>
+
+          <input
+            class="ss-search"
+            id="ss-upazila-search"
+            type="search"
+            placeholder="Type Assasuni, Kalaroa, Shyamnagar..."
+            aria-label="Filter upazila susceptibility table"
+            autocomplete="off"
+          >
+        </label>
+      </div>
+
+      <div class="ss-table-wrap ss-dark-table ss-reveal">
+        <table class="ss-table" aria-label="Upazila-wise GBM susceptibility percentages">
+          <thead>
+            <tr>
+              <th>Upazila</th>
+              <th>Very Low (%)</th>
+              <th>Low (%)</th>
+              <th>Moderate (%)</th>
+              <th>High (%)</th>
+              <th>Very High (%)</th>
+              <th>Combined High + Very High</th>
+            </tr>
+          </thead>
+
+          <tbody id="ss-upazila-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINDINGS -->
+
+  <section class="ss-section ss-section--light" id="findings">
+    <div class="ss-container">
+      <div class="ss-reveal">
+        <p class="ss-label">08 · Principal Findings</p>
+
+        <h2 class="ss-heading ss-heading--medium">
+          Six findings that turn satellite reflectance into planning evidence.
+        </h2>
+      </div>
+
+      <div class="ss-findings">
+        <article class="ss-finding ss-reveal">
+          <span class="ss-finding-num">01</span>
+          <h3>GBM is the most reliable model</h3>
+          <p>
+            Gradient Boosting records ROC–AUC = 0.83, substantially ahead of
+            SVM at 0.74 and the remaining models in the ROC results.
+          </p>
+        </article>
+
+        <article class="ss-finding ss-reveal">
+          <span class="ss-finding-num">02</span>
+          <h3>Nearly 60% is mapped high or very high by GBM</h3>
+          <p>
+            GBM assigns 28.67% of the mapped area to high susceptibility and
+            30.58% to very high susceptibility.
+          </p>
+        </article>
+
+        <article class="ss-finding ss-reveal">
+          <span class="ss-finding-num">03</span>
+          <h3>Assasuni has the largest proportional burden</h3>
+          <p>
+            Approximately 49.69% of Assasuni is classified as very highly
+            susceptible, the largest upazila-level proportion in the table.
+          </p>
+        </article>
+
+        <article class="ss-finding ss-reveal">
+          <span class="ss-finding-num">04</span>
+          <h3>Debhata shows emerging inland pressure</h3>
+          <p>
+            Debhata records 41.16% very high and 36.18% high susceptibility,
+            indicating strong pressure along its southern interfaces.
+          </p>
+        </article>
+
+        <article class="ss-finding ss-reveal">
+          <span class="ss-finding-num">05</span>
+          <h3>Kalaroa is the comparative refuge</h3>
+          <p>
+            Only 5.49% of Kalaroa is classified as very high susceptibility,
+            while low and moderate classes dominate its northern landscape.
+          </p>
+        </article>
+
+        <article class="ss-finding ss-reveal">
+          <span class="ss-finding-num">06</span>
+          <h3>Spectral and biological signals agree</h3>
+          <p>
+            Salinity and brightness indices rise toward the central and
+            southern district while NDVI, EVI and SAVI decline, revealing
+            parallel physical and vegetation-stress gradients.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIMITATIONS -->
+
+  <section class="ss-section ss-section--dark" id="limitations">
+    <div class="ss-container">
+      <div class="ss-reveal">
+        <p class="ss-label">09 · Limitations &amp; Next Research Steps</p>
+
+        <h2 class="ss-heading ss-heading--medium">
+          Strong spatial evidence—with important temporal and sampling constraints.
+        </h2>
+      </div>
+
+      <div class="ss-two-col">
+        <article class="ss-list-panel ss-list-panel--limits ss-reveal">
+          <h3>Current limitations</h3>
+
+          <ul>
+            <li>
+              The 241 ground observations are concentrated in Kaliganj rather
+              than evenly distributed across all seven upazilas.
+            </li>
+
+            <li>
+              Samples date from the 2016 dry season, whereas the Sentinel-2
+              imagery represents 2024.
+            </li>
+
+            <li>
+              The models estimate susceptibility patterns rather than future
+              salinity dynamics under sea-level rise or land-use change.
+            </li>
+
+            <li>
+              The draft contains an unresolved Random Forest AUC discrepancy
+              between the ROC results and discussion sections.
+            </li>
+          </ul>
+        </article>
+
+        <article class="ss-list-panel ss-list-panel--future ss-reveal">
+          <h3>Future directions</h3>
+
+          <ul>
+            <li>
+              Collect spatially balanced, contemporary electrical-conductivity
+              samples across all seven upazilas.
+            </li>
+
+            <li>
+              Develop multi-year Sentinel-2 time series to distinguish seasonal
+              salinity from persistent land degradation.
+            </li>
+
+            <li>
+              Integrate tidal flooding, groundwater salinity, elevation and
+              embankment-condition datasets.
+            </li>
+
+            <li>
+              Test spatial cross-validation and independent holdout regions to
+              evaluate transferability beyond Kaliganj.
+            </li>
+
+            <li>
+              Extend the framework to Khulna, Bagerhat and other vulnerable
+              coastal districts.
+            </li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- APPLICATIONS -->
+
+  <section class="ss-section ss-section--light" id="applications">
+    <div class="ss-container">
+      <div class="ss-reveal">
+        <p class="ss-label">10 · Planning Applications</p>
+
+        <h2 class="ss-heading ss-heading--medium">
+          A susceptibility map matters when it changes how land and water are managed.
+        </h2>
+      </div>
+
+      <div class="ss-policy-grid">
+        <article class="ss-policy-card ss-reveal">
+          <span class="ss-policy-number">APPLICATION 01</span>
+          <h3>Agricultural land zoning</h3>
+          <p>
+            High-risk areas can be prioritised for salt-tolerant crops,
+            adjusted planting calendars and reduced dependence on
+            freshwater-intensive production.
+          </p>
+        </article>
+
+        <article class="ss-policy-card ss-reveal">
+          <span class="ss-policy-number">APPLICATION 02</span>
+          <h3>Irrigation and freshwater protection</h3>
+          <p>
+            Susceptibility classes can guide irrigation allocation,
+            groundwater monitoring, canal rehabilitation and freshwater
+            retention investment.
+          </p>
+        </article>
+
+        <article class="ss-policy-card ss-reveal">
+          <span class="ss-policy-number">APPLICATION 03</span>
+          <h3>Embankment and drainage prioritisation</h3>
+          <p>
+            Assasuni, Debhata, Shyamnagar and Tala can be assessed for
+            hydrological connectivity, embankment weakness and drainage
+            interventions.
+          </p>
+        </article>
+
+        <article class="ss-policy-card ss-reveal">
+          <span class="ss-policy-number">APPLICATION 04</span>
+          <h3>Land reclamation targeting</h3>
+          <p>
+            Spatial susceptibility helps identify where soil amendments,
+            flushing, drainage improvement or land-restoration pilots are most
+            defensible.
+          </p>
+        </article>
+
+        <article class="ss-policy-card ss-reveal">
+          <span class="ss-policy-number">APPLICATION 05</span>
+          <h3>Aquaculture–agriculture transition planning</h3>
+          <p>
+            The maps support analysis of where saline aquaculture expansion
+            may conflict with crop production and freshwater-dependent
+            livelihoods.
+          </p>
+        </article>
+
+        <article class="ss-policy-card ss-reveal">
+          <span class="ss-policy-number">APPLICATION 06</span>
+          <h3>Repeatable coastal monitoring</h3>
+          <p>
+            Sentinel-2 offers a scalable foundation for periodic salinity
+            surveillance when paired with improved contemporary ground
+            measurements.
+          </p>
+        </article>
+      </div>
+
+      <div class="ss-sdg-strip ss-reveal" aria-label="Related Sustainable Development Goals">
+        <span class="ss-sdg">SDG 2 · Zero Hunger</span>
+        <span class="ss-sdg">SDG 6 · Clean Water</span>
+        <span class="ss-sdg">SDG 13 · Climate Action</span>
+        <span class="ss-sdg">SDG 15 · Life on Land</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORKING PAPER RECORD -->
+
+  <section class="ss-section ss-section--light" id="working-paper">
+    <div class="ss-container">
+      <div class="ss-reveal">
+        <p class="ss-label">11 · Working Paper Record</p>
+
+        <h2 class="ss-heading ss-heading--medium">
+          Research in progress—not yet submitted or peer reviewed.
+        </h2>
+      </div>
+
+      <div class="ss-record-layout">
+        <article class="ss-record-card ss-reveal">
+          <h3>Current status</h3>
+
+          <div class="ss-status-line">
+            <span class="ss-status-pill ss-status-pill--active">
+              Working Paper
+            </span>
+
+            <span class="ss-status-pill">
+              Collaborative research
+            </span>
+
+            <span class="ss-status-pill">
+              Manuscript development
+            </span>
+          </div>
+
+          <p>
+            The findings shown here come from an active working-paper draft.
+            They should not be interpreted as peer-reviewed, accepted or
+            published results. Numerical and editorial revisions may occur
+            before submission.
+          </p>
+
+          <a class="ss-contact-btn" href="../index.html#contact">
+            Discuss the research →
+          </a>
+        </article>
+
+        <article class="ss-title-card ss-reveal">
+          <h3>Full working title</h3>
+
+          <p class="ss-full-title">
+            <em>
+              Assessing Soil Salinity Susceptibility in Coastal Bangladesh
+              Using Sentinel-2 Indices and Advanced Machine Learning Models
+            </em>
+          </p>
+
+          <div class="ss-keywords" aria-label="Working paper keywords">
+            <span class="ss-keyword">Soil Salinity Susceptibility</span>
+            <span class="ss-keyword">Sentinel-2 MSI</span>
+            <span class="ss-keyword">Spectral Indices</span>
+            <span class="ss-keyword">Machine Learning</span>
+            <span class="ss-keyword">Gradient Boosting</span>
+            <span class="ss-keyword">Satkhira</span>
+            <span class="ss-keyword">Coastal Bangladesh</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOOLS -->
+
+  <section class="ss-section ss-section--dark" id="stack">
+    <div class="ss-container">
+      <div class="ss-reveal">
+        <p class="ss-label">12 · Tools &amp; Technical Stack</p>
+
+        <h2 class="ss-heading ss-heading--medium">
+          Remote sensing, spectral engineering and comparative machine learning.
+        </h2>
+      </div>
+
+      <div class="ss-stack-grid">
+        <article class="ss-stack-card ss-reveal">
+          <h3>Satellite Data</h3>
+
+          <div class="ss-stack-tags">
+            <span class="ss-stack-tag">Sentinel-2 MSI</span>
+            <span class="ss-stack-tag">10 m imagery</span>
+            <span class="ss-stack-tag">Visible bands</span>
+            <span class="ss-stack-tag">NIR</span>
+            <span class="ss-stack-tag">SWIR</span>
+          </div>
+        </article>
+
+        <article class="ss-stack-card ss-reveal">
+          <h3>Preprocessing</h3>
+
+          <div class="ss-stack-tags">
+            <span class="ss-stack-tag">Geometric correction</span>
+            <span class="ss-stack-tag">Atmospheric correction</span>
+            <span class="ss-stack-tag">FLAASH</span>
+            <span class="ss-stack-tag">Radiometric correction</span>
+            <span class="ss-stack-tag">Surface reflectance</span>
+          </div>
+        </article>
+
+        <article class="ss-stack-card ss-reveal">
+          <h3>Machine Learning</h3>
+
+          <div class="ss-stack-tags">
+            <span class="ss-stack-tag">ANN</span>
+            <span class="ss-stack-tag">Decision Tree</span>
+            <span class="ss-stack-tag">Gradient Boosting</span>
+            <span class="ss-stack-tag">Logistic Regression</span>
+            <span class="ss-stack-tag">Random Forest</span>
+            <span class="ss-stack-tag">SVM · RBF</span>
+          </div>
+        </article>
+
+        <article class="ss-stack-card ss-reveal">
+          <h3>Validation &amp; Mapping</h3>
+
+          <div class="ss-stack-tags">
+            <span class="ss-stack-tag">ROC curves</span>
+            <span class="ss-stack-tag">AUC comparison</span>
+            <span class="ss-stack-tag">80/20 train–test</span>
+            <span class="ss-stack-tag">Five-class mapping</span>
+            <span class="ss-stack-tag">Upazila statistics</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- FOOTER NAVIGATION -->
+
+<nav class="ss-footer-nav" aria-label="Project navigation">
+  <div class="ss-container">
+    <div class="ss-footer-grid">
+      <a class="ss-footer-card" href="../index.html#projects">
+        <span class="ss-footer-kicker">← Return</span>
+        <span class="ss-footer-title">Portfolio projects</span>
+      </a>
+
+      <a class="ss-footer-card" href="../index.html#contact">
+        <span class="ss-footer-kicker">Research collaboration →</span>
+        <span class="ss-footer-title">Discuss coastal geospatial ML</span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- LIGHTBOX -->
+
+<div
+  class="ss-lightbox"
+  id="ss-lightbox"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Expanded research figure"
+  aria-hidden="true"
+>
+  <button
+    class="ss-lightbox-close"
+    id="ss-lightbox-close"
+    type="button"
+    aria-label="Close expanded image"
+  >
+    ×
+  </button>
+
+  <div class="ss-lightbox-inner">
+    <img id="ss-lightbox-image" src="" alt="">
+
+    <div
+      class="ss-lightbox-caption"
+      id="ss-lightbox-caption"
+      aria-live="polite"
+    ></div>
+  </div>
+</div>
+
+<button
+  class="ss-back-top"
+  id="ss-back-top"
+  type="button"
+  aria-label="Back to top"
+>
+  ↑
+</button>
+
+<script>
+  (() => {
+    "use strict";
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    /* MOBILE NAV — GUARDED AGAINST DOUBLE-BINDING */
+
+    const siteHeader = document.querySelector(".site-header");
+    const menuToggle = document.querySelector(".menu-toggle");
+    const navLinks = document.querySelector(".nav-links");
+
+    if (
+      siteHeader &&
+      menuToggle &&
+      navLinks &&
+      menuToggle.dataset.navInit !== "true"
+    ) {
+      menuToggle.dataset.navInit = "true";
+      menuToggle.setAttribute("aria-expanded", "false");
+
+      menuToggle.addEventListener("click", () => {
+        const isOpen = siteHeader.classList.toggle("nav-open");
+        menuToggle.setAttribute("aria-expanded", String(isOpen));
+      });
+
+      navLinks.addEventListener("click", event => {
+        if (!event.target.closest("a")) return;
+
+        siteHeader.classList.remove("nav-open");
+        menuToggle.setAttribute("aria-expanded", "false");
+      });
+    }
+
+    /* HERO FALLBACK */
+
+    const hero = document.querySelector(".ss-hero");
+    const heroLoader = new Image();
+
+    heroLoader.onerror = () => {
+      hero?.classList.add("ss-image-missing");
+    };
+
+    heroLoader.src =
+      "../images/projects/salinity/satkhira-salinity-hero.jpg";
+
+    /* IMAGE FALLBACK */
+
+    function bindImageFallback(image) {
+      if (!image || image.dataset.ssFallbackBound === "true") return;
+
+      image.dataset.ssFallbackBound = "true";
+
+      const shell = image.closest(".ss-image-shell");
+
+      image.addEventListener("error", () => {
+        shell?.classList.add("ss-is-missing");
+      });
+
+      image.addEventListener("load", () => {
+        shell?.classList.remove("ss-is-missing");
+      });
+
+      if (image.complete && image.naturalWidth === 0) {
+        shell?.classList.add("ss-is-missing");
+      }
+    }
+
+    document
+      .querySelectorAll(".ss-image-shell img")
+      .forEach(bindImageFallback);
+
+    /* REVEAL ANIMATIONS */
+
+    const revealItems = document.querySelectorAll(".ss-reveal");
+
+    if (
+      prefersReducedMotion ||
+      !("IntersectionObserver" in window)
+    ) {
+      revealItems.forEach(item => item.classList.add("ss-visible"));
+    } else {
+      const revealObserver = new IntersectionObserver(
+        entries => {
+          entries.forEach((entry, index) => {
+            if (!entry.isIntersecting) return;
+
+            window.setTimeout(() => {
+              entry.target.classList.add("ss-visible");
+            }, Math.min(index * 45, 220));
+
+            revealObserver.unobserve(entry.target);
+          });
+        },
+        {
+          threshold: 0.12,
+          rootMargin: "0px 0px -6% 0px"
+        }
+      );
+
+      revealItems.forEach(item => revealObserver.observe(item));
+    }
+
+    /* COUNTERS */
+
+    const counters = document.querySelectorAll("[data-counter]");
+
+    function easeOutCubic(value) {
+      return 1 - Math.pow(1 - value, 3);
+    }
+
+    function animateCounter(element) {
+      if (element.dataset.counted === "true") return;
+
+      element.dataset.counted = "true";
+
+      const target = Number(element.dataset.target || 0);
+      const suffix = element.dataset.suffix || "";
+      const duration = 1500;
+      const start = performance.now();
+
+      const render = value => {
+        element.textContent =
+          Math.round(value).toLocaleString("en-US") + suffix;
+      };
+
+      if (prefersReducedMotion) {
+        render(target);
+        return;
+      }
+
+      const frame = now => {
+        const progress = Math.min((now - start) / duration, 1);
+
+        render(target * easeOutCubic(progress));
+
+        if (progress < 1) {
+          requestAnimationFrame(frame);
+        }
+      };
+
+      requestAnimationFrame(frame);
+    }
+
+    if ("IntersectionObserver" in window) {
+      const counterObserver = new IntersectionObserver(
+        entries => {
+          entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+
+            animateCounter(entry.target);
+            counterObserver.unobserve(entry.target);
+          });
+        },
+        { threshold: 0.5 }
+      );
+
+      counters.forEach(counter => {
+        counterObserver.observe(counter);
+      });
+    } else {
+      counters.forEach(animateCounter);
+    }
+
+    /* INDEX EXPLORER */
+
+    const indexButtons =
+      document.querySelectorAll(".ss-index-btn");
+
+    const indexDescription =
+      document.getElementById("ss-index-description");
+
+    indexButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        indexButtons.forEach(item => {
+          item.setAttribute("aria-pressed", "false");
+        });
+
+        button.setAttribute("aria-pressed", "true");
+
+        if (indexDescription) {
+          indexDescription.textContent =
+            button.dataset.description || "";
+        }
+      });
+    });
+
+    /* MODEL DATA */
+
+    const models = {
+      ann: {
+        name: "Artificial Neural Network",
+        auc: 0.68,
+        verdict: "Moderate discrimination",
+        image: "salinity-ann.jpg",
+        summary:
+          "ANN produced a comparatively smooth central-to-southern susceptibility belt. It classified 30.68% as very high and 21.31% as high susceptibility.",
+        distribution: {
+          veryLow: 6.41,
+          low: 20.73,
+          moderate: 20.85,
+          high: 21.31,
+          veryHigh: 30.68
+        }
+      },
+
+      dt: {
+        name: "Decision Tree",
+        auc: 0.65,
+        verdict: "Polarised and fragmented",
+        image: "salinity-dt.jpg",
+        summary:
+          "Decision Tree generated abrupt class boundaries and placed 37.15% of the mapped area in the high class, the largest high-class share among the models.",
+        distribution: {
+          veryLow: 2.00,
+          low: 8.02,
+          moderate: 22.37,
+          high: 37.15,
+          veryHigh: 30.44
+        }
+      },
+
+      gbm: {
+        name: "Gradient Boosting",
+        auc: 0.83,
+        verdict: "Best-performing model",
+        image: "salinity-gbm.jpg",
+        summary:
+          "GBM produced compact, spatially coherent high-susceptibility clusters through the central and southern district while achieving the strongest discrimination between saline and non-saline samples.",
+        distribution: {
+          veryLow: 3.48,
+          low: 11.86,
+          moderate: 25.38,
+          high: 28.67,
+          veryHigh: 30.58
+        }
+      },
+
+      lrm: {
+        name: "Logistic Regression · LRM",
+        auc: 0.62,
+        verdict: "Limited discrimination",
+        image: "salinity-lrm.jpg",
+        summary:
+          "The regression model produced smoother class transitions and assigned its largest share to high susceptibility at 30.18%, followed by very high at 28.03%.",
+        distribution: {
+          veryLow: 3.02,
+          low: 11.55,
+          moderate: 27.19,
+          high: 30.18,
+          veryHigh: 28.03
+        }
+      },
+
+      rf: {
+        name: "Random Forest",
+        auc: 0.50,
+        verdict: "Near-random in the Results text",
+        image: "salinity-rf.jpg",
+        summary:
+          "Random Forest produced a visually coherent susceptibility surface, but the Results text reports AUC 0.50 while the ROC figure and Discussion state 0.73. The discrepancy remains unresolved in the draft.",
+        distribution: {
+          veryLow: 5.95,
+          low: 18.46,
+          moderate: 22.90,
+          high: 21.73,
+          veryHigh: 30.93
+        }
+      },
+
+      svm: {
+        name: "Support Vector Machine",
+        auc: 0.74,
+        verdict: "Second-best ROC–AUC",
+        image: "salinity-svm.jpg",
+        summary:
+          "SVM generated broader, smoother moderate-to-high susceptibility zones and achieved the second-strongest reported ROC–AUC.",
+        distribution: {
+          veryLow: 4.52,
+          low: 16.05,
+          moderate: 26.49,
+          high: 24.28,
+          veryHigh: 28.63
+        }
+      }
+    };
+
+    const modelRows =
+      document.querySelectorAll(".ss-model-row");
+
+    const modelImage =
+      document.getElementById("ss-model-image");
+
+    const modelName =
+      document.getElementById("ss-model-name");
+
+    const modelVerdict =
+      document.getElementById("ss-model-verdict");
+
+    const modelSummary =
+      document.getElementById("ss-model-summary");
+
+    const aucNumber =
+      document.getElementById("ss-auc-number");
+
+    const distributionTitle =
+      document.getElementById("ss-distribution-title");
+
+    const distributionLegend =
+      document.getElementById("ss-distribution-legend");
+
+    const segmentElements = {
+      veryLow: document.querySelector('[data-segment="veryLow"]'),
+      low: document.querySelector('[data-segment="low"]'),
+      moderate: document.querySelector('[data-segment="moderate"]'),
+      high: document.querySelector('[data-segment="high"]'),
+      veryHigh: document.querySelector('[data-segment="veryHigh"]')
+    };
+
+    const classLabels = {
+      veryLow: "Very Low",
+      low: "Low",
+      moderate: "Moderate",
+      high: "High",
+      veryHigh: "Very High"
+    };
+
+    const classColours = {
+      veryLow: "#126a61",
+      low: "#4ea98f",
+      moderate: "#e0ca71",
+      high: "#e69258",
+      veryHigh: "#e06a58"
+    };
+
+    function updateModelImage(model) {
+      if (!modelImage) return;
+
+      const shell = modelImage.closest(".ss-image-shell");
+      const fallback = shell?.querySelector(".ss-img-fallback");
+
+      shell?.classList.remove("ss-is-missing");
+
+      modelImage.src =
+        `../images/projects/salinity/${model.image}`;
+
+      modelImage.alt =
+        `${model.name} soil salinity susceptibility map`;
+
+      modelImage.dataset.caption =
+        `${model.name} soil salinity susceptibility map.`;
+
+      if (fallback) {
+        fallback.textContent =
+          `${model.image} · image unavailable`;
+      }
+    }
+
+    function updateDistribution(model) {
+      if (distributionTitle) {
+        distributionTitle.textContent =
+          `${model.name} susceptibility distribution`;
+      }
+
+      Object.entries(model.distribution).forEach(([key, value]) => {
+        if (segmentElements[key]) {
+          segmentElements[key].style.width = `${value}%`;
+        }
+      });
+
+      if (distributionLegend) {
+        distributionLegend.innerHTML = Object.entries(
+          model.distribution
+        ).map(([key, value]) => `
+          <span class="ss-legend-item">
+            <i
+              class="ss-legend-dot"
+              style="background:${classColours[key]}"
+            ></i>
+            ${classLabels[key]} · ${value.toFixed(2)}%
+          </span>
+        `).join("");
+      }
+    }
+
+    function selectModel(row) {
+      const key = row.dataset.model;
+      const model = models[key];
+
+      if (!model) return;
+
+      modelRows.forEach(item => {
+        item.classList.remove("ss-selected");
+          item.setAttribute("aria-current", "false");
+      });
+
+      row.classList.add("ss-selected");
+      row.setAttribute("aria-current", "true");
+
+      if (modelName) modelName.textContent = model.name;
+      if (modelVerdict) modelVerdict.textContent = model.verdict;
+      if (modelSummary) modelSummary.textContent = model.summary;
+      if (aucNumber) aucNumber.textContent = model.auc.toFixed(2);
+
+      updateModelImage(model);
+      updateDistribution(model);
+    }
+
+    modelRows.forEach(row => {
+      row.addEventListener("click", () => {
+        selectModel(row);
+      });
+
+      row.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          selectModel(row);
+        }
+      });
+    });
+
+    /* AUC BARS */
+
+    const aucBars = document.querySelectorAll("[data-auc-bar]");
+
+    function animateAucBars() {
+      aucBars.forEach(bar => {
+        bar.style.width = `${bar.dataset.aucBar}%`;
+      });
+    }
+
+    if (
+      prefersReducedMotion ||
+      !("IntersectionObserver" in window)
+    ) {
+      animateAucBars();
+    } else {
+      const aucObserver = new IntersectionObserver(
+        entries => {
+          if (!entries.some(entry => entry.isIntersecting)) return;
+
+          animateAucBars();
+          aucObserver.disconnect();
+        },
+        { threshold: 0.35 }
+      );
+
+      const barsContainer = document.querySelector(".ss-bars");
+
+      if (barsContainer) {
+        aucObserver.observe(barsContainer);
+      }
+    }
+
+    /* UPAZILA TABLE */
+
+    const upazilas = [
+      {
+        name: "Assasuni",
+        veryLow: 1.7278,
+        low: 7.5665,
+        moderate: 17.2817,
+        high: 23.7383,
+        veryHigh: 49.6858
+      },
+
+      {
+        name: "Debhata",
+        veryLow: 0.7794,
+        low: 4.2773,
+        moderate: 17.5954,
+        high: 36.1849,
+        veryHigh: 41.1630
+      },
+
+      {
+        name: "Tala",
+        veryLow: 0.6026,
+        low: 9.8307,
+        moderate: 31.4127,
+        high: 27.0547,
+        veryHigh: 31.0993
+      },
+
+      {
+        name: "Shyamnagar",
+        veryLow: 8.6643,
+        low: 13.8701,
+        moderate: 18.9044,
+        high: 29.7395,
+        veryHigh: 28.8218
+      },
+
+      {
+        name: "Satkhira Sadar",
+        veryLow: 2.9609,
+        low: 11.1013,
+        moderate: 28.5011,
+        high: 30.3958,
+        veryHigh: 27.0410
+      },
+
+      {
+        name: "Kaliganj",
+        veryLow: 1.0900,
+        low: 11.4607,
+        moderate: 28.3213,
+        high: 32.6928,
+        veryHigh: 26.4353
+      },
+
+      {
+        name: "Kalaroa",
+        veryLow: 6.4698,
+        low: 25.6533,
+        moderate: 39.7864,
+        high: 22.6002,
+        veryHigh: 5.4903
+      }
+    ];
+
+    const upazilaBody =
+      document.getElementById("ss-upazila-body");
+
+    const upazilaSearch =
+      document.getElementById("ss-upazila-search");
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function renderUpazilaTable() {
+      if (!upazilaBody) return;
+
+      const query =
+        (upazilaSearch?.value || "").trim().toLowerCase();
+
+      const filtered = upazilas.filter(item =>
+        item.name.toLowerCase().includes(query)
+      );
+
+      upazilaBody.replaceChildren();
+
+      if (!filtered.length) {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+          <td class="ss-table-empty" colspan="7">
+            No upazila matches “${escapeHtml(query)}”.
+          </td>
+        `;
+
+        upazilaBody.appendChild(row);
+        return;
+      }
+
+      filtered.forEach(item => {
+        const combined = item.high + item.veryHigh;
+        const row = document.createElement("tr");
+
+        row.className = "ss-upazila-row";
+        row.tabIndex = 0;
+
+        row.innerHTML = `
+          <td>${escapeHtml(item.name)}</td>
+          <td class="ss-mono">${item.veryLow.toFixed(2)}</td>
+          <td class="ss-mono">${item.low.toFixed(2)}</td>
+          <td class="ss-mono">${item.moderate.toFixed(2)}</td>
+          <td class="ss-mono">${item.high.toFixed(2)}</td>
+          <td class="ss-mono">${item.veryHigh.toFixed(2)}</td>
+          <td class="ss-mono">${combined.toFixed(2)}%</td>
+        `;
+
+        const selectRow = () => {
+          upazilaBody
+            .querySelectorAll(".ss-upazila-row")
+            .forEach(tableRow => {
+              tableRow.classList.remove("ss-selected");
+            });
+
+          row.classList.add("ss-selected");
+        };
+
+        row.addEventListener("click", selectRow);
+
+        row.addEventListener("keydown", event => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            selectRow();
+          }
+        });
+
+        upazilaBody.appendChild(row);
+      });
+    }
+
+    upazilaSearch?.addEventListener(
+      "input",
+      renderUpazilaTable
+    );
+
+    renderUpazilaTable();
+
+    /* LIGHTBOX */
+
+    const lightbox = document.getElementById("ss-lightbox");
+    const lightboxImage =
+      document.getElementById("ss-lightbox-image");
+    const lightboxCaption =
+      document.getElementById("ss-lightbox-caption");
+    const lightboxClose =
+      document.getElementById("ss-lightbox-close");
+
+    let lastLightboxTrigger = null;
+
+    function openLightbox(target) {
+      if (
+        !lightbox ||
+        !lightboxImage ||
+        !target ||
+        target.closest(".ss-image-shell")?.classList.contains(
+          "ss-is-missing"
+        )
+      ) {
+        return;
+      }
+
+      lastLightboxTrigger = target;
+
+      lightboxImage.src = target.currentSrc || target.src;
+      lightboxImage.alt = target.alt || "";
+
+      lightboxCaption.textContent =
+        target.dataset.caption || target.alt || "";
+
+      lightbox.classList.add("ss-open");
+      lightbox.setAttribute("aria-hidden", "false");
+      document.body.classList.add("ss-lightbox-open");
+
+      requestAnimationFrame(() => {
+        lightboxClose?.focus();
+      });
+    }
+
+    function closeLightbox() {
+      if (!lightbox) return;
+
+      lightbox.classList.remove("ss-open");
+      lightbox.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("ss-lightbox-open");
+
+      if (lightboxImage) {
+        lightboxImage.src = "";
+      }
+
+      lastLightboxTrigger?.focus();
+      lastLightboxTrigger = null;
+    }
+
+    function bindLightboxTarget(target) {
+      if (
+        !target ||
+        target.dataset.ssLightboxBound === "true"
+      ) {
+        return;
+      }
+
+      target.dataset.ssLightboxBound = "true";
+
+      target.addEventListener("click", () => {
+        openLightbox(target);
+      });
+
+      target.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openLightbox(target);
+        }
+      });
+    }
+
+    document
+      .querySelectorAll("[data-lightbox]")
+      .forEach(bindLightboxTarget);
+
+    lightboxClose?.addEventListener("click", closeLightbox);
+
+    lightbox?.addEventListener("click", event => {
+      if (event.target === lightbox) {
+        closeLightbox();
+      }
+    });
+
+    document.addEventListener("keydown", event => {
+      if (
+        event.key === "Escape" &&
+        lightbox?.classList.contains("ss-open")
+      ) {
+        closeLightbox();
+      }
+    });
+
+    /* BACK TO TOP */
+
+    const backTop = document.getElementById("ss-back-top");
+
+    function updateBackTop() {
+      backTop?.classList.toggle(
+        "ss-show",
+        window.scrollY > 300
+      );
+    }
+
+    window.addEventListener(
+      "scroll",
+      updateBackTop,
+      { passive: true }
+    );
+
+    updateBackTop();
+
+    backTop?.addEventListener("click", () => {
+      window.scrollTo({
+        top: 0,
+        behavior: prefersReducedMotion ? "auto" : "smooth"
+      });
+    });
+  })();
+</script>
+
+<!-- IMAGE MANIFEST
+satkhira-salinity-hero.jpg
+satkhira-study-area.jpg
+indices-bi-evi-b2-int1-int2-ndvi.jpg
+indices-nir-ratio-si1-si2-si3-si11-savi.jpg
+roc-model-comparison.png
+feature-importance-indices.png
+salinity-ann.jpg
+salinity-dt.jpg
+salinity-gbm.jpg
+salinity-lrm.jpg
+salinity-rf.jpg
+salinity-svm.jpg
+upazila-wise-gbm-map.jpg
+-->
+
+</body>
+</html>
